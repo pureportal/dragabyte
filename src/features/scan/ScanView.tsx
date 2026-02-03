@@ -1100,7 +1100,7 @@ const ScanView = (): JSX.Element => {
           </div>
 
           {/* Right Panel: Details & Subfolders */}
-          <div className="flex flex-col gap-4 overflow-hidden h-full">
+          <div className="flex flex-col gap-4 overflow-auto h-full pr-1">
             {/* Info Cards Row */}
             <div className="shrink-0 grid gap-4 lg:grid-cols-2">
               <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
@@ -1231,7 +1231,7 @@ const ScanView = (): JSX.Element => {
             </div>
 
             {/* Subfolders Table - Fills remaining vertical space */}
-            <div className="flex-1 min-h-[260px] flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden shadow-sm">
+            <div className="flex-1 min-h-[220px] flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
                 <span className="text-slate-400">Subfolders</span>
                 <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/50">
