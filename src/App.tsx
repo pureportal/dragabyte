@@ -74,7 +74,10 @@ const App = (): JSX.Element => {
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:64px_64px]" />
 
       {/* Title Bar */}
-      <div className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur select-none z-50">
+      <div
+        className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur select-none z-50"
+        data-tauri-drag-region
+      >
         <div
           className="relative flex items-center gap-2"
           data-tauri-drag-region
@@ -91,6 +94,7 @@ const App = (): JSX.Element => {
           <button
             onClick={minimize}
             className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            data-tauri-no-drag
           >
             <svg viewBox="0 0 10 10" className="h-2.5 w-2.5 fill-current">
               <path d="M0 5h10v1H0z" />
@@ -99,6 +103,7 @@ const App = (): JSX.Element => {
           <button
             onClick={toggleMaximize}
             className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            data-tauri-no-drag
           >
             <svg
               viewBox="0 0 10 10"
@@ -114,6 +119,7 @@ const App = (): JSX.Element => {
           <button
             onClick={close}
             className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-red-500/10 hover:text-red-400"
+            data-tauri-no-drag
           >
             <svg viewBox="0 0 10 10" className="h-3 w-3 fill-current">
               <path

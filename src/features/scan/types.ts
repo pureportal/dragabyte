@@ -34,6 +34,10 @@ export type ScanThrottleLevel = "off" | "low" | "medium" | "high";
 export interface ScanFilters {
   includeExtensions: string[];
   excludeExtensions: string[];
+  includeNames: string[];
+  excludeNames: string[];
+  minSizeBytes: number | null;
+  maxSizeBytes: number | null;
   includeRegex: string | null;
   excludeRegex: string | null;
   includePaths: string[];

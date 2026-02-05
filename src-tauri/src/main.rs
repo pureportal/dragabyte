@@ -2,7 +2,8 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -18,6 +19,7 @@ use tauri::Manager;
 use tauri::Emitter;
 
 struct StartupPath(Mutex<Option<String>>);
+struct ScanCancellation(Mutex<HashMap<String, Arc<AtomicBool>>>);
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -71,6 +73,10 @@ enum ScanThrottleLevel {
 struct ScanFilters {
   include_extensions: Vec<String>,
   exclude_extensions: Vec<String>,
+  include_names: Vec<String>,
+  exclude_names: Vec<String>,
+  min_size_bytes: Option<u64>,
+  max_size_bytes: Option<u64>,
   include_regex: Option<String>,
   exclude_regex: Option<String>,
   include_paths: Vec<String>,
@@ -88,6 +94,10 @@ struct ScanOptions {
 struct FilterConfig {
   include_extensions: HashSet<String>,
   exclude_extensions: HashSet<String>,
+  include_names: Vec<String>,
+  exclude_names: Vec<String>,
+  min_size_bytes: Option<u64>,
+  max_size_bytes: Option<u64>,
   include_regex: Option<Regex>,
   exclude_regex: Option<Regex>,
   include_paths: Vec<String>,
@@ -124,6 +134,7 @@ fn scan_path(
   window: tauri::Window,
   path: String,
   options: ScanOptions,
+  state: tauri::State<ScanCancellation>,
 ) -> Result<(), String> {
   let root = PathBuf::from(&path);
   if !root.exists() {
@@ -131,13 +142,48 @@ fn scan_path(
   }
 
   let config = build_scan_config(&options)?;
+  let label = window.label().to_string();
+  let cancel_flag = Arc::new(AtomicBool::new(false));
+  {
+    let mut cancellations = state
+      .0
+      .lock()
+      .map_err(|_| "Failed to lock scan state".to_string())?;
+    if let Some(existing) = cancellations.get(&label) {
+      existing.store(true, Ordering::SeqCst);
+    }
+    cancellations.insert(label.clone(), Arc::clone(&cancel_flag));
+  }
+  let window_for_task = window.clone();
+  let label_for_task = label.clone();
 
   tauri::async_runtime::spawn(async move {
-    if let Err(error) = run_scan(&window, root, config) {
-      let _ = window.emit("scan-error", error);
+    let app_handle = window_for_task.app_handle();
+    if let Err(error) = run_scan(&window_for_task, root, config, Arc::clone(&cancel_flag)) {
+      let _ = window_for_task.emit("scan-error", error);
     }
+    let cancellations = app_handle.state::<ScanCancellation>();
+    if let Ok(mut map) = cancellations.0.lock() {
+      map.remove(&label_for_task);
+    };
   });
 
+  Ok(())
+}
+
+#[tauri::command]
+fn cancel_scan(
+  window: tauri::Window,
+  state: tauri::State<ScanCancellation>,
+) -> Result<(), String> {
+  let label = window.label().to_string();
+  let cancellations = state
+    .0
+    .lock()
+    .map_err(|_| "Failed to lock scan state".to_string())?;
+  if let Some(flag) = cancellations.get(&label) {
+    flag.store(true, Ordering::SeqCst);
+  }
   Ok(())
 }
 
@@ -145,6 +191,7 @@ fn run_scan(
   window: &tauri::Window,
   root: PathBuf,
   config: ScanConfig,
+  cancel_flag: Arc<AtomicBool>,
 ) -> Result<(), String> {
   let start = Instant::now();
   let mut stats: HashMap<PathBuf, NodeStats> = HashMap::new();
@@ -154,6 +201,10 @@ fn run_scan(
   let mut processed: u64 = 0;
 
   for entry in WalkDir::new(&root) {
+    if cancel_flag.load(Ordering::Relaxed) {
+      let _ = window.emit("scan-cancelled", "Scan cancelled");
+      return Ok(());
+    }
     let entry = match entry {
       Ok(item) => item,
       Err(_) => continue,
@@ -165,13 +216,6 @@ fn run_scan(
       if should_skip_dir(&root, &entry_path, &config.filters) {
         continue;
       }
-    } else if entry.file_type().is_file() {
-      if !should_include_file(&entry_path, &config.filters) {
-        continue;
-      }
-    }
-
-    if entry.file_type().is_dir() {
       stats.entry(entry_path.to_path_buf()).or_default();
       if let Some(parent) = entry_path.parent() {
         children
@@ -182,6 +226,9 @@ fn run_scan(
       }
     } else if entry.file_type().is_file() {
       let size = entry.metadata().map(|meta| meta.len()).unwrap_or(0);
+      if !should_include_file(&entry_path, size, &config.filters) {
+        continue;
+      }
       update_largest_files(&mut largest_files, &entry_path, size, 10);
       if let Some(parent) = entry_path.parent() {
         let parent_stats = stats.entry(parent.to_path_buf()).or_default();
@@ -190,16 +237,16 @@ fn run_scan(
       }
     }
 
-    if should_emit_progress(processed, last_emit, &config) {
-      let summary = build_summary(&root, &children, &stats, &largest_files, start);
-      let _ = window.emit("scan-progress", summary);
-      last_emit = Instant::now();
-    }
-
     if let Some(throttle) = &config.throttle {
       if throttle.sleep_ms > 0 && processed % throttle.every_entries == 0 {
         thread::sleep(Duration::from_millis(throttle.sleep_ms));
       }
+    }
+
+    if should_emit_progress(processed, last_emit, &config) {
+      let summary = build_summary(&root, &children, &stats, &largest_files, start);
+      let _ = window.emit("scan-progress", summary);
+      last_emit = Instant::now();
     }
   }
 
@@ -239,6 +286,11 @@ fn build_scan_config(options: &ScanOptions) -> Result<ScanConfig, String> {
 }
 
 fn build_filter_config(filters: &ScanFilters) -> Result<FilterConfig, String> {
+  if let (Some(min), Some(max)) = (filters.min_size_bytes, filters.max_size_bytes) {
+    if min > max {
+      return Err("Min size cannot exceed max size".to_string());
+    }
+  }
   let include_regex = match &filters.include_regex {
     Some(pattern) => Some(Regex::new(pattern).map_err(|err| err.to_string())?),
     None => None,
@@ -249,14 +301,21 @@ fn build_filter_config(filters: &ScanFilters) -> Result<FilterConfig, String> {
   };
   let include_extensions = normalize_extensions(&filters.include_extensions);
   let exclude_extensions = normalize_extensions(&filters.exclude_extensions);
+  let include_names = normalize_terms(&filters.include_names);
+  let exclude_names = normalize_terms(&filters.exclude_names);
   let include_paths = normalize_paths(&filters.include_paths);
   let exclude_paths = normalize_paths(&filters.exclude_paths);
   let has_includes = !include_extensions.is_empty()
     || include_regex.is_some()
-    || !include_paths.is_empty();
+    || !include_paths.is_empty()
+    || !include_names.is_empty();
   Ok(FilterConfig {
     include_extensions,
     exclude_extensions,
+    include_names,
+    exclude_names,
+    min_size_bytes: filters.min_size_bytes,
+    max_size_bytes: filters.max_size_bytes,
     include_regex,
     exclude_regex,
     include_paths,
@@ -287,6 +346,17 @@ fn normalize_paths(values: &[String]) -> Vec<String> {
   list
 }
 
+fn normalize_terms(values: &[String]) -> Vec<String> {
+  let mut list = Vec::new();
+  for value in values {
+    let cleaned = value.trim().to_lowercase();
+    if !cleaned.is_empty() {
+      list.push(cleaned);
+    }
+  }
+  list
+}
+
 fn should_emit_progress(processed: u64, last_emit: Instant, config: &ScanConfig) -> bool {
   if processed % config.emit_every == 0 {
     return true;
@@ -299,18 +369,36 @@ fn should_skip_dir(root: &Path, path: &Path, filters: &FilterConfig) -> bool {
     return false;
   }
   let path_str = path.to_string_lossy().to_lowercase();
+  let name_str = get_entry_name_lower(path);
   if matches_regex(&path_str, &filters.exclude_regex) {
+    return true;
+  }
+  if path_contains_any(&name_str, &filters.exclude_names) {
     return true;
   }
   path_contains_any(&path_str, &filters.exclude_paths)
 }
 
-fn should_include_file(path: &Path, filters: &FilterConfig) -> bool {
+fn should_include_file(path: &Path, size_bytes: u64, filters: &FilterConfig) -> bool {
   let path_str = path.to_string_lossy().to_lowercase();
+  let name_str = get_entry_name_lower(path);
+  if let Some(min_size) = filters.min_size_bytes {
+    if size_bytes < min_size {
+      return false;
+    }
+  }
+  if let Some(max_size) = filters.max_size_bytes {
+    if size_bytes > max_size {
+      return false;
+    }
+  }
   if matches_regex(&path_str, &filters.exclude_regex) {
     return false;
   }
   if path_contains_any(&path_str, &filters.exclude_paths) {
+    return false;
+  }
+  if path_contains_any(&name_str, &filters.exclude_names) {
     return false;
   }
   if let Some(ext) = path.extension().and_then(|value| value.to_str()) {
@@ -327,6 +415,9 @@ fn should_include_file(path: &Path, filters: &FilterConfig) -> bool {
     return true;
   }
   if path_contains_any(&path_str, &filters.include_paths) {
+    return true;
+  }
+  if path_contains_any(&name_str, &filters.include_names) {
     return true;
   }
   if let Some(ext) = path.extension().and_then(|value| value.to_str()) {
@@ -353,6 +444,13 @@ fn path_contains_any(path: &str, values: &[String]) -> bool {
     }
   }
   false
+}
+
+fn get_entry_name_lower(path: &Path) -> String {
+  path
+    .file_name()
+    .map(|value| value.to_string_lossy().to_string().to_lowercase())
+    .unwrap_or_else(|| path.to_string_lossy().to_string().to_lowercase())
 }
 
 #[tauri::command]
@@ -548,10 +646,12 @@ fn main() {
          }
       }
       app.manage(StartupPath(Mutex::new(startup_path)));
+      app.manage(ScanCancellation(Mutex::new(HashMap::new())));
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
       scan_path,
+      cancel_scan,
       is_context_menu_enabled,
       toggle_context_menu,
       get_startup_path

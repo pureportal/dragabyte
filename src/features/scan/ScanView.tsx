@@ -3,9 +3,10 @@ import { open } from "@tauri-apps/plugin-dialog";
 import type { CSSProperties, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DetailsModal } from "../../components/DetailsModal";
-import { formatBytes } from "../../lib/utils";
+import { formatBytes, formatDuration } from "../../lib/utils";
 import { useUIStore } from "../../store";
 import {
+  cancelScan,
   checkContextMenu,
   getStartupPath,
   startScan,
@@ -23,6 +24,7 @@ import type {
   ScanSummary,
   ScanThrottleLevel,
 } from "./types";
+import UsageCharts from "./UsageCharts";
 
 const SIMPLE_FILTER_CATEGORIES = [
   {
@@ -99,6 +101,267 @@ const parseListInput = (value: string): string[] => {
     result.push(cleaned);
   }
   return result;
+};
+
+const SIZE_UNITS: Record<string, number> = {
+  b: 1,
+  kb: 1024,
+  mb: 1024 ** 2,
+  gb: 1024 ** 3,
+  tb: 1024 ** 4,
+};
+
+const parseSizeValue = (raw: string): number | null => {
+  const match = raw
+    .trim()
+    .toLowerCase()
+    .match(/^(\d+(?:\.\d+)?)(b|kb|mb|gb|tb)?$/);
+  if (!match) return null;
+  const value = Number(match[1]);
+  const unit = match[2] ?? "b";
+  const multiplier = SIZE_UNITS[unit];
+  if (!Number.isFinite(value) || !multiplier) return null;
+  return Math.round(value * multiplier);
+};
+
+const parseRegexToken = (value: string): RegExp | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("/") && trimmed.lastIndexOf("/") > 0) {
+    const lastSlash = trimmed.lastIndexOf("/");
+    const pattern = trimmed.slice(1, lastSlash);
+    const flags = trimmed.slice(lastSlash + 1) || "i";
+    try {
+      return new RegExp(pattern, flags);
+    } catch {
+      return null;
+    }
+  }
+  try {
+    return new RegExp(trimmed, "i");
+  } catch {
+    return null;
+  }
+};
+
+const getPathExtension = (path: string): string | null => {
+  const lastDot = path.lastIndexOf(".");
+  if (lastDot <= 0 || lastDot === path.length - 1) return null;
+  return path.slice(lastDot + 1).toLowerCase();
+};
+
+type SearchParams = {
+  terms: string[];
+  nameTerms: string[];
+  pathTerms: string[];
+  exts: Set<string>;
+  regex: RegExp | null;
+  minSize: number | null;
+  maxSize: number | null;
+};
+
+type FilterMatchers = {
+  includeExts: Set<string>;
+  excludeExts: Set<string>;
+  includeRegex: RegExp | null;
+  excludeRegex: RegExp | null;
+  includePaths: string[];
+  excludePaths: string[];
+};
+
+const applySizeToken = (params: SearchParams, token: string): boolean => {
+  const match = token.match(/^size(<=|>=|=|<|>)(.+)$/);
+  if (!match) return false;
+  const sizeValue = parseSizeValue(match[2]);
+  if (sizeValue === null) return true;
+  const operator = match[1];
+  if (operator === ">" || operator === ">=") params.minSize = sizeValue;
+  if (operator === "<" || operator === "<=") params.maxSize = sizeValue;
+  if (operator === "=") {
+    params.minSize = sizeValue;
+    params.maxSize = sizeValue;
+  }
+  return true;
+};
+
+const applyKeyToken = (params: SearchParams, token: string): boolean => {
+  const colonIndex = token.indexOf(":");
+  if (colonIndex <= 0) return false;
+  const key = token.slice(0, colonIndex);
+  const value = token.slice(colonIndex + 1);
+  if (key === "name") params.nameTerms.push(value);
+  else if (key === "path") params.pathTerms.push(value);
+  else if (key === "ext") {
+    const extensions = parseListInput(value);
+    for (let i = 0; i < extensions.length; i += 1) {
+      const ext = extensions[i];
+      if (ext) params.exts.add(ext);
+    }
+  } else if (key === "regex") {
+    const regex = parseRegexToken(value);
+    if (regex) params.regex = regex;
+  } else {
+    params.terms.push(token);
+  }
+  return true;
+};
+
+const parseSearchQuery = (query: string): SearchParams => {
+  const tokens = query.trim().split(/\s+/).filter(Boolean);
+  const params: SearchParams = {
+    terms: [],
+    nameTerms: [],
+    pathTerms: [],
+    exts: new Set<string>(),
+    regex: null,
+    minSize: null,
+    maxSize: null,
+  };
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i].toLowerCase();
+    if (applySizeToken(params, token)) continue;
+    if (applyKeyToken(params, token)) continue;
+    params.terms.push(token);
+  }
+  return params;
+};
+
+const matchesAllTokens = (value: string, tokens: string[]): boolean => {
+  for (let i = 0; i < tokens.length; i += 1) {
+    const token = tokens[i];
+    if (!token) continue;
+    if (!value.includes(token)) return false;
+  }
+  return true;
+};
+
+const matchesSearchNode = (node: ScanNode, params: SearchParams): boolean => {
+  const name = node.name.toLowerCase();
+  const path = node.path.toLowerCase();
+  if (!matchesAllTokens(name, params.nameTerms)) return false;
+  if (!matchesAllTokens(path, params.pathTerms)) return false;
+  for (let i = 0; i < params.terms.length; i += 1) {
+    const term = params.terms[i];
+    if (!name.includes(term) && !path.includes(term)) return false;
+  }
+  if (params.exts.size > 0) {
+    const ext = getPathExtension(path);
+    if (!ext || !params.exts.has(ext)) return false;
+  }
+  if (params.minSize !== null && node.sizeBytes < params.minSize) return false;
+  if (params.maxSize !== null && node.sizeBytes > params.maxSize) return false;
+  if (params.regex && !params.regex.test(path) && !params.regex.test(name)) {
+    return false;
+  }
+  return true;
+};
+
+const matchesSearchFile = (file: ScanFile, params: SearchParams): boolean => {
+  const name = file.name.toLowerCase();
+  const path = file.path.toLowerCase();
+  if (!matchesAllTokens(name, params.nameTerms)) return false;
+  if (!matchesAllTokens(path, params.pathTerms)) return false;
+  for (let i = 0; i < params.terms.length; i += 1) {
+    const term = params.terms[i];
+    if (!name.includes(term) && !path.includes(term)) return false;
+  }
+  if (params.exts.size > 0) {
+    const ext = getPathExtension(path);
+    if (!ext || !params.exts.has(ext)) return false;
+  }
+  if (params.minSize !== null && file.sizeBytes < params.minSize) return false;
+  if (params.maxSize !== null && file.sizeBytes > params.maxSize) return false;
+  if (params.regex && !params.regex.test(path) && !params.regex.test(name)) {
+    return false;
+  }
+  return true;
+};
+
+const buildFilterMatchers = (filters: ScanFilters): FilterMatchers => {
+  return {
+    includeExts: new Set(filters.includeExtensions),
+    excludeExts: new Set(filters.excludeExtensions),
+    includeRegex: parseRegexToken(filters.includeRegex ?? ""),
+    excludeRegex: parseRegexToken(filters.excludeRegex ?? ""),
+    includePaths: filters.includePaths,
+    excludePaths: filters.excludePaths,
+  };
+};
+
+const pathContainsAny = (path: string, values: string[]): boolean => {
+  for (let i = 0; i < values.length; i += 1) {
+    const value = values[i];
+    if (value && path.includes(value)) return true;
+  }
+  return false;
+};
+
+const matchesPathFilters = (
+  path: string,
+  includePaths: string[],
+  excludePaths: string[],
+): boolean => {
+  const normalized = path.toLowerCase();
+  if (includePaths.length > 0 && !pathContainsAny(normalized, includePaths)) {
+    return false;
+  }
+  if (excludePaths.length > 0 && pathContainsAny(normalized, excludePaths)) {
+    return false;
+  }
+  return true;
+};
+
+const matchesExtensionFilters = (
+  path: string,
+  includeExts: Set<string>,
+  excludeExts: Set<string>,
+): boolean => {
+  const ext = getPathExtension(path);
+  if (includeExts.size > 0 && (!ext || !includeExts.has(ext))) return false;
+  if (excludeExts.size > 0 && ext && excludeExts.has(ext)) return false;
+  return true;
+};
+
+const matchesRegexFilters = (
+  path: string,
+  name: string,
+  includeRegex: RegExp | null,
+  excludeRegex: RegExp | null,
+): boolean => {
+  if (includeRegex && !includeRegex.test(path) && !includeRegex.test(name)) {
+    return false;
+  }
+  if (excludeRegex && (excludeRegex.test(path) || excludeRegex.test(name))) {
+    return false;
+  }
+  return true;
+};
+
+const matchesFilterFile = (
+  file: ScanFile,
+  matchers: FilterMatchers,
+): boolean => {
+  const path = file.path.toLowerCase();
+  const name = file.name.toLowerCase();
+  if (
+    !matchesExtensionFilters(path, matchers.includeExts, matchers.excludeExts)
+  ) {
+    return false;
+  }
+  if (!matchesPathFilters(path, matchers.includePaths, matchers.excludePaths)) {
+    return false;
+  }
+  if (
+    !matchesRegexFilters(
+      path,
+      name,
+      matchers.includeRegex,
+      matchers.excludeRegex,
+    )
+  ) {
+    return false;
+  }
+  return true;
 };
 
 type ContextMenuState = {
@@ -245,26 +508,40 @@ const ScanView = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [priorityMode, setPriorityMode] =
-    useState<ScanPriorityMode>("balanced");
-  const [throttleLevel, setThrottleLevel] = useState<ScanThrottleLevel>("off");
-  const [filterMode, setFilterMode] = useState<FilterMode>("simple");
-  const [simpleFilterIds, setSimpleFilterIds] = useState<Set<SimpleFilterId>>(
-    () => new Set<SimpleFilterId>(),
-  );
-  const [includeExtensionsInput, setIncludeExtensionsInput] =
-    useState<string>("");
-  const [excludeExtensionsInput, setExcludeExtensionsInput] =
-    useState<string>("");
-  const [includePathsInput, setIncludePathsInput] = useState<string>("");
-  const [excludePathsInput, setExcludePathsInput] = useState<string>("");
-  const [includeRegexInput, setIncludeRegexInput] = useState<string>("");
-  const [excludeRegexInput, setExcludeRegexInput] = useState<string>("");
   const {
     isNavigationBarVisible,
     toggleNavigationBar,
     scanHistory,
     addScanHistory,
+    priorityMode,
+    throttleLevel,
+    filterMode,
+    simpleFilterIds,
+    includeExtensionsInput,
+    excludeExtensionsInput,
+    includeNamesInput,
+    excludeNamesInput,
+    minSizeInput,
+    maxSizeInput,
+    includePathsInput,
+    excludePathsInput,
+    includeRegexInput,
+    excludeRegexInput,
+    setPriorityMode,
+    setThrottleLevel,
+    setFilterMode,
+    setSimpleFilterIds,
+    setIncludeExtensionsInput,
+    setExcludeExtensionsInput,
+    setIncludeNamesInput,
+    setExcludeNamesInput,
+    setMinSizeInput,
+    setMaxSizeInput,
+    setIncludePathsInput,
+    setExcludePathsInput,
+    setIncludeRegexInput,
+    setExcludeRegexInput,
+    resetFilters,
   } = useUIStore();
   const unlistenRef = useRef<(() => void) | null>(null);
   const hasInitializedExpansionRef = useRef(false);
@@ -301,6 +578,18 @@ const ScanView = (): JSX.Element => {
     return summary ? buildTreeItems(summary.root, expandedPaths) : [];
   }, [expandedPaths, summary]);
 
+  const simpleFilterSet = useMemo<Set<SimpleFilterId>>(() => {
+    const next = new Set<SimpleFilterId>();
+    for (let i = 0; i < simpleFilterIds.length; i += 1) {
+      const value = simpleFilterIds[i];
+      const isValid = SIMPLE_FILTER_CATEGORIES.some(
+        (category) => category.id === value,
+      );
+      if (isValid) next.add(value as SimpleFilterId);
+    }
+    return next;
+  }, [simpleFilterIds]);
+
   const simpleExtensions = useMemo<string[]>(() => {
     if (filterMode !== "simple") {
       return [];
@@ -309,7 +598,7 @@ const ScanView = (): JSX.Element => {
     const seen = new Set<string>();
     for (let i = 0; i < SIMPLE_FILTER_CATEGORIES.length; i += 1) {
       const category = SIMPLE_FILTER_CATEGORIES[i];
-      if (!category || !simpleFilterIds.has(category.id)) continue;
+      if (!category || !simpleFilterSet.has(category.id)) continue;
       for (let j = 0; j < category.extensions.length; j += 1) {
         const ext = category.extensions[j];
         if (!ext || seen.has(ext)) continue;
@@ -318,13 +607,75 @@ const ScanView = (): JSX.Element => {
       }
     }
     return results;
-  }, [filterMode, simpleFilterIds]);
+  }, [filterMode, simpleFilterSet]);
+
+  const regexErrorMessage = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      new RegExp(trimmed);
+      return null;
+    } catch (err) {
+      return "Invalid regex pattern";
+    }
+  };
+
+  const includeRegexError = useMemo<string | null>(() => {
+    return regexErrorMessage(includeRegexInput);
+  }, [includeRegexInput]);
+
+  const excludeRegexError = useMemo<string | null>(() => {
+    return regexErrorMessage(excludeRegexInput);
+  }, [excludeRegexInput]);
+
+  const hasRegexError = includeRegexError || excludeRegexError;
+
+  const parseSizeInput = (
+    value: string,
+  ): { value: number | null; error: string | null } => {
+    const trimmed = value.trim();
+    if (!trimmed) return { value: null, error: null };
+    const parsed = parseSizeValue(trimmed);
+    if (parsed === null) {
+      return { value: null, error: "Use values like 10mb or 500kb" };
+    }
+    return { value: parsed, error: null };
+  };
+
+  const minSizeResult = useMemo(() => {
+    return parseSizeInput(minSizeInput);
+  }, [minSizeInput]);
+
+  const maxSizeResult = useMemo(() => {
+    return parseSizeInput(maxSizeInput);
+  }, [maxSizeInput]);
+
+  const sizeRangeError = useMemo<string | null>(() => {
+    if (minSizeResult.value === null || maxSizeResult.value === null) {
+      return null;
+    }
+    if (minSizeResult.value > maxSizeResult.value) {
+      return "Min size must be smaller than max size";
+    }
+    return null;
+  }, [maxSizeResult.value, minSizeResult.value]);
+
+  const hasFilterError = Boolean(
+    hasRegexError ||
+    minSizeResult.error ||
+    maxSizeResult.error ||
+    sizeRangeError,
+  );
 
   const scanFilters = useMemo<ScanFilters>(() => {
     if (filterMode === "simple") {
       return {
         includeExtensions: simpleExtensions,
         excludeExtensions: [],
+        includeNames: [],
+        excludeNames: [],
+        minSizeBytes: null,
+        maxSizeBytes: null,
         includeRegex: null,
         excludeRegex: null,
         includePaths: [],
@@ -334,6 +685,10 @@ const ScanView = (): JSX.Element => {
     return {
       includeExtensions: parseListInput(includeExtensionsInput),
       excludeExtensions: parseListInput(excludeExtensionsInput),
+      includeNames: parseListInput(includeNamesInput),
+      excludeNames: parseListInput(excludeNamesInput),
+      minSizeBytes: minSizeResult.value,
+      maxSizeBytes: maxSizeResult.value,
       includeRegex: includeRegexInput.trim() || null,
       excludeRegex: excludeRegexInput.trim() || null,
       includePaths: parseListInput(includePathsInput),
@@ -341,12 +696,16 @@ const ScanView = (): JSX.Element => {
     };
   }, [
     excludeExtensionsInput,
+    excludeNamesInput,
     excludePathsInput,
     excludeRegexInput,
     filterMode,
     includeExtensionsInput,
+    includeNamesInput,
     includePathsInput,
     includeRegexInput,
+    maxSizeResult.value,
+    minSizeResult.value,
     simpleExtensions,
   ]);
 
@@ -358,19 +717,29 @@ const ScanView = (): JSX.Element => {
     };
   }, [priorityMode, scanFilters, throttleLevel]);
 
-  const statusLabel = isScanning ? "Scanning" : summary ? "Ready" : "Idle";
-  const statusClasses = isScanning
-    ? "border-blue-500/40 bg-blue-500/10 text-blue-200"
-    : summary
-      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-      : "border-slate-700 bg-slate-900/70 text-slate-300";
-
   const activeNode = summary ? (selectedNode ?? summary.root) : null;
   const activeChildren = activeNode?.children ?? [];
 
+  const filterMatchers = useMemo<FilterMatchers>(() => {
+    return buildFilterMatchers(scanFilters);
+  }, [scanFilters]);
+
   const largestFiles = useMemo<ScanFile[]>(() => {
-    return summary?.largestFiles ?? [];
-  }, [summary]);
+    if (!summary) return [];
+    const files = summary.largestFiles ?? [];
+    if (files.length === 0) return [];
+    const trimmedQuery = searchQuery.trim();
+    const params = trimmedQuery ? parseSearchQuery(trimmedQuery) : null;
+    const results: ScanFile[] = [];
+    for (let i = 0; i < files.length; i += 1) {
+      const file = files[i];
+      if (!file) continue;
+      if (!matchesFilterFile(file, filterMatchers)) continue;
+      if (params && !matchesSearchFile(file, params)) continue;
+      results.push(file);
+    }
+    return results;
+  }, [filterMatchers, searchQuery, summary]);
 
   const largestFileMaxSize = useMemo<number>(() => {
     if (largestFiles.length === 0) {
@@ -395,13 +764,13 @@ const ScanView = (): JSX.Element => {
       return null;
     }
     const results: ScanNode[] = [];
-    const query = searchQuery.toLowerCase();
+    const params = parseSearchQuery(searchQuery);
     const stack: ScanNode[] = [summary.root];
     const limit = 1000;
     while (stack.length > 0 && results.length < limit) {
       const node = stack.pop();
       if (!node) continue;
-      if (node.name.toLowerCase().includes(query)) {
+      if (matchesSearchNode(node, params)) {
         results.push(node);
       }
       const children = node.children;
@@ -485,6 +854,11 @@ const ScanView = (): JSX.Element => {
     clearListeners();
   };
 
+  const cancelScanRun = (_message: string): void => {
+    setIsScanning(false);
+    clearListeners();
+  };
+
   const startScanWithFolder = async (folder: string): Promise<void> => {
     clearListeners();
     setSummary(null);
@@ -496,6 +870,7 @@ const ScanView = (): JSX.Element => {
         onProgress: applySummary,
         onComplete: finishScan,
         onError: failScan,
+        onCancel: cancelScanRun,
       });
     } catch (err) {
       failScan(toErrorMessage(err));
@@ -504,11 +879,41 @@ const ScanView = (): JSX.Element => {
 
   const handleScan = async (): Promise<void> => {
     setError(null);
+    if (hasFilterError) {
+      setError("Fix filter errors before starting a scan.");
+      return;
+    }
     const folder = await resolveFolderSelection();
     if (!folder) {
       return;
     }
     await startScanWithFolder(folder);
+  };
+
+  const toggleSimpleFilter = useCallback(
+    (id: SimpleFilterId): void => {
+      const next: string[] = [];
+      let exists = false;
+      for (let i = 0; i < simpleFilterIds.length; i += 1) {
+        const value = simpleFilterIds[i];
+        if (value === id) {
+          exists = true;
+          continue;
+        }
+        next.push(value);
+      }
+      if (!exists) next.push(id);
+      setSimpleFilterIds(next);
+    },
+    [setSimpleFilterIds, simpleFilterIds],
+  );
+
+  const handleCancelScan = async (): Promise<void> => {
+    try {
+      await cancelScan();
+    } catch (err) {
+      failScan(toErrorMessage(err));
+    }
   };
 
   const openScanWindow = useCallback((path: string): void => {
@@ -665,12 +1070,6 @@ const ScanView = (): JSX.Element => {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-xl font-semibold">Storage Scan</h2>
-              <span
-                className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${statusClasses}`}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
-                {statusLabel}
-              </span>
             </div>
             <p className="text-xs text-slate-400">
               Select a folder to analyze.
@@ -696,7 +1095,7 @@ const ScanView = (): JSX.Element => {
               type="text"
               value={searchQuery}
               onChange={(event): void => setSearchQuery(event.target.value)}
-              placeholder="Search..."
+              placeholder="Search... (name:, path:, ext:, size>)"
               className="h-8 w-40 lg:w-48 rounded-md border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all focus:w-64 shadow-inner"
             />
             {searchQuery ? (
@@ -735,6 +1134,15 @@ const ScanView = (): JSX.Element => {
           >
             {isScanning ? "Scanning..." : "Scan Folder"}
           </button>
+          {isScanning ? (
+            <button
+              type="button"
+              onClick={handleCancelScan}
+              className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
+            >
+              Cancel
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -770,6 +1178,13 @@ const ScanView = (): JSX.Element => {
               }`}
             >
               Advanced Filters
+            </button>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-md px-3 py-1.5 text-xs font-semibold transition border border-slate-700 bg-slate-900/40 text-slate-400 hover:text-slate-200"
+            >
+              Clear Filters
             </button>
           </div>
         </div>
@@ -818,22 +1233,12 @@ const ScanView = (): JSX.Element => {
             {filterMode === "simple" ? (
               <div className="flex flex-wrap gap-2">
                 {SIMPLE_FILTER_CATEGORIES.map((category) => {
-                  const active = simpleFilterIds.has(category.id);
+                  const active = simpleFilterSet.has(category.id);
                   return (
                     <button
                       key={category.id}
                       type="button"
-                      onClick={(): void => {
-                        setSimpleFilterIds((previous) => {
-                          const next = new Set(previous);
-                          if (active) {
-                            next.delete(category.id);
-                          } else {
-                            next.add(category.id);
-                          }
-                          return next;
-                        });
-                      }}
+                      onClick={(): void => toggleSimpleFilter(category.id)}
                       className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                         active
                           ? "border-emerald-400/60 bg-emerald-500/15 text-emerald-200"
@@ -844,7 +1249,7 @@ const ScanView = (): JSX.Element => {
                     </button>
                   );
                 })}
-                {simpleFilterIds.size === 0 ? (
+                {simpleFilterSet.size === 0 ? (
                   <span className="text-xs text-slate-500">
                     No filters selected. All file types will be scanned.
                   </span>
@@ -875,6 +1280,69 @@ const ScanView = (): JSX.Element => {
                     placeholder="tmp, cache"
                     className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
                   />
+                </label>
+                <label className="text-xs text-slate-400">
+                  Include names (contains)
+                  <input
+                    type="text"
+                    value={includeNamesInput}
+                    onChange={(event): void =>
+                      setIncludeNamesInput(event.target.value)
+                    }
+                    placeholder="report, backup"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  />
+                </label>
+                <label className="text-xs text-slate-400">
+                  Exclude names (contains)
+                  <input
+                    type="text"
+                    value={excludeNamesInput}
+                    onChange={(event): void =>
+                      setExcludeNamesInput(event.target.value)
+                    }
+                    placeholder="node_modules, cache"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  />
+                </label>
+                <label className="text-xs text-slate-400">
+                  Min size
+                  <input
+                    type="text"
+                    value={minSizeInput}
+                    onChange={(event): void =>
+                      setMinSizeInput(event.target.value)
+                    }
+                    placeholder="10mb"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  />
+                  {minSizeResult.error ? (
+                    <span className="text-[10px] text-amber-400">
+                      {minSizeResult.error}
+                    </span>
+                  ) : null}
+                </label>
+                <label className="text-xs text-slate-400">
+                  Max size
+                  <input
+                    type="text"
+                    value={maxSizeInput}
+                    onChange={(event): void =>
+                      setMaxSizeInput(event.target.value)
+                    }
+                    placeholder="2gb"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  />
+                  {maxSizeResult.error ? (
+                    <span className="text-[10px] text-amber-400">
+                      {maxSizeResult.error}
+                    </span>
+                  ) : null}
+                  {sizeRangeError ? (
+                    <span className="text-[10px] text-amber-400">
+                      {sizeRangeError}
+                    </span>
+                  ) : null}
                 </label>
                 <label className="text-xs text-slate-400">
                   Include paths (contains)
@@ -911,6 +1379,11 @@ const ScanView = (): JSX.Element => {
                     placeholder="\\.(png|jpg)$"
                     className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
                   />
+                  {includeRegexError ? (
+                    <span className="text-[10px] text-amber-400">
+                      {includeRegexError}
+                    </span>
+                  ) : null}
                 </label>
                 <label className="text-xs text-slate-400">
                   Exclude regex
@@ -923,6 +1396,11 @@ const ScanView = (): JSX.Element => {
                     placeholder="/\\.git/"
                     className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
                   />
+                  {excludeRegexError ? (
+                    <span className="text-[10px] text-amber-400">
+                      {excludeRegexError}
+                    </span>
+                  ) : null}
                 </label>
               </div>
             )}
@@ -1020,7 +1498,7 @@ const ScanView = (): JSX.Element => {
 
             <div
               ref={setContainerRef}
-              className="flex-1 overflow-auto px-2 py-2 min-h-0"
+              className="flex-1 overflow-auto py-2 min-h-0"
             >
               {searchQuery && searchResults ? (
                 <div className="flex flex-col">
@@ -1168,12 +1646,14 @@ const ScanView = (): JSX.Element => {
                       Duration
                     </p>
                     <p className="text-2xl font-light text-slate-200 tabular-nums">
-                      {(summary.durationMs / 1000).toFixed(2)}s
+                      {formatDuration(summary.durationMs)}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
+
+            <UsageCharts node={activeNode} />
 
             <div className="shrink-0 rounded-xl border border-slate-800/80 bg-slate-900/55 shadow-sm overflow-hidden flex flex-col max-h-[260px]">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
@@ -1198,7 +1678,7 @@ const ScanView = (): JSX.Element => {
                       onClick={(): void =>
                         setSelectedPath(parentPath ?? summary.root.path)
                       }
-                      className={`w-full text-left px-4 py-3 text-[13px] leading-5 transition ${
+                      className={`w-full text-left text-[13px] leading-5 transition ${
                         isSelected
                           ? "bg-blue-500/15 text-blue-100"
                           : "text-slate-200 hover:bg-slate-800/60"
@@ -1206,7 +1686,7 @@ const ScanView = (): JSX.Element => {
                       style={rowStyle}
                       title={file.path}
                     >
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center justify-between gap-4 px-4 py-3">
                         <div className="min-w-0">
                           <div className="truncate font-semibold text-slate-100">
                             {file.name}

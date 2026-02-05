@@ -3,4 +3,4 @@
 [[permission]]
 identifier = "scan"
 description = "Allow folder scanning commands"
-commands.allow = ["scan_path"]
+commands.allow = ["scan_path", "cancel_scan"]

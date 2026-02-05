@@ -6,6 +6,7 @@ interface ScanHandlers {
   onProgress: (summary: ScanSummary) => void;
   onComplete: (summary: ScanSummary) => void;
   onError: (message: string) => void;
+  onCancel: (message: string) => void;
 }
 
 export const startScan = async (
@@ -13,8 +14,8 @@ export const startScan = async (
   options: ScanOptions,
   handlers: ScanHandlers,
 ): Promise<() => void> => {
-  const [unlistenProgress, unlistenComplete, unlistenError] = await Promise.all(
-    [
+  const [unlistenProgress, unlistenComplete, unlistenError, unlistenCancelled] =
+    await Promise.all([
       listen<ScanSummary>("scan-progress", (event) => {
         handlers.onProgress(event.payload);
       }),
@@ -24,8 +25,10 @@ export const startScan = async (
       listen<string>("scan-error", (event) => {
         handlers.onError(event.payload);
       }),
-    ],
-  );
+      listen<string>("scan-cancelled", (event) => {
+        handlers.onCancel(event.payload);
+      }),
+    ]);
 
   await invoke<void>("scan_path", { path, options });
 
@@ -33,7 +36,12 @@ export const startScan = async (
     unlistenProgress();
     unlistenComplete();
     unlistenError();
+    unlistenCancelled();
   };
+};
+
+export const cancelScan = async (): Promise<void> => {
+  return invoke<void>("cancel_scan");
 };
 
 export const checkContextMenu = async (): Promise<boolean> => {

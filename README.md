@@ -28,16 +28,34 @@ npm run tauri:dev
 npm run tauri:build
 ```
 
-## Core Features (Planned)
+## Feature Status
 
-### Storage Analysis
+### Finished
 
-- Tree-style explorer with detailed folder breakdowns.
+- Local folder scanning with live progress updates.
+- Tree-style explorer with expandable folder breakdowns.
 - Treemap, pie, and bar visualizations for space usage.
-- Top files and largest folders views for quick triage.
+- Largest files list (top 10).
+- Per-item details modal.
+- Scan history shortcuts.
+- Scan performance controls (priority + throttling).
+- Optional Windows Explorer context menu integration.
+- Open scans in a dedicated window.
+- Advanced filters (extensions, name contains, size range, path contains, regex).
+- Advanced search tokens (name, path, extension, size, regex).
+
+### Partially Implemented
+
+- Search and filters (age/metadata filters pending).
+
+### Planned
+
+#### Storage Analysis
+
+- Top folders view for quick triage.
 - Snapshot comparison to track growth over time.
 
-### Scan Targets
+#### Scan Targets
 
 - Local drives and external/USB media.
 - Network shares (SMB/CIFS).
@@ -46,22 +64,21 @@ npm run tauri:build
 - Drive images (VHD, VHDX, ISO).
 - Mobile devices via MTP/WebDAV.
 
-### Search & Cleanup
+#### Search & Cleanup
 
 - Advanced file search by size, age, type, and metadata.
-- Regex and pattern-based filtering.
 - Duplicate file and folder detection.
 - ZIP archive searching.
 - Bulk actions: move, delete, archive, rename, copy.
 
-### Reporting & Automation
+#### Reporting & Automation
 
 - Export reports to PDF, Excel, CSV, and HTML.
 - Email-ready report generation.
 - Command-line and task scheduler integration.
 - Reusable search templates and scheduled scans.
 
-### File System Insights
+#### File System Insights
 
 - NTFS details (compression, permissions, hardlink awareness).
 - Long-path support.
