@@ -4,6 +4,7 @@ export interface ScanNode {
   sizeBytes: number;
   fileCount: number;
   dirCount: number;
+  files: ScanFile[];
   children: ScanNode[];
 }
 
@@ -23,8 +24,15 @@ export interface ScanSummary {
 }
 
 export interface FlatNode {
-  node: ScanNode;
   depth: number;
+  kind: "folder" | "file";
+  path: string;
+  name: string;
+  sizeBytes: number;
+  hasChildren: boolean;
+  node?: ScanNode;
+  file?: ScanFile;
+  parentPath?: string;
 }
 
 export type ScanPriorityMode = "performance" | "balanced" | "low";

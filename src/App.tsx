@@ -1,14 +1,32 @@
 import { Outlet } from "@tanstack/react-router";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
+import { useUIStore } from "./store";
+
+const hasMultipleWindows = async (): Promise<boolean> => {
+  const windows = await getAllWindows();
+  return windows.length > 1;
+};
+
+const getIndicatorWrapperClasses = (
+  status: "idle" | "scanning" | "complete",
+): string => {
+  if (status === "complete") {
+    return "bg-emerald-400/90 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.6)]";
+  }
+  if (status === "scanning") {
+    return "bg-slate-950/70 shadow-[0_0_10px_rgba(59,130,246,0.45)]";
+  }
+  return "bg-slate-500/70 shadow-[0_0_8px_rgba(148,163,184,0.35)]";
+};
+
+const getIndicatorScanClasses = (): string => {
+  return "absolute inset-y-0 left-[-100%] w-[300%] bg-[linear-gradient(90deg,#22d3ee,#a855f7,#34d399,#22d3ee)] animate-[indicator-scan_2.2s_linear_infinite] will-change-transform";
+};
 
 const App = (): JSX.Element => {
   const [isMaximized, setIsMaximized] = useState(false);
-
-  const hasMultipleWindows = async (): Promise<boolean> => {
-    const windows = await getAllWindows();
-    return windows.length > 1;
-  };
+  const scanStatus = useUIStore((state) => state.scanStatus);
 
   useEffect((): (() => void) => {
     const handleContextMenu = (event: MouseEvent): void => {
@@ -72,6 +90,18 @@ const App = (): JSX.Element => {
     <div className="relative flex h-screen flex-col overflow-hidden bg-slate-950 text-slate-100 border border-slate-800/50 rounded-lg">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:64px_64px]" />
+
+      <div
+        className={`relative h-1 w-full shrink-0 overflow-hidden ${getIndicatorWrapperClasses(
+          scanStatus,
+        )}`}
+        data-tauri-drag-region
+        aria-hidden="true"
+      >
+        {scanStatus === "scanning" ? (
+          <span className={getIndicatorScanClasses()} />
+        ) : null}
+      </div>
 
       {/* Title Bar */}
       <div

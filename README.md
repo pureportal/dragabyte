@@ -50,20 +50,6 @@ npm run tauri:build
 
 ### Planned
 
-#### Storage Analysis
-
-- Top folders view for quick triage.
-- Snapshot comparison to track growth over time.
-
-#### Scan Targets
-
-- Local drives and external/USB media.
-- Network shares (SMB/CIFS).
-- Remote locations via SSH.
-- Cloud and collaboration platforms (SharePoint, S3-compatible storage, WebDAV).
-- Drive images (VHD, VHDX, ISO).
-- Mobile devices via MTP/WebDAV.
-
 #### Search & Cleanup
 
 - Advanced file search by size, age, type, and metadata.

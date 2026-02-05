@@ -1,18 +1,16 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { memo, useMemo } from "react";
-import { formatBytes } from "../../lib/utils";
-import type { FlatNode, ScanNode } from "./types";
+import { formatBytes, truncateMiddle } from "../../lib/utils";
+import type { FlatNode, ScanFile, ScanNode } from "./types";
 
 const getDepthTone = (depth: number): string => {
   return depth % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/60";
 };
 
 const getTreeRowClassName = (isActive: boolean, depthTone: string): string => {
-  // Use flex and full width so the row background spans the entire list.
   if (isActive) {
     return "flex items-center min-w-full w-full gap-3 px-2 text-left text-sm transition bg-blue-500/15 text-blue-100 border border-blue-500/30 rounded-md";
   }
-  // Remove hover from sticky part? No.
   return `flex items-center min-w-full w-full gap-3 px-2 text-left text-sm transition ${depthTone} text-slate-200 hover:bg-slate-800/80 hover:border-slate-800/70 border border-transparent rounded-md`;
 };
 
@@ -26,7 +24,7 @@ const getMaxSizeByDepth = (items: FlatNode[]): Map<number, number> => {
   for (let i = 0; i < items.length; i += 1) {
     const item = items[i];
     if (!item) continue;
-    const size = item.node.sizeBytes ?? 0;
+    const size = item.sizeBytes ?? 0;
     const current = map.get(item.depth) ?? 0;
     if (size > current) {
       map.set(item.depth, size);
@@ -61,10 +59,17 @@ interface ScanTreeProps {
   treeItems: FlatNode[];
   expandedPaths: Set<string>;
   selectedPath: string | null;
+  selectedFilePath: string | null;
   onToggleExpand: (path: string, currentlyExpanded: boolean) => void;
-  onSelect: (path: string) => void;
+  onSelectFolder: (path: string) => void;
+  onSelectFile: (path: string, parentPath: string) => void;
   onDouble: (node: ScanNode) => void;
+  onOpenFile: (path: string | null) => void;
   onContextMenu?: (event: MouseEvent<HTMLDivElement>, node: ScanNode) => void;
+  onContextMenuFile?: (
+    event: MouseEvent<HTMLDivElement>,
+    file: ScanFile,
+  ) => void;
 }
 
 const ScanTree = memo(
@@ -72,10 +77,14 @@ const ScanTree = memo(
     treeItems,
     expandedPaths,
     selectedPath,
+    selectedFilePath,
     onToggleExpand,
-    onSelect,
+    onSelectFolder,
+    onSelectFile,
     onDouble,
+    onOpenFile,
     onContextMenu,
+    onContextMenuFile,
   }: ScanTreeProps) => {
     const maxSizeByDepth = useMemo(() => {
       return getMaxSizeByDepth(treeItems);
@@ -84,10 +93,14 @@ const ScanTree = memo(
     return (
       <>
         {treeItems.map((item) => {
-          const isExpanded = expandedPaths.has(item.node.path);
-          const hasChildren = item.node.children.length > 0;
+          const isFolder = item.kind === "folder";
+          const isExpanded = isFolder && expandedPaths.has(item.path);
+          const hasChildren = isFolder && item.hasChildren;
+          const isActive = isFolder
+            ? item.path === selectedPath
+            : item.path === selectedFilePath;
           const fillPercent = getRowFillPercent(
-            item.node.sizeBytes,
+            item.sizeBytes,
             item.depth,
             maxSizeByDepth,
           );
@@ -96,60 +109,83 @@ const ScanTree = memo(
             ...getRowFillStyle(fillPercent),
           };
           const rowClass = getTreeRowClassName(
-            item.node.path === selectedPath,
+            isActive,
             getDepthTone(item.depth),
           );
 
+          const displayName = truncateMiddle(item.name ?? item.path ?? "", 44);
+
           return (
             <div
-              key={item.node.path}
+              key={item.path}
               className={rowClass}
               style={depthStyle}
-              onClick={() => onSelect(item.node.path)}
-              onContextMenu={(event) => onContextMenu?.(event, item.node)}
+              onClick={() => {
+                if (isFolder) {
+                  onSelectFolder(item.path);
+                  return;
+                }
+                if (item.parentPath) {
+                  onSelectFile(item.path, item.parentPath);
+                }
+              }}
+              onContextMenu={(event) => {
+                if (isFolder && item.node) {
+                  onContextMenu?.(event, item.node);
+                  return;
+                }
+                if (!isFolder && item.file && onContextMenuFile) {
+                  onContextMenuFile(event, item.file);
+                }
+              }}
               onDoubleClick={(event) => {
                 event.stopPropagation();
-                onDouble(item.node);
+                if (isFolder && item.node) {
+                  onDouble(item.node);
+                  return;
+                }
+                onOpenFile(item.path ?? null);
               }}
               role="button"
               tabIndex={0}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  onSelect(item.node.path);
+                  if (isFolder) {
+                    onSelectFolder(item.path);
+                    return;
+                  }
+                  if (item.parentPath) {
+                    onSelectFile(item.path, item.parentPath);
+                  }
                 }
               }}
             >
-              <div className="flex flex-none items-center gap-2 py-1.5 pr-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2">
                 <button
                   type="button"
                   onClick={(event) => {
                     event.stopPropagation();
                     if (!hasChildren) return;
-                    onToggleExpand(item.node.path, isExpanded);
+                    onToggleExpand(item.path, isExpanded);
                   }}
                   className={getExpandButtonClassName(hasChildren)}
                   aria-label={isExpanded ? "Collapse" : "Expand"}
                 >
                   {isExpanded ? "▾" : "▸"}
                 </button>
-                {/* Name - allow it to be wide. whitespace-nowrap ensures it pushes width. */}
-                <span className="whitespace-nowrap">
-                  {item.node.name || item.node.path}
+                {isFolder ? null : (
+                  <span className="text-[10px] text-slate-500">FILE</span>
+                )}
+                <span
+                  className="min-w-0 flex-1 truncate whitespace-nowrap"
+                  title={item.path}
+                >
+                  {displayName}
                 </span>
               </div>
-
-              {/* Sticky Usage Column */}
-              {/* Using ml-auto to push it to the right if there is space, but sticky right-0 keeps it visible on scroll */}
-              {/* Need a background to cover scrolled text. Inherit might work if parent is opaque.
-                Parent has a bg color (slate-900/40 etc).
-                If we scroll, text goes behind this div.
-                We need a solid bg for this cell that matches the row's appearance.
-                Since row appearance is dynamic (hover, select), this is tricky.
-                Simple fix: use a solid gradient/color for this cell, or just bg-slate-900 and hope it blends reasonably.
-            */}
-              <span className="sticky right-0 ml-auto flex-none py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-sm border-l border-white/5">
-                {formatBytes(item.node.sizeBytes)}
+              <span className="sticky right-0 ml-auto flex-none w-24 py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-sm border-l border-white/5">
+                {formatBytes(item.sizeBytes)}
               </span>
             </div>
           );

@@ -3,12 +3,14 @@ import { open } from "@tauri-apps/plugin-dialog";
 import type { CSSProperties, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DetailsModal } from "../../components/DetailsModal";
-import { formatBytes, formatDuration } from "../../lib/utils";
+import { formatBytes, formatDuration, truncateMiddle } from "../../lib/utils";
 import { useUIStore } from "../../store";
 import {
   cancelScan,
   checkContextMenu,
   getStartupPath,
+  openPath,
+  showInExplorer,
   startScan,
   toggleContextMenu,
 } from "./api";
@@ -103,13 +105,16 @@ const parseListInput = (value: string): string[] => {
   return result;
 };
 
-const SIZE_UNITS: Record<string, number> = {
+const SIZE_UNITS = {
   b: 1,
   kb: 1024,
   mb: 1024 ** 2,
   gb: 1024 ** 3,
   tb: 1024 ** 4,
-};
+} satisfies Record<string, number>;
+const SIMPLE_FILTER_ID_SET = new Set<SimpleFilterId>(
+  SIMPLE_FILTER_CATEGORIES.map((category) => category.id),
+);
 
 const parseSizeValue = (raw: string): number | null => {
   const match = raw
@@ -118,7 +123,7 @@ const parseSizeValue = (raw: string): number | null => {
     .match(/^(\d+(?:\.\d+)?)(b|kb|mb|gb|tb)?$/);
   if (!match) return null;
   const value = Number(match[1]);
-  const unit = match[2] ?? "b";
+  const unit = (match[2] ?? "b") as keyof typeof SIZE_UNITS;
   const multiplier = SIZE_UNITS[unit];
   if (!Number.isFinite(value) || !multiplier) return null;
   return Math.round(value * multiplier);
@@ -160,6 +165,18 @@ type SearchParams = {
   maxSize: number | null;
 };
 
+type SearchEntry = {
+  name: string;
+  path: string;
+  sizeBytes: number;
+};
+
+type SelectionEntry = {
+  kind: "folder" | "file";
+  path: string;
+  parentPath?: string | null;
+};
+
 type FilterMatchers = {
   includeExts: Set<string>;
   excludeExts: Set<string>;
@@ -172,7 +189,9 @@ type FilterMatchers = {
 const applySizeToken = (params: SearchParams, token: string): boolean => {
   const match = token.match(/^size(<=|>=|=|<|>)(.+)$/);
   if (!match) return false;
-  const sizeValue = parseSizeValue(match[2]);
+  const sizeToken = match[2];
+  if (!sizeToken) return true;
+  const sizeValue = parseSizeValue(sizeToken);
   if (sizeValue === null) return true;
   const operator = match[1];
   if (operator === ">" || operator === ">=") params.minSize = sizeValue;
@@ -218,7 +237,9 @@ const parseSearchQuery = (query: string): SearchParams => {
     maxSize: null,
   };
   for (let i = 0; i < tokens.length; i += 1) {
-    const token = tokens[i].toLowerCase();
+    const rawToken = tokens[i];
+    if (!rawToken) continue;
+    const token = rawToken.toLowerCase();
     if (applySizeToken(params, token)) continue;
     if (applyKeyToken(params, token)) continue;
     params.terms.push(token);
@@ -235,46 +256,57 @@ const matchesAllTokens = (value: string, tokens: string[]): boolean => {
   return true;
 };
 
-const matchesSearchNode = (node: ScanNode, params: SearchParams): boolean => {
-  const name = node.name.toLowerCase();
-  const path = node.path.toLowerCase();
-  if (!matchesAllTokens(name, params.nameTerms)) return false;
-  if (!matchesAllTokens(path, params.pathTerms)) return false;
-  for (let i = 0; i < params.terms.length; i += 1) {
-    const term = params.terms[i];
+const matchesSearchTerms = (
+  name: string,
+  path: string,
+  terms: string[],
+): boolean => {
+  for (let i = 0; i < terms.length; i += 1) {
+    const term = terms[i];
+    if (!term) continue;
     if (!name.includes(term) && !path.includes(term)) return false;
-  }
-  if (params.exts.size > 0) {
-    const ext = getPathExtension(path);
-    if (!ext || !params.exts.has(ext)) return false;
-  }
-  if (params.minSize !== null && node.sizeBytes < params.minSize) return false;
-  if (params.maxSize !== null && node.sizeBytes > params.maxSize) return false;
-  if (params.regex && !params.regex.test(path) && !params.regex.test(name)) {
-    return false;
   }
   return true;
 };
 
-const matchesSearchFile = (file: ScanFile, params: SearchParams): boolean => {
-  const name = file.name.toLowerCase();
-  const path = file.path.toLowerCase();
+const matchesSizeConstraints = (
+  sizeBytes: number,
+  minSize: number | null,
+  maxSize: number | null,
+): boolean => {
+  if (minSize !== null && sizeBytes < minSize) return false;
+  if (maxSize !== null && sizeBytes > maxSize) return false;
+  return true;
+};
+
+const matchesRegexConstraint = (
+  name: string,
+  path: string,
+  regex: RegExp | null,
+): boolean => {
+  if (regex && !regex.test(path) && !regex.test(name)) return false;
+  return true;
+};
+
+const matchesSearchEntry = (
+  entry: SearchEntry,
+  params: SearchParams,
+): boolean => {
+  const name = entry.name.toLowerCase();
+  const path = entry.path.toLowerCase();
   if (!matchesAllTokens(name, params.nameTerms)) return false;
   if (!matchesAllTokens(path, params.pathTerms)) return false;
-  for (let i = 0; i < params.terms.length; i += 1) {
-    const term = params.terms[i];
-    if (!name.includes(term) && !path.includes(term)) return false;
-  }
+  if (!matchesSearchTerms(name, path, params.terms)) return false;
   if (params.exts.size > 0) {
     const ext = getPathExtension(path);
     if (!ext || !params.exts.has(ext)) return false;
   }
-  if (params.minSize !== null && file.sizeBytes < params.minSize) return false;
-  if (params.maxSize !== null && file.sizeBytes > params.maxSize) return false;
-  if (params.regex && !params.regex.test(path) && !params.regex.test(name)) {
+  if (
+    !matchesSizeConstraints(entry.sizeBytes, params.minSize, params.maxSize)
+  ) {
     return false;
   }
-  return true;
+  return matchesRegexConstraint(name, path, params.regex);
 };
 
 const buildFilterMatchers = (filters: ScanFilters): FilterMatchers => {
@@ -367,7 +399,37 @@ const matchesFilterFile = (
 type ContextMenuState = {
   x: number;
   y: number;
-  node: ScanNode;
+  kind: "folder" | "file";
+  node?: ScanNode;
+  file?: ScanFile;
+};
+
+type MenuPosition = {
+  x: number;
+  y: number;
+};
+
+const MENU_WIDTH = 220;
+const MENU_HEIGHT = 152;
+
+const getMenuPosition = (
+  event: MouseEvent,
+  menuWidth: number,
+  menuHeight: number,
+): MenuPosition => {
+  const maxX = window.innerWidth - menuWidth - 8;
+  const maxY = window.innerHeight - menuHeight - 8;
+  return {
+    x: Math.max(8, Math.min(event.clientX, maxX)),
+    y: Math.max(8, Math.min(event.clientY, maxY)),
+  };
+};
+
+const getMenuTitle = (menu: ContextMenuState): string => {
+  if (menu.kind === "file") {
+    return menu.file?.name ?? menu.file?.path ?? "File";
+  }
+  return menu.node?.name ?? menu.node?.path ?? "Folder";
 };
 
 const getUsageFillPercent = (size: number, maxSize: number): number => {
@@ -405,50 +467,128 @@ const resolveFolderSelection = async (): Promise<string | null> => {
   return null;
 };
 
-const findNodeByPath = (
-  root: ScanNode,
-  path: string | null,
-): ScanNode | null => {
-  if (!path) {
-    return null;
-  }
+const buildNodeMap = (root: ScanNode): Map<string, ScanNode> => {
+  const map = new Map<string, ScanNode>();
   const stack: ScanNode[] = [root];
   while (stack.length > 0) {
     const current = stack.pop();
-    if (!current) {
-      continue;
-    }
-    if (current.path === path) {
-      return current;
-    }
+    if (!current) continue;
+    map.set(current.path, current);
     const children = current.children;
-    for (let i = children.length - 1; i >= 0; i -= 1) {
+    for (let i = 0; i < children.length; i += 1) {
       const child = children[i];
-      if (child) {
-        stack.push(child);
-      }
+      if (child) stack.push(child);
     }
   }
-  return null;
+  return map;
 };
 
-const buildTreeItems = (root: ScanNode, expanded: Set<string>): FlatNode[] => {
+const isEmptyFolder = (node: ScanNode): boolean => {
+  return node.children.length === 0 && node.files.length === 0;
+};
+
+const sortFilesBySize = (files: ScanFile[]): ScanFile[] => {
+  const sorted = [...files];
+  sorted.sort((a, b) => b.sizeBytes - a.sizeBytes);
+  return sorted;
+};
+
+const updateLargestFiles = (
+  largest: ScanFile[],
+  file: ScanFile,
+  limit: number,
+): void => {
+  if (file.sizeBytes <= 0) return;
+  if (largest.length < limit) {
+    largest.push(file);
+    largest.sort((a, b) => b.sizeBytes - a.sizeBytes);
+    return;
+  }
+  const smallest = largest[largest.length - 1]?.sizeBytes ?? 0;
+  if (file.sizeBytes <= smallest) return;
+  largest.push(file);
+  largest.sort((a, b) => b.sizeBytes - a.sizeBytes);
+  largest.length = limit;
+};
+
+const getLargestFilesForNode = (
+  node: ScanNode,
+  limit: number,
+  shouldInclude?: (file: ScanFile) => boolean,
+): ScanFile[] => {
+  const largest: ScanFile[] = [];
+  const stack: ScanNode[] = [node];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+    for (let i = 0; i < current.files.length; i += 1) {
+      const file = current.files[i];
+      if (!file || (shouldInclude && !shouldInclude(file))) continue;
+      updateLargestFiles(largest, file, limit);
+    }
+    for (let i = 0; i < current.children.length; i += 1) {
+      const child = current.children[i];
+      if (child) stack.push(child);
+    }
+  }
+  return largest;
+};
+
+const buildTreeItems = (
+  root: ScanNode,
+  expanded: Set<string>,
+  showFiles: boolean,
+  hideEmptyFolders: boolean,
+): FlatNode[] => {
   const result: FlatNode[] = [];
-  const stack: FlatNode[] = [{ node: root, depth: 0 }];
+  const stack: { node: ScanNode; depth: number; isRoot: boolean }[] = [
+    { node: root, depth: 0, isRoot: true },
+  ];
   while (stack.length > 0) {
     const current = stack.pop();
     if (!current) {
       continue;
     }
-    result.push(current);
+    const shouldHide =
+      hideEmptyFolders && !current.isRoot && isEmptyFolder(current.node);
+    if (shouldHide) {
+      continue;
+    }
+    const hasChildren =
+      current.node.children.length > 0 ||
+      (showFiles && current.node.files.length > 0);
+    result.push({
+      depth: current.depth,
+      kind: "folder",
+      path: current.node.path,
+      name: current.node.name,
+      sizeBytes: current.node.sizeBytes,
+      hasChildren,
+      node: current.node,
+    });
     if (!expanded.has(current.node.path)) {
       continue;
     }
-    const children = current.node.children;
-    for (let i = children.length - 1; i >= 0; i -= 1) {
-      const child = children[i];
+    const childFolders = current.node.children;
+    const childFiles = showFiles ? sortFilesBySize(current.node.files) : [];
+    for (let i = childFiles.length - 1; i >= 0; i -= 1) {
+      const file = childFiles[i];
+      if (!file) continue;
+      result.push({
+        depth: current.depth + 1,
+        kind: "file",
+        path: file.path,
+        name: file.name,
+        sizeBytes: file.sizeBytes,
+        hasChildren: false,
+        file,
+        parentPath: current.node.path,
+      });
+    }
+    for (let i = childFolders.length - 1; i >= 0; i -= 1) {
+      const child = childFolders[i];
       if (child) {
-        stack.push({ node: child, depth: current.depth + 1 });
+        stack.push({ node: child, depth: current.depth + 1, isRoot: false });
       }
     }
   }
@@ -480,6 +620,42 @@ const getParentPath = (path: string): string | null => {
   return trimmed.slice(0, slashIndex);
 };
 
+const MAX_SELECTION_HISTORY = 50;
+
+const isSameSelection = (
+  left: SelectionEntry | undefined,
+  right: SelectionEntry,
+): boolean => {
+  if (!left) return false;
+  return (
+    left.kind === right.kind &&
+    left.path === right.path &&
+    (left.parentPath ?? null) === (right.parentPath ?? null)
+  );
+};
+
+const createNextSelectionHistory = (
+  items: SelectionEntry[],
+  currentIndex: number,
+  entry: SelectionEntry,
+  limit: number,
+): { history: SelectionEntry[]; index: number } => {
+  const safeIndex = Math.min(Math.max(currentIndex, -1), items.length - 1);
+  const head = items.slice(0, safeIndex + 1);
+  const last = head[head.length - 1];
+  if (isSameSelection(last, entry)) {
+    return { history: head, index: head.length - 1 };
+  }
+  const next = [...head, entry];
+  const trimmed = next.length > limit ? next.slice(next.length - limit) : next;
+  return { history: trimmed, index: trimmed.length - 1 };
+};
+
+const getSelectionLabel = (entry: SelectionEntry): string => {
+  const base = entry.path.split(/[/\\]/).pop() ?? entry.path;
+  return entry.kind === "file" ? `FILE • ${base}` : base;
+};
+
 const toErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
@@ -498,9 +674,12 @@ const ScanView = (): JSX.Element => {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isErrorExpanded, setIsErrorExpanded] = useState(false);
+  const [errorCopied, setErrorCopied] = useState(false);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
     () => new Set<string>(),
   );
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [detailsNode, setDetailsNode] = useState<ScanNode | null>(null);
   const [contextMenuEnabled, setContextMenuEnabled] = useState<boolean>(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -508,11 +687,19 @@ const ScanView = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [selectionHistory, setSelectionHistory] = useState<SelectionEntry[]>(
+    [],
+  );
+  const [selectionHistoryIndex, setSelectionHistoryIndex] =
+    useState<number>(-1);
   const {
     isNavigationBarVisible,
     toggleNavigationBar,
+    setScanStatus,
     scanHistory,
     addScanHistory,
+    showExplorerFiles,
+    hideEmptyExplorerFolders,
     priorityMode,
     throttleLevel,
     filterMode,
@@ -541,11 +728,19 @@ const ScanView = (): JSX.Element => {
     setExcludePathsInput,
     setIncludeRegexInput,
     setExcludeRegexInput,
+    setShowExplorerFiles,
+    setHideEmptyExplorerFolders,
     resetFilters,
   } = useUIStore();
   const unlistenRef = useRef<(() => void) | null>(null);
   const hasInitializedExpansionRef = useRef(false);
   const hasAutoScanRef = useRef(false);
+  const copyTimeoutRef = useRef<number | null>(null);
+  const historyIndexRef = useRef<number>(-1);
+
+  useEffect((): void => {
+    historyIndexRef.current = selectionHistoryIndex;
+  }, [selectionHistoryIndex]);
 
   useEffect((): (() => void) | void => {
     if (!containerRef) return undefined;
@@ -563,29 +758,106 @@ const ScanView = (): JSX.Element => {
     return (): void => observer.disconnect();
   }, [containerRef]);
 
-  // When summary is cleared (new scan), reset the initialization flag
   useEffect(() => {
     if (!summary) {
       hasInitializedExpansionRef.current = false;
     }
   }, [summary]);
 
+  const nodeMap = useMemo<Map<string, ScanNode> | null>(() => {
+    return summary ? buildNodeMap(summary.root) : null;
+  }, [summary]);
+
   const selectedNode = useMemo<ScanNode | null>(() => {
-    return summary ? findNodeByPath(summary.root, selectedPath) : null;
-  }, [summary, selectedPath]);
+    if (!summary || !nodeMap || !selectedPath) return null;
+    return nodeMap.get(selectedPath) ?? null;
+  }, [nodeMap, selectedPath, summary]);
 
   const treeItems = useMemo<FlatNode[]>(() => {
-    return summary ? buildTreeItems(summary.root, expandedPaths) : [];
-  }, [expandedPaths, summary]);
+    return summary
+      ? buildTreeItems(
+          summary.root,
+          expandedPaths,
+          showExplorerFiles,
+          hideEmptyExplorerFolders,
+        )
+      : [];
+  }, [expandedPaths, hideEmptyExplorerFolders, showExplorerFiles, summary]);
+
+  const addSelectionHistory = useCallback((entry: SelectionEntry): void => {
+    setSelectionHistory((previous) => {
+      const result = createNextSelectionHistory(
+        previous,
+        historyIndexRef.current,
+        entry,
+        MAX_SELECTION_HISTORY,
+      );
+      historyIndexRef.current = result.index;
+      setSelectionHistoryIndex(result.index);
+      return result.history;
+    });
+  }, []);
+
+  const applySelectionFromHistory = useCallback(
+    (entry: SelectionEntry): void => {
+      if (entry.kind === "file") {
+        setSelectedFilePath(entry.path);
+        setSelectedPath(entry.parentPath ?? null);
+        return;
+      }
+      setSelectedFilePath(null);
+      setSelectedPath(entry.path);
+    },
+    [],
+  );
+
+  const navigateToHistoryIndex = useCallback(
+    (nextIndex: number): void => {
+      if (nextIndex < 0 || nextIndex >= selectionHistory.length) return;
+      const entry = selectionHistory[nextIndex];
+      if (!entry) return;
+      setSelectionHistoryIndex(nextIndex);
+      historyIndexRef.current = nextIndex;
+      applySelectionFromHistory(entry);
+    },
+    [applySelectionFromHistory, selectionHistory],
+  );
+
+  const goBack = useCallback((): void => {
+    if (selectionHistoryIndex <= 0) return;
+    navigateToHistoryIndex(selectionHistoryIndex - 1);
+  }, [navigateToHistoryIndex, selectionHistoryIndex]);
+
+  const goForward = useCallback((): void => {
+    if (selectionHistoryIndex >= selectionHistory.length - 1) return;
+    navigateToHistoryIndex(selectionHistoryIndex + 1);
+  }, [navigateToHistoryIndex, selectionHistoryIndex, selectionHistory.length]);
+
+  const selectFolder = useCallback(
+    (path: string): void => {
+      setSelectedFilePath(null);
+      setSelectedPath(path);
+      addSelectionHistory({ kind: "folder", path });
+    },
+    [addSelectionHistory],
+  );
+
+  const selectFile = useCallback(
+    (path: string, parentPath: string): void => {
+      setSelectedFilePath(path);
+      setSelectedPath(parentPath);
+      addSelectionHistory({ kind: "file", path, parentPath });
+    },
+    [addSelectionHistory],
+  );
 
   const simpleFilterSet = useMemo<Set<SimpleFilterId>>(() => {
     const next = new Set<SimpleFilterId>();
     for (let i = 0; i < simpleFilterIds.length; i += 1) {
       const value = simpleFilterIds[i];
-      const isValid = SIMPLE_FILTER_CATEGORIES.some(
-        (category) => category.id === value,
-      );
-      if (isValid) next.add(value as SimpleFilterId);
+      if (value && SIMPLE_FILTER_ID_SET.has(value as SimpleFilterId)) {
+        next.add(value as SimpleFilterId);
+      }
     }
     return next;
   }, [simpleFilterIds]);
@@ -724,22 +996,20 @@ const ScanView = (): JSX.Element => {
     return buildFilterMatchers(scanFilters);
   }, [scanFilters]);
 
+  const searchParams = useMemo<SearchParams | null>(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return null;
+    return parseSearchQuery(trimmed);
+  }, [searchQuery]);
+
   const largestFiles = useMemo<ScanFile[]>(() => {
-    if (!summary) return [];
-    const files = summary.largestFiles ?? [];
-    if (files.length === 0) return [];
-    const trimmedQuery = searchQuery.trim();
-    const params = trimmedQuery ? parseSearchQuery(trimmedQuery) : null;
-    const results: ScanFile[] = [];
-    for (let i = 0; i < files.length; i += 1) {
-      const file = files[i];
-      if (!file) continue;
-      if (!matchesFilterFile(file, filterMatchers)) continue;
-      if (params && !matchesSearchFile(file, params)) continue;
-      results.push(file);
-    }
-    return results;
-  }, [filterMatchers, searchQuery, summary]);
+    if (!summary || !activeNode) return [];
+    return getLargestFilesForNode(activeNode, 10, (file): boolean => {
+      if (!matchesFilterFile(file, filterMatchers)) return false;
+      if (searchParams && !matchesSearchEntry(file, searchParams)) return false;
+      return true;
+    });
+  }, [activeNode, filterMatchers, searchParams, summary]);
 
   const largestFileMaxSize = useMemo<number>(() => {
     if (largestFiles.length === 0) {
@@ -759,18 +1029,23 @@ const ScanView = (): JSX.Element => {
     return maxSize;
   }, [activeChildren]);
 
+  const canGoBack = selectionHistoryIndex > 0;
+  const canGoForward =
+    selectionHistoryIndex >= 0 &&
+    selectionHistoryIndex < selectionHistory.length - 1;
+
   const searchResults = useMemo<ScanNode[] | null>(() => {
-    if (!summary || !searchQuery.trim()) {
+    if (!summary || !searchParams) {
       return null;
     }
     const results: ScanNode[] = [];
-    const params = parseSearchQuery(searchQuery);
+    const params = searchParams;
     const stack: ScanNode[] = [summary.root];
     const limit = 1000;
     while (stack.length > 0 && results.length < limit) {
       const node = stack.pop();
       if (!node) continue;
-      if (matchesSearchNode(node, params)) {
+      if (matchesSearchEntry(node, params)) {
         results.push(node);
       }
       const children = node.children;
@@ -782,7 +1057,27 @@ const ScanView = (): JSX.Element => {
       }
     }
     return results;
-  }, [summary, searchQuery]);
+  }, [summary, searchParams]);
+
+  const errorLines = useMemo<string[]>((): string[] => {
+    if (!error) return [];
+    return error
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }, [error]);
+
+  const errorSummary = useMemo<string>(() => {
+    if (!error) return "";
+    return errorLines[0] ?? error;
+  }, [error, errorLines]);
+
+  useEffect((): void => {
+    if (!summary || !selectedPath) return;
+    if (selectionHistory.length > 0) return;
+    if (selectedPath !== summary.root.path) return;
+    addSelectionHistory({ kind: "folder", path: selectedPath });
+  }, [addSelectionHistory, selectedPath, selectionHistory.length, summary]);
 
   const clearListeners = (): void => {
     unlistenRef.current?.();
@@ -834,7 +1129,6 @@ const ScanView = (): JSX.Element => {
     setSummary(payload);
     setSelectedPath((previous): string | null => previous ?? payload.root.path);
 
-    // Only set initial expanded paths once per scan to avoid overwriting user interactions
     if (!hasInitializedExpansionRef.current) {
       setExpandedPaths(buildInitialExpandedPaths(payload.root));
       hasInitializedExpansionRef.current = true;
@@ -842,20 +1136,24 @@ const ScanView = (): JSX.Element => {
   };
 
   const finishScan = (payload: ScanSummary): void => {
-    applySummary(payload); // Ensure final state is applied
+    applySummary(payload);
     addScanHistory(payload.root.path);
     setIsScanning(false);
+    setScanStatus("complete");
     clearListeners();
   };
 
   const failScan = (message: string): void => {
     setError(message);
+    setIsErrorExpanded(true);
     setIsScanning(false);
+    setScanStatus("idle");
     clearListeners();
   };
 
   const cancelScanRun = (_message: string): void => {
     setIsScanning(false);
+    setScanStatus("idle");
     clearListeners();
   };
 
@@ -863,8 +1161,15 @@ const ScanView = (): JSX.Element => {
     clearListeners();
     setSummary(null);
     setSelectedPath(null);
+    setSelectedFilePath(null);
     setIsScanning(true);
-    hasInitializedExpansionRef.current = false; // Reset for new scan
+    setScanStatus("scanning");
+    setErrorCopied(false);
+    setIsErrorExpanded(false);
+    setSelectionHistory([]);
+    setSelectionHistoryIndex(-1);
+    historyIndexRef.current = -1;
+    hasInitializedExpansionRef.current = false;
     try {
       unlistenRef.current = await startScan(folder, scanOptions, {
         onProgress: applySummary,
@@ -879,8 +1184,10 @@ const ScanView = (): JSX.Element => {
 
   const handleScan = async (): Promise<void> => {
     setError(null);
+    setIsErrorExpanded(false);
     if (hasFilterError) {
       setError("Fix filter errors before starting a scan.");
+      setIsErrorExpanded(false);
       return;
     }
     const folder = await resolveFolderSelection();
@@ -896,6 +1203,7 @@ const ScanView = (): JSX.Element => {
       let exists = false;
       for (let i = 0; i < simpleFilterIds.length; i += 1) {
         const value = simpleFilterIds[i];
+        if (!value) continue;
         if (value === id) {
           exists = true;
           continue;
@@ -913,6 +1221,53 @@ const ScanView = (): JSX.Element => {
       await cancelScan();
     } catch (err) {
       failScan(toErrorMessage(err));
+    }
+  };
+
+  const handleOpenPath = useCallback(
+    async (path: string | null): Promise<void> => {
+      if (!path) return;
+      try {
+        setError(null);
+        await openPath(path);
+      } catch (err) {
+        setError(toErrorMessage(err));
+      }
+    },
+    [setError],
+  );
+
+  const handleShowInExplorer = useCallback(
+    async (path: string | null): Promise<void> => {
+      if (!path) return;
+      try {
+        setError(null);
+        await showInExplorer(path);
+      } catch (err) {
+        setError(toErrorMessage(err));
+      }
+    },
+    [setError],
+  );
+
+  const clearError = (): void => {
+    setError(null);
+    setIsErrorExpanded(false);
+  };
+
+  const handleCopyError = async (): Promise<void> => {
+    if (!error) return;
+    try {
+      await navigator.clipboard.writeText(error);
+      setErrorCopied(true);
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setErrorCopied(false);
+      }, 2000);
+    } catch (copyError) {
+      console.error("Failed to copy error", copyError);
     }
   };
 
@@ -935,17 +1290,22 @@ const ScanView = (): JSX.Element => {
     }
   }, []);
 
-  const openContextMenu = useCallback(
+  const openFolderContextMenu = useCallback(
     (event: MouseEvent, node: ScanNode): void => {
       event.preventDefault();
       event.stopPropagation();
-      const menuWidth = 220;
-      const menuHeight = 96;
-      const maxX = window.innerWidth - menuWidth - 8;
-      const maxY = window.innerHeight - menuHeight - 8;
-      const x = Math.max(8, Math.min(event.clientX, maxX));
-      const y = Math.max(8, Math.min(event.clientY, maxY));
-      setContextMenu({ x, y, node });
+      const position = getMenuPosition(event, MENU_WIDTH, MENU_HEIGHT);
+      setContextMenu({ ...position, kind: "folder", node });
+    },
+    [],
+  );
+
+  const openFileContextMenu = useCallback(
+    (event: MouseEvent, file: ScanFile): void => {
+      event.preventDefault();
+      event.stopPropagation();
+      const position = getMenuPosition(event, MENU_WIDTH, MENU_HEIGHT);
+      setContextMenu({ ...position, kind: "file", file });
     },
     [],
   );
@@ -962,8 +1322,8 @@ const ScanView = (): JSX.Element => {
     return (
       <tr
         key={child.path}
-        onClick={(): void => setSelectedPath(child.path)}
-        onContextMenu={(event): void => openContextMenu(event, child)}
+        onClick={(): void => selectFolder(child.path)}
+        onContextMenu={(event): void => openFolderContextMenu(event, child)}
         style={rowStyle}
         className={`cursor-pointer border-t border-slate-800 text-slate-200 transition hover:bg-slate-800/60 ${isSelected ? "bg-blue-500/10" : ""}`}
       >
@@ -978,6 +1338,13 @@ const ScanView = (): JSX.Element => {
   useEffect((): (() => void) => {
     return (): void => {
       clearListeners();
+    };
+  }, []);
+  useEffect((): (() => void) => {
+    return (): void => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
     };
   }, []);
   useEffect(() => {
@@ -1009,19 +1376,39 @@ const ScanView = (): JSX.Element => {
         setContextMenu(null);
       }
     };
+    const scrollOptions: AddEventListenerOptions = {
+      capture: true,
+      passive: true,
+    };
     window.addEventListener("resize", handleDismiss);
     window.addEventListener("blur", handleDismiss);
-    window.addEventListener("scroll", handleDismiss, true);
+    window.addEventListener("scroll", handleDismiss, scrollOptions);
     document.addEventListener("click", handleDismiss);
     document.addEventListener("keydown", handleKeyDown);
     return (): void => {
       window.removeEventListener("resize", handleDismiss);
       window.removeEventListener("blur", handleDismiss);
-      window.removeEventListener("scroll", handleDismiss, true);
+      window.removeEventListener("scroll", handleDismiss, scrollOptions);
       document.removeEventListener("click", handleDismiss);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [contextMenu]);
+
+  useEffect((): (() => void) => {
+    const handleMouseButton = (event: globalThis.MouseEvent): void => {
+      if (event.button === 3 && canGoBack) {
+        event.preventDefault();
+        goBack();
+        return;
+      }
+      if (event.button === 4 && canGoForward) {
+        event.preventDefault();
+        goForward();
+      }
+    };
+    window.addEventListener("mouseup", handleMouseButton);
+    return (): void => window.removeEventListener("mouseup", handleMouseButton);
+  }, [canGoBack, canGoForward, goBack, goForward]);
 
   const handleToggleContextMenu = async (): Promise<void> => {
     try {
@@ -1046,25 +1433,73 @@ const ScanView = (): JSX.Element => {
           style={{ top: contextMenu.y, left: contextMenu.x }}
           role="menu"
         >
-          <div className="px-3 py-2 text-[11px] font-semibold text-slate-400 border-b border-slate-800/70">
-            {contextMenu.node.name || contextMenu.node.path}
-          </div>
-          <button
-            type="button"
-            onClick={(): void => {
-              openScanWindow(contextMenu.node.path);
-              closeContextMenu();
-            }}
-            className="flex w-full items-center justify-between px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/70"
-            role="menuitem"
+          <div
+            className="px-3 py-2 text-[11px] font-semibold text-slate-400 border-b border-slate-800/70 whitespace-nowrap"
+            title={getMenuTitle(contextMenu)}
           >
-            <span>Open in New Window</span>
-            <span className="text-[10px] text-slate-500">Scan</span>
-          </button>
+            {truncateMiddle(getMenuTitle(contextMenu), 32)}
+          </div>
+          {contextMenu.kind === "folder" ? (
+            <>
+              <button
+                type="button"
+                onClick={(): void => {
+                  if (contextMenu.node?.path) {
+                    openScanWindow(contextMenu.node.path);
+                  }
+                  closeContextMenu();
+                }}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/70"
+                role="menuitem"
+              >
+                <span>Open in New Window</span>
+                <span className="text-[10px] text-slate-500">Scan</span>
+              </button>
+              <button
+                type="button"
+                onClick={(): void => {
+                  handleShowInExplorer(contextMenu.node?.path ?? null);
+                  closeContextMenu();
+                }}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/70"
+                role="menuitem"
+              >
+                <span>Show in Explorer</span>
+                <span className="text-[10px] text-slate-500">Folder</span>
+              </button>
+            </>
+          ) : null}
+          {contextMenu.kind === "file" ? (
+            <>
+              <button
+                type="button"
+                onClick={(): void => {
+                  handleOpenPath(contextMenu.file?.path ?? null);
+                  closeContextMenu();
+                }}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/70"
+                role="menuitem"
+              >
+                <span>Open</span>
+                <span className="text-[10px] text-slate-500">File</span>
+              </button>
+              <button
+                type="button"
+                onClick={(): void => {
+                  handleShowInExplorer(contextMenu.file?.path ?? null);
+                  closeContextMenu();
+                }}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs text-slate-200 hover:bg-slate-800/70"
+                role="menuitem"
+              >
+                <span>Show in Explorer</span>
+                <span className="text-[10px] text-slate-500">File</span>
+              </button>
+            </>
+          ) : null}
         </div>
       ) : null}
 
-      {/* Top Header Bar */}
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800/80 bg-slate-900/50 px-4 py-3 shadow-sm backdrop-blur">
         <div className="flex flex-1 items-center gap-4">
           <div>
@@ -1114,18 +1549,15 @@ const ScanView = (): JSX.Element => {
               </button>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={handleToggleContextMenu}
-            className={`mr-2 rounded-md border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 px-3 py-2
-                ${
-                  contextMenuEnabled
-                    ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-800 hover:text-slate-200"
-                }`}
-          >
-            {contextMenuEnabled ? "Integration Active" : "Add to Explorer"}
-          </button>
+          {!contextMenuEnabled ? (
+            <button
+              type="button"
+              onClick={handleToggleContextMenu}
+              className="mr-2 rounded-md border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600"
+            >
+              Add to Explorer
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleScan}
@@ -1408,7 +1840,6 @@ const ScanView = (): JSX.Element => {
         </div>
       </div>
 
-      {/* History Bar */}
       {isNavigationBarVisible && scanHistory.length > 0 ? (
         <div className="shrink-0 rounded-xl border border-slate-800/70 bg-slate-900/50 px-3 py-2 shadow-sm">
           <div className="flex items-center justify-between pb-2">
@@ -1427,7 +1858,7 @@ const ScanView = (): JSX.Element => {
                 className="flex-shrink-0 max-w-[220px] truncate px-3 py-1.5 text-xs bg-slate-950/70 border border-slate-800 rounded-md hover:bg-slate-800/80 text-slate-400 hover:text-slate-200 transition"
                 title={path}
               >
-                {path}
+                {truncateMiddle(path, 36)}
               </button>
             ))}
           </div>
@@ -1435,15 +1866,76 @@ const ScanView = (): JSX.Element => {
       ) : null}
 
       {error ? (
-        <div className="shrink-0 rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
-          {error}
+        <div
+          className="shrink-0 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100 shadow-sm"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/20 text-red-300">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v4m0 4h.01M10.29 3.86l-7.4 12.82A2 2 0 004.6 19h14.8a2 2 0 001.71-3.02l-7.4-12.82a2 2 0 00-3.42 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-100">
+                  Something went wrong
+                </p>
+                <p className="text-xs text-red-200/80 max-w-2xl">
+                  {errorSummary}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopyError}
+                className="rounded-md border border-red-400/40 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-100 transition hover:bg-red-500/20"
+              >
+                {errorCopied ? "Copied" : "Copy"}
+              </button>
+              <button
+                type="button"
+                onClick={(): void => setIsErrorExpanded((current) => !current)}
+                className="rounded-md border border-red-400/40 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-100 transition hover:bg-red-500/20"
+              >
+                {isErrorExpanded ? "Hide Details" : "Show Details"}
+              </button>
+              <button
+                type="button"
+                onClick={clearError}
+                className="rounded-md border border-red-400/40 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-100 transition hover:bg-red-500/20"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+          {isErrorExpanded ? (
+            <div className="mt-3 rounded-lg border border-red-500/20 bg-slate-950/60 p-3">
+              <p className="text-[10px] uppercase tracking-widest text-red-200/70">
+                Error details
+              </p>
+              <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words text-xs text-red-100/90">
+                {error}
+              </pre>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {/* Main Content Area */}
       {summary ? (
         <div className="flex-1 min-h-0 grid gap-5 lg:grid-cols-[minmax(400px,_40%)_1fr]">
-          {/* Left Panel: Tree */}
           <div className="flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden h-full shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-2 text-sm font-semibold shrink-0 bg-slate-900/80 backdrop-blur">
               <div className="flex items-center gap-2">
@@ -1470,6 +1962,36 @@ const ScanView = (): JSX.Element => {
                     }`}
                   >
                     Treemap
+                  </button>
+                </div>
+                <div className="flex items-center gap-1 rounded-lg border border-slate-800/50 bg-slate-950/40 p-0.5">
+                  <button
+                    type="button"
+                    onClick={(): void =>
+                      setShowExplorerFiles(!showExplorerFiles)
+                    }
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                      showExplorerFiles
+                        ? "bg-slate-800 text-slate-100"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                    title="Toggle files in tree"
+                  >
+                    Files: {showExplorerFiles ? "On" : "Off"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(): void =>
+                      setHideEmptyExplorerFolders(!hideEmptyExplorerFolders)
+                    }
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                      hideEmptyExplorerFolders
+                        ? "bg-slate-800 text-slate-100"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                    title="Hide empty folders"
+                  >
+                    Empty: {hideEmptyExplorerFolders ? "Hidden" : "Shown"}
                   </button>
                 </div>
               </div>
@@ -1511,10 +2033,10 @@ const ScanView = (): JSX.Element => {
                       {searchResults.map((node) => (
                         <tr
                           key={node.path}
-                          onClick={(): void => setSelectedPath(node.path)}
+                          onClick={(): void => selectFolder(node.path)}
                           onDoubleClick={(): void => setDetailsNode(node)}
                           onContextMenu={(event): void =>
-                            openContextMenu(event, node)
+                            openFolderContextMenu(event, node)
                           }
                           className={`cursor-pointer border-b border-slate-800/50 hover:bg-slate-800/50 ${
                             selectedPath === node.path ? "bg-blue-500/10" : ""
@@ -1531,10 +2053,10 @@ const ScanView = (): JSX.Element => {
                               {node.name}
                             </div>
                             <div
-                              className="text-[10px] text-slate-500 truncate max-w-[280px]"
+                              className="text-[10px] text-slate-500 truncate max-w-[280px] whitespace-nowrap"
                               title={node.path}
                             >
-                              {node.path}
+                              {truncateMiddle(node.path, 52)}
                             </div>
                           </td>
                           <td className="px-3 py-2 text-right whitespace-nowrap text-xs text-slate-400 align-middle">
@@ -1560,26 +2082,28 @@ const ScanView = (): JSX.Element => {
                   treeItems={treeItems}
                   expandedPaths={expandedPaths}
                   selectedPath={selectedPath}
+                  selectedFilePath={selectedFilePath}
                   onToggleExpand={handleToggleExpand}
-                  onSelect={setSelectedPath}
+                  onSelectFolder={selectFolder}
+                  onSelectFile={selectFile}
                   onDouble={setDetailsNode}
-                  onContextMenu={openContextMenu}
+                  onOpenFile={handleOpenPath}
+                  onContextMenu={openFolderContextMenu}
+                  onContextMenuFile={openFileContextMenu}
                 />
               ) : (
                 <Treemap
                   rootNode={selectedNode ?? summary.root}
                   width={containerSize.width}
                   height={containerSize.height}
-                  onSelect={(node): void => setSelectedPath(node.path)}
+                  onSelect={(node): void => selectFolder(node.path)}
                   selectedPath={selectedPath}
                 />
               )}
             </div>
           </div>
 
-          {/* Right Panel: Details & Subfolders */}
           <div className="flex flex-col gap-4 overflow-auto h-full pr-1">
-            {/* Info Cards Row */}
             <div className="shrink-0 grid gap-4 lg:grid-cols-2">
               <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -1591,10 +2115,12 @@ const ScanView = (): JSX.Element => {
                       {activeNode?.name || "Root"}
                     </h3>
                     <p
-                      className="text-xs text-slate-500 font-mono truncate max-w-full"
+                      className="text-xs text-slate-500 font-mono truncate max-w-full whitespace-nowrap"
                       title={activeNode?.path}
                     >
-                      {activeNode?.path ?? ""}
+                      {activeNode?.path
+                        ? truncateMiddle(activeNode.path, 64)
+                        : ""}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 text-xs text-slate-300 items-end shrink-0">
@@ -1676,7 +2202,10 @@ const ScanView = (): JSX.Element => {
                       type="button"
                       key={file.path}
                       onClick={(): void =>
-                        setSelectedPath(parentPath ?? summary.root.path)
+                        selectFolder(parentPath ?? summary.root.path)
+                      }
+                      onContextMenu={(event): void =>
+                        openFileContextMenu(event, file)
                       }
                       className={`w-full text-left text-[13px] leading-5 transition ${
                         isSelected
@@ -1691,8 +2220,11 @@ const ScanView = (): JSX.Element => {
                           <div className="truncate font-semibold text-slate-100">
                             {file.name}
                           </div>
-                          <div className="text-xs text-slate-400 truncate">
-                            {file.path}
+                          <div
+                            className="text-xs text-slate-400 truncate whitespace-nowrap"
+                            title={file.path}
+                          >
+                            {truncateMiddle(file.path, 56)}
                           </div>
                         </div>
                         <div className="text-sm font-semibold text-slate-100 tabular-nums shrink-0">
@@ -1710,7 +2242,6 @@ const ScanView = (): JSX.Element => {
               </div>
             </div>
 
-            {/* Subfolders Table - Fills remaining vertical space */}
             <div className="flex-1 min-h-[220px] flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
                 <span className="text-slate-400">Subfolders</span>

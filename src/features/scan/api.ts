@@ -1,5 +1,5 @@
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { invokeCommand } from "../../lib/tauriInvoke";
 import type { ScanOptions, ScanSummary } from "./types";
 
 interface ScanHandlers {
@@ -30,7 +30,7 @@ export const startScan = async (
       }),
     ]);
 
-  await invoke<void>("scan_path", { path, options });
+  await invokeCommand<void>("scan_path", { path, options });
 
   return (): void => {
     unlistenProgress();
@@ -41,17 +41,25 @@ export const startScan = async (
 };
 
 export const cancelScan = async (): Promise<void> => {
-  return invoke<void>("cancel_scan");
+  return invokeCommand<void>("cancel_scan");
 };
 
 export const checkContextMenu = async (): Promise<boolean> => {
-  return invoke<boolean>("is_context_menu_enabled");
+  return invokeCommand<boolean>("is_context_menu_enabled");
 };
 
 export const toggleContextMenu = async (enable: boolean): Promise<void> => {
-  return invoke<void>("toggle_context_menu", { enable });
+  return invokeCommand<void>("toggle_context_menu", { enable });
 };
 
 export const getStartupPath = async (): Promise<string | null> => {
-  return invoke<string | null>("get_startup_path");
+  return invokeCommand<string | null>("get_startup_path");
+};
+
+export const openPath = async (path: string): Promise<void> => {
+  return invokeCommand<void>("open_path", { path });
+};
+
+export const showInExplorer = async (path: string): Promise<void> => {
+  return invokeCommand<void>("show_in_explorer", { path });
 };

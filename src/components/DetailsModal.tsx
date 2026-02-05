@@ -1,5 +1,5 @@
 import type { ScanNode } from "../features/scan/types";
-import { formatBytes } from "../lib/utils";
+import { formatBytes, truncateMiddle } from "../lib/utils";
 
 interface DetailsModalProps {
   node: ScanNode | null;
@@ -44,8 +44,11 @@ export const DetailsModal = ({
             <label className="text-xs font-medium uppercase text-slate-500">
               Path
             </label>
-            <p className="text-sm break-all font-mono text-slate-400 bg-slate-950/70 p-2 rounded mt-1 border border-slate-800/60">
-              {node.path}
+            <p
+              className="text-sm font-mono text-slate-400 bg-slate-950/70 p-2 rounded mt-1 border border-slate-800/60 whitespace-nowrap truncate"
+              title={node.path}
+            >
+              {truncateMiddle(node.path, 72)}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-4">

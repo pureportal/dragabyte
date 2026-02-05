@@ -16,6 +16,7 @@
     "core:window:allow-destroy",
     "core:window:allow-close",
     "core:window:allow-is-maximized",
-    "core:window:allow-get-all-windows"
+    "core:window:allow-get-all-windows",
+    "window-state:default"
   ]
 }

@@ -3,4 +3,12 @@
 [[permission]]
 identifier = "scan"
 description = "Allow folder scanning commands"
-commands.allow = ["scan_path", "cancel_scan"]
+commands.allow = [
+	"scan_path",
+	"cancel_scan",
+	"open_path",
+	"show_in_explorer",
+	"is_context_menu_enabled",
+	"toggle_context_menu",
+	"get_startup_path"
+]

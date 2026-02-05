@@ -46,3 +46,15 @@ export const formatDuration = (
   const remainingHours = totalHours % 24;
   return `${totalDays}d ${padTime(remainingHours)}h ${padTime(remainingMinutes)}m ${padTime(remainingSeconds)}s`;
 };
+
+export const truncateMiddle = (value: string, maxLength: number): string => {
+  const safeMax = Math.floor(maxLength);
+  if (safeMax <= 0) return "";
+  if (value.length <= safeMax) return value;
+  if (safeMax <= 4) return value.slice(0, safeMax);
+
+  const keep = safeMax - 3;
+  const startLen = Math.max(2, Math.floor(keep * 0.35));
+  const endLen = Math.max(2, keep - startLen);
+  return `${value.slice(0, startLen)}...${value.slice(value.length - endLen)}`;
+};

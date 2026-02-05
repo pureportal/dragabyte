@@ -26,6 +26,16 @@ const sumSizes = (nodes: ScanNode[]): number => {
   return total;
 };
 
+const sumSegmentBytes = (segments: ChartSegment[]): number => {
+  let total = 0;
+  for (let i = 0; i < segments.length; i += 1) {
+    const segment = segments[i];
+    if (!segment) continue;
+    total += segment.sizeBytes;
+  }
+  return total;
+};
+
 const sortBySize = (nodes: ScanNode[]): ScanNode[] => {
   return [...nodes].sort((a, b) => b.sizeBytes - a.sizeBytes);
 };
@@ -35,7 +45,10 @@ const getTotalBytes = (node: ScanNode): number => {
   return sumSizes(node.children);
 };
 
-const buildSegments = (node: ScanNode | null, limit: number): ChartSegment[] => {
+const buildSegments = (
+  node: ScanNode | null,
+  limit: number,
+): ChartSegment[] => {
   if (!node || node.children.length === 0) return [];
   const sorted = sortBySize(node.children);
   const total = getTotalBytes(node);
@@ -59,7 +72,7 @@ const formatPercent = (value: number): string => {
 const buildConicGradient = (segments: ChartSegment[]): string => {
   let cursor = 0;
   const stops: string[] = [];
-  const total = segments.reduce((sum, seg) => sum + seg.sizeBytes, 0);
+  const total = sumSegmentBytes(segments);
   for (let i = 0; i < segments.length; i += 1) {
     const segment = segments[i];
     if (!segment) continue;
@@ -113,16 +126,16 @@ const UsageCharts = ({ node }: UsageChartsProps): JSX.Element => {
               <div key={segment.label} className="flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                  style={{
+                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                  }}
                 />
                 <div className="flex-1 text-xs text-slate-300 truncate">
                   {segment.label}
                 </div>
                 <div className="text-[10px] text-slate-500 whitespace-nowrap">
                   {formatPercent(
-                    totalBytes > 0
-                      ? (segment.sizeBytes / totalBytes) * 100
-                      : 0,
+                    totalBytes > 0 ? (segment.sizeBytes / totalBytes) * 100 : 0,
                   )}
                 </div>
               </div>
@@ -148,7 +161,8 @@ const UsageCharts = ({ node }: UsageChartsProps): JSX.Element => {
         </div>
         <div className="space-y-3">
           {segments.map((segment, index) => {
-            const percent = totalBytes > 0 ? (segment.sizeBytes / totalBytes) * 100 : 0;
+            const percent =
+              totalBytes > 0 ? (segment.sizeBytes / totalBytes) * 100 : 0;
             return (
               <div key={segment.label}>
                 <div className="flex items-center justify-between text-xs text-slate-300 mb-1">
@@ -162,7 +176,8 @@ const UsageCharts = ({ node }: UsageChartsProps): JSX.Element => {
                     className="h-full rounded-full"
                     style={{
                       width: `${Math.min(100, Math.max(0, percent))}%`,
-                      backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                      backgroundColor:
+                        CHART_COLORS[index % CHART_COLORS.length],
                     }}
                   />
                 </div>

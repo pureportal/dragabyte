@@ -41,17 +41,11 @@ function recursiveSplit(
     if (!node) return [];
     return [{ x, y, w, h, node }];
   }
-
-  // Sort by size
   const sorted = [...nodes].sort((a, b) => b.sizeBytes - a.sizeBytes);
   const total = sumNodeSizes(sorted);
-
-  // Safety check for empty total
   if (total <= 0) {
     return [];
   }
-
-  // Find split point where first half is ~50% of weight
   let currentSum = 0;
   let splitIndex = 0;
 
@@ -60,11 +54,10 @@ function recursiveSplit(
     if (!node) continue;
     currentSum += node.sizeBytes;
     if (currentSum >= total / 2) {
-      splitIndex = i + 1; // Include this one in first half
+      splitIndex = i + 1;
       break;
     }
   }
-  // Edge case if 1st item is huge
   if (splitIndex === 0) splitIndex = 1;
 
   const groupA = sorted.slice(0, splitIndex);
@@ -77,12 +70,10 @@ function recursiveSplit(
   const result: Rect[] = [];
 
   if (w > h) {
-    // Split horizontally (vertical line)
     const wA = w * ratioA;
     result.push(...recursiveSplit(groupA, x, y, wA, h));
     result.push(...recursiveSplit(groupB, x + wA, y, w - wA, h));
   } else {
-    // Split vertically (horizontal line)
     const hA = h * ratioA;
     result.push(...recursiveSplit(groupA, x, y, w, hA));
     result.push(...recursiveSplit(groupB, x, y + hA, w, h - hA));
@@ -108,7 +99,6 @@ const Treemap = ({
   selectedPath,
 }: TreemapProps): JSX.Element => {
   const rects = useMemo(() => {
-    // We only layout the immediate children for now to keep it clean,
     return recursiveSplit(rootNode.children, 0, 0, width, height);
   }, [rootNode, width, height]);
 
@@ -119,7 +109,6 @@ const Treemap = ({
     >
       {rects.map((r, i) => {
         const isSelected = selectedPath === r.node.path;
-        // Simple distinct colors
         const colorClass = COLORS[i % COLORS.length];
 
         return (
@@ -138,7 +127,6 @@ const Treemap = ({
             }}
             title={`${r.node.name} (${formatBytes(r.node.sizeBytes)})`}
           >
-            {/* Only show label if box is big enough */}
             {r.w > 40 && r.h > 20 && (
               <span className="text-[10px] sm:text-xs font-semibold text-white/90 truncate px-1 drop-shadow-md cursor-default pointer-events-none select-none">
                 {r.node.name}
