@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { invokeCommand } from "../../lib/tauriInvoke";
-import type { ScanOptions, ScanSummary } from "./types";
+import type { DiskUsage, ScanOptions, ScanSummary } from "./types";
 
 interface ScanHandlers {
   onProgress: (summary: ScanSummary) => void;
@@ -9,6 +9,18 @@ interface ScanHandlers {
   onCancel: (message: string) => void;
 }
 
+const listenToScanEvent = async <T>(
+  eventName: string,
+  handler: (payload: T) => void,
+): Promise<() => void> => {
+  const unlisten = await listen<T>(eventName, (event) => {
+    handler(event.payload);
+  });
+  return (): void => {
+    unlisten();
+  };
+};
+
 export const startScan = async (
   path: string,
   options: ScanOptions,
@@ -16,18 +28,10 @@ export const startScan = async (
 ): Promise<() => void> => {
   const [unlistenProgress, unlistenComplete, unlistenError, unlistenCancelled] =
     await Promise.all([
-      listen<ScanSummary>("scan-progress", (event) => {
-        handlers.onProgress(event.payload);
-      }),
-      listen<ScanSummary>("scan-complete", (event) => {
-        handlers.onComplete(event.payload);
-      }),
-      listen<string>("scan-error", (event) => {
-        handlers.onError(event.payload);
-      }),
-      listen<string>("scan-cancelled", (event) => {
-        handlers.onCancel(event.payload);
-      }),
+      listenToScanEvent<ScanSummary>("scan-progress", handlers.onProgress),
+      listenToScanEvent<ScanSummary>("scan-complete", handlers.onComplete),
+      listenToScanEvent<string>("scan-error", handlers.onError),
+      listenToScanEvent<string>("scan-cancelled", handlers.onCancel),
     ]);
 
   await invokeCommand<void>("scan_path", { path, options });
@@ -62,4 +66,8 @@ export const openPath = async (path: string): Promise<void> => {
 
 export const showInExplorer = async (path: string): Promise<void> => {
   return invokeCommand<void>("show_in_explorer", { path });
+};
+
+export const getDiskUsage = async (path: string): Promise<DiskUsage> => {
+  return invokeCommand<DiskUsage>("get_disk_usage", { path });
 };

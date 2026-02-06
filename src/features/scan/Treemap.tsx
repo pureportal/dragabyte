@@ -18,6 +18,9 @@ interface TreemapProps {
   selectedPath: string | null;
 }
 
+const MIN_LABEL_WIDTH = 40;
+const MIN_LABEL_HEIGHT = 20;
+
 const sumNodeSizes = (nodes: ScanNode[]): number => {
   let total = 0;
   for (let i = 0; i < nodes.length; i += 1) {
@@ -26,6 +29,27 @@ const sumNodeSizes = (nodes: ScanNode[]): number => {
     total += node.sizeBytes;
   }
   return total;
+};
+
+const sortBySize = (nodes: ScanNode[]): ScanNode[] => {
+  return [...nodes].sort((a, b) => b.sizeBytes - a.sizeBytes);
+};
+
+const getSplitIndex = (nodes: ScanNode[], total: number): number => {
+  let currentSum = 0;
+  for (let i = 0; i < nodes.length; i += 1) {
+    const node = nodes[i];
+    if (!node) continue;
+    currentSum += node.sizeBytes;
+    if (currentSum >= total / 2) {
+      return i + 1;
+    }
+  }
+  return 1;
+};
+
+const shouldRenderLabel = (rect: Rect): boolean => {
+  return rect.w > MIN_LABEL_WIDTH && rect.h > MIN_LABEL_HEIGHT;
 };
 
 function recursiveSplit(
@@ -41,25 +65,12 @@ function recursiveSplit(
     if (!node) return [];
     return [{ x, y, w, h, node }];
   }
-  const sorted = [...nodes].sort((a, b) => b.sizeBytes - a.sizeBytes);
+  const sorted = sortBySize(nodes);
   const total = sumNodeSizes(sorted);
   if (total <= 0) {
     return [];
   }
-  let currentSum = 0;
-  let splitIndex = 0;
-
-  for (let i = 0; i < sorted.length; i++) {
-    const node = sorted[i];
-    if (!node) continue;
-    currentSum += node.sizeBytes;
-    if (currentSum >= total / 2) {
-      splitIndex = i + 1;
-      break;
-    }
-  }
-  if (splitIndex === 0) splitIndex = 1;
-
+  const splitIndex = getSplitIndex(sorted, total);
   const groupA = sorted.slice(0, splitIndex);
   const groupB = sorted.slice(splitIndex);
 
@@ -127,7 +138,7 @@ const Treemap = ({
             }}
             title={`${r.node.name} (${formatBytes(r.node.sizeBytes)})`}
           >
-            {r.w > 40 && r.h > 20 && (
+            {shouldRenderLabel(r) && (
               <span className="text-[10px] sm:text-xs font-semibold text-white/90 truncate px-1 drop-shadow-md cursor-default pointer-events-none select-none">
                 {r.node.name}
               </span>

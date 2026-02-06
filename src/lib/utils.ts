@@ -7,6 +7,18 @@ export const cn = (...inputs: ClassValue[]): string => {
 
 const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB"] as const;
 
+const padTime = (value: number): string => value.toString().padStart(2, "0");
+
+export const toErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message || "Unknown error";
+  }
+  if (typeof error === "string") {
+    return error || "Unknown error";
+  }
+  return "Unknown error";
+};
+
 export const formatBytes = (bytes: number | null | undefined): string => {
   const safeBytes =
     typeof bytes === "number" && Number.isFinite(bytes) ? bytes : 0;
@@ -31,7 +43,6 @@ export const formatDuration = (
   if (totalSeconds <= 60) {
     return `${totalSeconds}s`;
   }
-  const padTime = (value: number): string => value.toString().padStart(2, "0");
   const totalMinutes = Math.floor(totalSeconds / 60);
   const remainingSeconds = totalSeconds % 60;
   if (totalMinutes < 60) {

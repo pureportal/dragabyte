@@ -61,29 +61,30 @@ const App = (): JSX.Element => {
 
   const toggleMaximize = async (): Promise<void> => {
     const win = getCurrentWindow();
-    const max = await win.isMaximized();
-    if (max) {
-      await win.unmaximize();
-      setIsMaximized(false);
-    } else {
+    const shouldMaximize = !(await win.isMaximized());
+    if (shouldMaximize) {
       await win.maximize();
-      setIsMaximized(true);
+    } else {
+      await win.unmaximize();
     }
+    setIsMaximized(shouldMaximize);
+  };
+
+  const handleClose = async (): Promise<void> => {
+    const currentWindow = getCurrentWindow();
+    try {
+      if (await hasMultipleWindows()) {
+        await currentWindow.hide();
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to check windows before closing", error);
+    }
+    await currentWindow.destroy();
   };
 
   const close = (): void => {
-    const currentWindow = getCurrentWindow();
-    void (async (): Promise<void> => {
-      try {
-        if (await hasMultipleWindows()) {
-          await currentWindow.hide();
-          return;
-        }
-      } catch (error) {
-        console.error("Failed to check windows before closing", error);
-      }
-      await currentWindow.destroy();
-    })();
+    void handleClose();
   };
 
   return (
@@ -103,7 +104,6 @@ const App = (): JSX.Element => {
         ) : null}
       </div>
 
-      {/* Title Bar */}
       <div
         className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur select-none z-50"
         data-tauri-drag-region

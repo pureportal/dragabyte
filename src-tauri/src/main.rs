@@ -1,10 +1,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::collections::{HashMap, HashSet};
+use std::fs;
+use std::io::{BufRead, BufReader, Write};
+use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -16,12 +19,33 @@ use winreg::RegKey;
 use jwalk::{Parallelism, WalkDir};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 struct StartupPath(Mutex<Option<String>>);
 struct ScanCancellation(Mutex<HashMap<String, Arc<AtomicBool>>>);
+struct RemoteClientState(Mutex<Option<RemoteClientHandle>>);
+struct SettingsState {
+  path: PathBuf,
+  value: Mutex<AppSettings>,
+}
+
+struct RuntimeState {
+  tcp_bind: Option<String>,
+  tcp_enabled: bool,
+}
+
+#[derive(Clone)]
+enum ScanEvent {
+  Progress(ScanSummary),
+  Complete(ScanSummary),
+  Error(String),
+  Cancelled(String),
+}
+
+type ScanEmitter = Arc<dyn Fn(ScanEvent) + Send + Sync>;
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,6 +78,14 @@ struct ScanSummary {
   duration_ms: u128,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DiskUsageSnapshot {
+  path: String,
+  total_bytes: u64,
+  free_bytes: u64,
+}
+
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum ScanPriorityMode {
@@ -69,6 +101,77 @@ enum ScanThrottleLevel {
   Low,
   Medium,
   High,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "action", rename_all = "camelCase")]
+enum RemoteRequest {
+  Ping { id: Option<String> },
+  List { id: Option<String>, path: Option<String> },
+  Disk { id: Option<String>, path: String },
+  Scan {
+    id: Option<String>,
+    path: String,
+    options: Option<ScanOptions>,
+  },
+  Cancel { id: Option<String> },
+  Shutdown { id: Option<String> },
+}
+
+#[derive(Deserialize)]
+struct RemoteEnvelope {
+  token: Option<String>,
+  #[serde(flatten)]
+  request: RemoteRequest,
+}
+
+#[derive(Clone)]
+struct TcpConfig {
+  bind_addr: SocketAddr,
+  token: Option<String>,
+}
+
+struct RuntimeOptions {
+  headless: bool,
+  tcp: Option<TcpConfig>,
+  startup_path: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct AppSettings {
+  local_token: Option<String>,
+  tcp_bind: Option<String>,
+  headless: Option<bool>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AppSettingsUpdate {
+  local_token: Option<String>,
+  tcp_bind: Option<String>,
+  headless: Option<bool>,
+}
+
+#[derive(Deserialize)]
+struct RemoteConnectPayload {
+  host: String,
+  port: u16,
+  token: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RemoteSendPayload {
+  #[serde(default)]
+  payload: JsonValue,
+}
+
+struct RemoteHub {
+  clients: Mutex<Vec<mpsc::Sender<String>>>,
+  scan_cancel: Mutex<Option<Arc<AtomicBool>>>,
+  scan_active: AtomicBool,
+  token: Option<String>,
+  shutdown: Option<mpsc::Sender<()>>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -92,6 +195,45 @@ struct ScanOptions {
   priority_mode: ScanPriorityMode,
   throttle_level: ScanThrottleLevel,
   filters: ScanFilters,
+}
+
+impl Default for ScanPriorityMode {
+  fn default() -> Self {
+    ScanPriorityMode::Balanced
+  }
+}
+
+impl Default for ScanThrottleLevel {
+  fn default() -> Self {
+    ScanThrottleLevel::Off
+  }
+}
+
+impl Default for ScanFilters {
+  fn default() -> Self {
+    Self {
+      include_extensions: Vec::new(),
+      exclude_extensions: Vec::new(),
+      include_names: Vec::new(),
+      exclude_names: Vec::new(),
+      min_size_bytes: None,
+      max_size_bytes: None,
+      include_regex: None,
+      exclude_regex: None,
+      include_paths: Vec::new(),
+      exclude_paths: Vec::new(),
+    }
+  }
+}
+
+impl Default for ScanOptions {
+  fn default() -> Self {
+    Self {
+      priority_mode: ScanPriorityMode::default(),
+      throttle_level: ScanThrottleLevel::default(),
+      filters: ScanFilters::default(),
+    }
+  }
 }
 
 struct FilterConfig {
@@ -137,6 +279,115 @@ struct NodeStats {
   direct_dirs: u64,
 }
 
+impl RemoteHub {
+  fn new(token: Option<String>, shutdown: Option<mpsc::Sender<()>>) -> Self {
+    Self {
+      clients: Mutex::new(Vec::new()),
+      scan_cancel: Mutex::new(None),
+      scan_active: AtomicBool::new(false),
+      token,
+      shutdown,
+    }
+  }
+
+  fn register_client(&self, sender: mpsc::Sender<String>) {
+    if let Ok(mut clients) = self.clients.lock() {
+      clients.push(sender);
+    }
+  }
+
+  fn broadcast(&self, message: String) {
+    if let Ok(mut clients) = self.clients.lock() {
+      clients.retain(|sender| sender.send(message.clone()).is_ok());
+    }
+  }
+
+  fn start_scan(&self, cancel_flag: Arc<AtomicBool>) -> bool {
+    if self.scan_active.swap(true, Ordering::SeqCst) {
+      return false;
+    }
+    if let Ok(mut cancel) = self.scan_cancel.lock() {
+      *cancel = Some(cancel_flag);
+    }
+    true
+  }
+
+  fn cancel_scan(&self) -> bool {
+    if let Ok(cancel) = self.scan_cancel.lock() {
+      if let Some(flag) = cancel.as_ref() {
+        flag.store(true, Ordering::SeqCst);
+        return true;
+      }
+    }
+    false
+  }
+
+  fn finish_scan(&self) {
+    self.scan_active.store(false, Ordering::SeqCst);
+    if let Ok(mut cancel) = self.scan_cancel.lock() {
+      *cancel = None;
+    }
+  }
+
+  fn validate_token(&self, token: Option<&str>) -> bool {
+    match self.token.as_deref() {
+      None => true,
+      Some(expected) => token == Some(expected),
+    }
+  }
+
+  fn request_shutdown(&self) -> bool {
+    match &self.shutdown {
+      Some(sender) => sender.send(()).is_ok(),
+      None => false,
+    }
+  }
+}
+
+fn emit_to_window(window: &tauri::Window, event: ScanEvent) {
+  match event {
+    ScanEvent::Progress(summary) => {
+      let _ = window.emit("scan-progress", summary);
+    }
+    ScanEvent::Complete(summary) => {
+      let _ = window.emit("scan-complete", summary);
+    }
+    ScanEvent::Error(message) => {
+      let _ = window.emit("scan-error", message);
+    }
+    ScanEvent::Cancelled(message) => {
+      let _ = window.emit("scan-cancelled", message);
+    }
+  }
+}
+
+fn emit_to_remote(hub: &RemoteHub, event: ScanEvent, request_id: Option<&str>) {
+  let payload = match event {
+    ScanEvent::Progress(summary) => serde_json::json!({
+      "event": "scan-progress",
+      "id": request_id,
+      "data": summary
+    }),
+    ScanEvent::Complete(summary) => serde_json::json!({
+      "event": "scan-complete",
+      "id": request_id,
+      "data": summary
+    }),
+    ScanEvent::Error(message) => serde_json::json!({
+      "event": "scan-error",
+      "id": request_id,
+      "message": message
+    }),
+    ScanEvent::Cancelled(message) => serde_json::json!({
+      "event": "scan-cancelled",
+      "id": request_id,
+      "message": message
+    }),
+  };
+  let line = format!("{}\n", payload);
+  hub.broadcast(line);
+}
+
 #[tauri::command]
 fn get_startup_path(state: tauri::State<StartupPath>) -> Option<String> {
   state.0.lock().unwrap().clone()
@@ -172,7 +423,9 @@ fn scan_path(
 
   tauri::async_runtime::spawn(async move {
     let app_handle = window_for_task.app_handle();
-    if let Err(error) = run_scan(&window_for_task, root, config, Arc::clone(&cancel_flag)) {
+    let emitter_window = window_for_task.clone();
+    let emitter: ScanEmitter = Arc::new(move |event| emit_to_window(&emitter_window, event));
+    if let Err(error) = run_scan(root, config, Arc::clone(&cancel_flag), emitter) {
       let _ = window_for_task.emit("scan-error", error);
     }
     let cancellations = app_handle.state::<ScanCancellation>();
@@ -200,11 +453,17 @@ fn cancel_scan(
   Ok(())
 }
 
+#[tauri::command]
+fn get_disk_usage(path: String) -> Result<DiskUsageSnapshot, String> {
+  let target = PathBuf::from(&path);
+  compute_disk_usage(&target)
+}
+
 fn run_scan(
-  window: &tauri::Window,
   root: PathBuf,
   config: ScanConfig,
   cancel_flag: Arc<AtomicBool>,
+  emit: ScanEmitter,
 ) -> Result<(), String> {
   let start = Instant::now();
   let mut stats: HashMap<PathBuf, NodeStats> = HashMap::new();
@@ -217,7 +476,7 @@ fn run_scan(
   let walk = WalkDir::new(&root).parallelism(config.parallelism.clone());
   for entry in walk {
     if cancel_flag.load(Ordering::Relaxed) {
-      let _ = window.emit("scan-cancelled", "Scan cancelled");
+      emit(ScanEvent::Cancelled("Scan cancelled".to_string()));
       return Ok(());
     }
     let entry = match entry {
@@ -275,13 +534,13 @@ fn run_scan(
     if should_emit_progress(processed, &last_emit, &config) {
       let summary =
         build_summary(&root, &children, &files_by_parent, &stats, &largest_files, start);
-      let _ = window.emit("scan-progress", summary);
+      emit(ScanEvent::Progress(summary));
       last_emit = Instant::now();
     }
   }
 
   let summary = build_summary(&root, &children, &files_by_parent, &stats, &largest_files, start);
-  let _ = window.emit("scan-complete", summary);
+  emit(ScanEvent::Complete(summary));
   Ok(())
 }
 
@@ -407,6 +666,21 @@ fn should_emit_progress(processed: u64, last_emit: &Instant, config: &ScanConfig
 
 fn get_path_string(path: &Path) -> String {
   path.to_string_lossy().to_string()
+}
+
+fn compute_disk_usage(path: &Path) -> Result<DiskUsageSnapshot, String> {
+  if !path.exists() {
+    return Err("path-not-found".to_string());
+  }
+  let total_bytes = fs2::total_space(path)
+    .map_err(|error| format!("disk-usage-failed: {error}"))?;
+  let free_bytes = fs2::available_space(path)
+    .map_err(|error| format!("disk-usage-failed: {error}"))?;
+  Ok(DiskUsageSnapshot {
+    path: get_path_string(path),
+    total_bytes,
+    free_bytes,
+  })
 }
 
 fn get_entry_name_string(path: &Path) -> String {
@@ -552,8 +826,689 @@ fn path_contains_any(path: &str, values: &[String]) -> bool {
   false
 }
 
+fn parse_runtime_options(
+  args: &[String],
+  startup_path: Option<String>,
+  settings: &AppSettings,
+) -> Result<RuntimeOptions, String> {
+  let headless = has_flag(args, "--headless")
+    || env_flag("VOXARA_HEADLESS")
+    || settings.headless.unwrap_or(false);
+  let tcp = parse_tcp_config(args, settings)?;
+  Ok(RuntimeOptions {
+    headless,
+    tcp,
+    startup_path,
+  })
+}
+
+fn parse_tcp_config(args: &[String], settings: &AppSettings) -> Result<Option<TcpConfig>, String> {
+  let bind_arg = get_arg_value(args, "--tcp-bind");
+  let env_bind = std::env::var("VOXARA_TCP_BIND").ok();
+  let token = get_arg_value(args, "--tcp-token")
+    .or_else(|| std::env::var("VOXARA_TCP_TOKEN").ok())
+    .or_else(|| settings.local_token.clone());
+  let enabled = has_flag(args, "--tcp")
+    || bind_arg.is_some()
+    || env_bind.is_some()
+    || settings.tcp_bind.is_some()
+    || settings.local_token.is_some();
+  if !enabled {
+    return Ok(None);
+  }
+  let bind_raw = bind_arg
+    .or_else(|| env_bind)
+    .or_else(|| settings.tcp_bind.clone())
+    .unwrap_or_else(|| "127.0.0.1:4799".to_string());
+  let bind_addr = bind_raw
+    .parse::<SocketAddr>()
+    .map_err(|_| "Invalid TCP bind address".to_string())?;
+  if !bind_addr.ip().is_loopback() && token.is_none() {
+    return Err("VOXARA_TCP_TOKEN is required when binding to non-loopback".to_string());
+  }
+  Ok(Some(TcpConfig { bind_addr, token }))
+}
+
+fn env_flag(name: &str) -> bool {
+  match std::env::var(name) {
+    Ok(value) => matches!(value.to_lowercase().as_str(), "1" | "true" | "yes"),
+    Err(_) => false,
+  }
+}
+
+fn has_flag(args: &[String], flag: &str) -> bool {
+  args.iter().any(|value| value == flag)
+}
+
+fn get_arg_value(args: &[String], prefix: &str) -> Option<String> {
+  for value in args {
+    if let Some(stripped) = value.strip_prefix(&format!("{}=", prefix)) {
+      return Some(stripped.to_string());
+    }
+  }
+  None
+}
+
+struct RemoteServerHandle {
+  shutdown: mpsc::Sender<()>,
+  join: thread::JoinHandle<()>,
+}
+
+struct RemoteClientHandle {
+  sender: mpsc::Sender<String>,
+  shutdown: mpsc::Sender<()>,
+  join: thread::JoinHandle<()>,
+  token: Option<String>,
+  address: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RemoteListEntry {
+  name: String,
+  path: String,
+  is_dir: bool,
+}
+
+fn start_remote_server(config: TcpConfig, headless: bool) -> Result<RemoteServerHandle, String> {
+  eprintln!("[remote] starting tcp server on {}", config.bind_addr);
+  let listener = TcpListener::bind(config.bind_addr)
+    .map_err(|error| format!("Failed to bind TCP server: {error}"))?;
+  listener
+    .set_nonblocking(true)
+    .map_err(|error| format!("Failed to configure TCP listener: {error}"))?;
+  let (shutdown_tx, shutdown_rx) = mpsc::channel();
+  let hub = Arc::new(RemoteHub::new(config.token.clone(), Some(shutdown_tx.clone())));
+  let join = thread::spawn(move || {
+    loop {
+      if shutdown_rx.try_recv().is_ok() {
+        break;
+      }
+      match listener.accept() {
+        Ok((stream, _)) => {
+          eprintln!("[remote] tcp client accepted");
+          let hub_clone = Arc::clone(&hub);
+          thread::spawn(move || handle_client(stream, hub_clone, headless));
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+          thread::sleep(Duration::from_millis(50));
+        }
+        Err(_) => break,
+      }
+    }
+  });
+  Ok(RemoteServerHandle {
+    shutdown: shutdown_tx,
+    join,
+  })
+}
+
+fn handle_client(stream: TcpStream, hub: Arc<RemoteHub>, headless: bool) {
+  eprintln!("[remote] tcp client connected");
+  if let Err(error) = stream.set_read_timeout(Some(Duration::from_millis(200))) {
+    eprintln!("[remote] set read timeout failed: {error}");
+  }
+  let (sender, receiver) = mpsc::channel::<String>();
+  hub.register_client(sender.clone());
+  let writer_stream = match stream.try_clone() {
+    Ok(clone) => clone,
+    Err(_) => return,
+  };
+  thread::spawn(move || write_remote_lines(writer_stream, receiver));
+  let reader = BufReader::new(stream);
+  for line in reader.lines() {
+    let line = match line {
+      Ok(value) => {
+        eprintln!("[remote] read line bytes={}", value.len());
+        value
+      }
+      Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => continue,
+      Err(error) if error.kind() == std::io::ErrorKind::TimedOut => continue,
+      Err(error) => {
+        eprintln!("[remote] read line error: {error}");
+        break;
+      }
+    };
+    if line.trim().is_empty() {
+      eprintln!("[remote] read empty line");
+      continue;
+    }
+    handle_remote_line(&line, Arc::clone(&hub), &sender, headless);
+  }
+}
+
+fn write_remote_lines(mut stream: TcpStream, receiver: mpsc::Receiver<String>) {
+  for line in receiver {
+    eprintln!("[remote] sending line bytes={}", line.len());
+    if let Err(error) = stream.write_all(line.as_bytes()) {
+      eprintln!("[remote] write failed: {error}");
+      break;
+    }
+    if let Err(error) = stream.flush() {
+      eprintln!("[remote] flush failed: {error}");
+      break;
+    }
+  }
+}
+
+fn handle_remote_line(
+  line: &str,
+  hub: Arc<RemoteHub>,
+  sender: &mpsc::Sender<String>,
+  headless: bool,
+) {
+  eprintln!("[remote] incoming line: {}", line.trim());
+  let envelope: RemoteEnvelope = match serde_json::from_str(line) {
+    Ok(value) => value,
+    Err(_) => {
+      eprintln!("[remote] invalid json");
+      send_remote_error(sender, None, "invalid_json");
+      return;
+    }
+  };
+  if !hub.validate_token(envelope.token.as_deref()) {
+    eprintln!("[remote] unauthorized token");
+    send_remote_error(sender, request_id(&envelope.request), "unauthorized");
+    return;
+  }
+  match envelope.request {
+    RemoteRequest::Ping { id } => {
+      eprintln!("[remote] ping {:?}", id);
+      send_remote_event(sender, serde_json::json!({ "event": "pong", "id": id }));
+    }
+    RemoteRequest::List { id, path } => {
+      eprintln!("[remote] list {:?} {:?}", id, path);
+      handle_remote_list(sender, id, path);
+    }
+    RemoteRequest::Disk { id, path } => {
+      eprintln!("[remote] disk {:?} {}", id, path);
+      handle_remote_disk(sender, id, path);
+    }
+    RemoteRequest::Scan { id, path, options } => {
+      eprintln!("[remote] scan {:?} {}", id, path);
+      handle_remote_scan(hub, sender, id, path, options);
+    }
+    RemoteRequest::Cancel { id } => {
+      eprintln!("[remote] cancel {:?}", id);
+      let cancelled = hub.cancel_scan();
+      let message = if cancelled { "cancel-requested" } else { "no-active-scan" };
+      send_remote_event(sender, serde_json::json!({ "event": message, "id": id }));
+    }
+    RemoteRequest::Shutdown { id } => {
+      eprintln!("[remote] shutdown {:?}", id);
+      if !headless {
+        send_remote_error(sender, id.as_deref(), "shutdown-not-allowed");
+        return;
+      }
+      if hub.request_shutdown() {
+        send_remote_event(sender, serde_json::json!({ "event": "shutdown", "id": id }));
+      } else {
+        send_remote_error(sender, id.as_deref(), "shutdown-failed");
+      }
+    }
+  }
+}
+
+fn handle_remote_scan(
+  hub: Arc<RemoteHub>,
+  sender: &mpsc::Sender<String>,
+  id: Option<String>,
+  path: String,
+  options: Option<ScanOptions>,
+) {
+  let root = PathBuf::from(&path);
+  if !root.exists() {
+    send_remote_error(sender, id.as_deref(), "path-not-found");
+    return;
+  }
+  let config = match build_scan_config(&options.unwrap_or_default()) {
+    Ok(value) => value,
+    Err(error) => {
+      send_remote_error(sender, id.as_deref(), &error);
+      return;
+    }
+  };
+  let cancel_flag = Arc::new(AtomicBool::new(false));
+  if !hub.start_scan(Arc::clone(&cancel_flag)) {
+    send_remote_error(sender, id.as_deref(), "scan-in-progress");
+    return;
+  }
+  send_remote_event(sender, serde_json::json!({ "event": "scan-started", "id": id }));
+  let hub_for_scan = Arc::clone(&hub);
+  let request_id = id.clone();
+  thread::spawn(move || {
+    let hub_ref = Arc::clone(&hub_for_scan);
+    let request_id_for_emit = request_id.clone();
+    let emitter_hub = Arc::clone(&hub_ref);
+    let emitter: ScanEmitter = Arc::new(move |event| {
+      emit_to_remote(&emitter_hub, event, request_id_for_emit.as_deref());
+    });
+    if let Err(error) = run_scan(root, config, Arc::clone(&cancel_flag), emitter) {
+      emit_to_remote(&hub_ref, ScanEvent::Error(error), request_id.as_deref());
+    }
+    hub_ref.finish_scan();
+  });
+}
+
+fn handle_remote_disk(sender: &mpsc::Sender<String>, id: Option<String>, path: String) {
+  let target = PathBuf::from(&path);
+  match compute_disk_usage(&target) {
+    Ok(snapshot) => {
+      send_remote_event(
+        sender,
+        serde_json::json!({ "event": "disk-info", "id": id, "data": snapshot }),
+      );
+    }
+    Err(message) => {
+      send_remote_event(
+        sender,
+        serde_json::json!({ "event": "disk-error", "id": id, "message": message }),
+      );
+    }
+  }
+}
+
+fn handle_remote_list(
+  sender: &mpsc::Sender<String>,
+  id: Option<String>,
+  path: Option<String>,
+) {
+  eprintln!("[remote] handle list {:?} {:?}", id, path);
+  let target = resolve_list_target(path.as_deref());
+  let (entries, list_path) = match target {
+    Ok(value) => value,
+    Err(message) => {
+      eprintln!("[remote] list error {:?}", message);
+      send_remote_event(
+        sender,
+        serde_json::json!({ "event": "list-error", "id": id, "message": message }),
+      );
+      return;
+    }
+  };
+  eprintln!("[remote] list ok {:?} entries={}", list_path, entries.len());
+  let payload = serde_json::json!({
+    "event": "list-complete",
+    "id": id,
+    "data": {
+      "path": list_path,
+      "entries": entries,
+      "os": if cfg!(target_os = "windows") { "windows" } else { "unix" }
+    }
+  });
+  send_remote_event(sender, payload);
+}
+
+fn resolve_list_target(path: Option<&str>) -> Result<(Vec<RemoteListEntry>, Option<String>), String> {
+  let trimmed = path.unwrap_or("").trim();
+  if trimmed.is_empty() {
+    #[cfg(target_os = "windows")]
+    {
+      return Ok((list_windows_drives(), None));
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+      let root = PathBuf::from("/");
+      let entries = list_directory_entries(&root)?;
+      return Ok((entries, Some("/".to_string())));
+    }
+  }
+  #[cfg(target_os = "windows")]
+  {
+    if trimmed == "/" || trimmed == "\\" {
+      return Ok((list_windows_drives(), None));
+    }
+  }
+  let target = PathBuf::from(trimmed);
+  if !target.exists() {
+    return Err("path-not-found".to_string());
+  }
+  let entries = list_directory_entries(&target)?;
+  Ok((entries, Some(trimmed.to_string())))
+}
+
+fn list_directory_entries(path: &Path) -> Result<Vec<RemoteListEntry>, String> {
+  let mut entries: Vec<RemoteListEntry> = Vec::new();
+  let read_dir = fs::read_dir(path)
+    .map_err(|error| format!("list-failed: {error}"))?;
+  for entry in read_dir {
+    let entry = match entry {
+      Ok(value) => value,
+      Err(error) => {
+        eprintln!("[remote] list entry error: {error}");
+        continue;
+      }
+    };
+    let entry_path = entry.path();
+    let is_dir = entry.file_type().map(|value| value.is_dir()).unwrap_or(false);
+    if !is_dir {
+      continue;
+    }
+    let name = entry
+      .file_name()
+      .to_string_lossy()
+      .to_string();
+    let path_str = entry_path.to_string_lossy().to_string();
+    entries.push(RemoteListEntry {
+      name,
+      path: path_str,
+      is_dir,
+    });
+  }
+  entries.sort_by_key(|entry| entry.name.to_lowercase());
+  Ok(entries)
+}
+
+#[cfg(target_os = "windows")]
+fn list_windows_drives() -> Vec<RemoteListEntry> {
+  let mut entries = Vec::new();
+  for letter in b'A'..=b'Z' {
+    let drive = format!("{}:\\", letter as char);
+    let path = Path::new(&drive);
+    if !path.exists() {
+      continue;
+    }
+    entries.push(RemoteListEntry {
+      name: drive.clone(),
+      path: drive,
+      is_dir: true,
+    });
+  }
+  entries
+}
+
+fn send_remote_event(sender: &mpsc::Sender<String>, value: serde_json::Value) {
+  let _ = sender.send(format!("{}\n", value));
+}
+
+fn send_remote_error(sender: &mpsc::Sender<String>, id: Option<&str>, message: &str) {
+  send_remote_event(sender, serde_json::json!({ "event": "error", "id": id, "message": message }));
+}
+
+fn request_id(request: &RemoteRequest) -> Option<&str> {
+  match request {
+    RemoteRequest::Ping { id }
+    | RemoteRequest::List { id, .. }
+    | RemoteRequest::Disk { id, .. }
+    | RemoteRequest::Scan { id, .. }
+    | RemoteRequest::Cancel { id }
+    | RemoteRequest::Shutdown { id } => id.as_deref(),
+  }
+}
+
+fn resolve_settings_path(args: &[String]) -> PathBuf {
+  if let Some(path) = get_arg_value(args, "--settings") {
+    return PathBuf::from(path);
+  }
+  if let Ok(path) = std::env::var("VOXARA_SETTINGS_PATH") {
+    return PathBuf::from(path);
+  }
+  std::env::current_dir()
+    .unwrap_or_else(|_| PathBuf::from("."))
+    .join("voxara.settings.json")
+}
+
+fn load_settings(path: &Path) -> AppSettings {
+  let contents = fs::read_to_string(path).unwrap_or_default();
+  if contents.trim().is_empty() {
+    return AppSettings::default();
+  }
+  serde_json::from_str(&contents).unwrap_or_default()
+}
+
+fn save_settings(path: &Path, settings: &AppSettings) -> Result<(), String> {
+  let payload = serde_json::to_string_pretty(settings)
+    .map_err(|error| format!("Failed to serialize settings: {error}"))?;
+  fs::write(path, payload).map_err(|error| format!("Failed to save settings: {error}"))
+}
+
+fn apply_settings_update(settings: &mut AppSettings, update: AppSettingsUpdate) {
+  if update.local_token.is_some() {
+    settings.local_token = update.local_token;
+  }
+  if update.tcp_bind.is_some() {
+    settings.tcp_bind = update.tcp_bind;
+  }
+  if update.headless.is_some() {
+    settings.headless = update.headless;
+  }
+}
+
+#[tauri::command]
+fn get_settings(state: tauri::State<SettingsState>) -> Result<AppSettings, String> {
+  let guard = state
+    .value
+    .lock()
+    .map_err(|_| "Failed to lock settings".to_string())?;
+  Ok(guard.clone())
+}
+
+#[tauri::command]
+fn update_settings(
+  state: tauri::State<SettingsState>,
+  update: AppSettingsUpdate,
+) -> Result<AppSettings, String> {
+  let mut guard = state
+    .value
+    .lock()
+    .map_err(|_| "Failed to lock settings".to_string())?;
+  apply_settings_update(&mut guard, update);
+  save_settings(&state.path, &guard)?;
+  Ok(guard.clone())
+}
+
+fn emit_remote_status(
+  app: &tauri::AppHandle,
+  status: &str,
+  message: Option<String>,
+  address: Option<String>,
+) {
+  let payload = serde_json::json!({
+    "status": status,
+    "message": message,
+    "address": address
+  });
+  let _ = app.emit("remote-status", payload);
+}
+
+fn build_remote_payload(payload: JsonValue, token: Option<&str>) -> Result<String, String> {
+  eprintln!("[remote] build payload input={}", payload);
+  let mut value = payload;
+  if let Some(secret) = token {
+    match value {
+      JsonValue::Object(ref mut map) => {
+        map.entry("token".to_string())
+          .or_insert_with(|| JsonValue::String(secret.to_string()));
+      }
+      _ => return Err("Payload must be an object".to_string()),
+    }
+  }
+  Ok(format!("{}\n", value))
+}
+
+fn stop_remote_server(handle: RemoteServerHandle) {
+  let _ = handle.shutdown.send(());
+  let _ = handle.join.join();
+}
+
+fn stop_remote_client(handle: RemoteClientHandle) {
+  let _ = handle.shutdown.send(());
+  drop(handle.sender);
+  let _ = handle.join.join();
+}
+
+fn spawn_remote_client(
+  app: tauri::AppHandle,
+  stream: TcpStream,
+  token: Option<String>,
+  address: String,
+) -> Result<RemoteClientHandle, String> {
+  stream
+    .set_read_timeout(Some(Duration::from_millis(200)))
+    .map_err(|error| format!("Failed to configure TCP stream: {error}"))?;
+  let (sender, receiver) = mpsc::channel::<String>();
+  let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>();
+  let writer_stream = stream
+    .try_clone()
+    .map_err(|error| format!("Failed to clone TCP stream: {error}"))?;
+  thread::spawn(move || write_remote_lines(writer_stream, receiver));
+  let app_clone = app.clone();
+  let address_clone = address.clone();
+  let join = thread::spawn(move || {
+    let mut reader = BufReader::new(stream);
+    loop {
+      if shutdown_rx.try_recv().is_ok() {
+        break;
+      }
+      let mut line = String::new();
+      match reader.read_line(&mut line) {
+        Ok(0) => break,
+        Ok(_) => {
+          let trimmed = line.trim();
+          if trimmed.is_empty() {
+            continue;
+          }
+          if let Ok(value) = serde_json::from_str::<JsonValue>(trimmed) {
+            let _ = app_clone.emit("remote-event", value);
+          }
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => continue,
+        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => continue,
+        Err(_) => break,
+      }
+    }
+    emit_remote_status(&app_clone, "disconnected", None, Some(address_clone));
+  });
+  Ok(RemoteClientHandle {
+    sender,
+    shutdown: shutdown_tx,
+    join,
+    token,
+    address,
+  })
+}
+
+#[tauri::command]
+fn remote_connect(
+  app: tauri::AppHandle,
+  state: tauri::State<RemoteClientState>,
+  payload: RemoteConnectPayload,
+) -> Result<(), String> {
+  let address = format!("{}:{}", payload.host.trim(), payload.port);
+  eprintln!("[remote] connect attempt {}", address);
+  emit_remote_status(&app, "connecting", None, Some(address.clone()));
+  let stream = TcpStream::connect(&address).map_err(|error| {
+    emit_remote_status(
+      &app,
+      "error",
+      Some(format!("Failed to connect: {error}")),
+      Some(address.clone()),
+    );
+    format!("Failed to connect to {address}: {error}")
+  })?;
+  eprintln!("[remote] connect success {}", address);
+  let mut state_guard = state
+    .0
+    .lock()
+    .map_err(|_| "Failed to lock remote state".to_string())?;
+  if let Some(existing) = state_guard.take() {
+    stop_remote_client(existing);
+  }
+  let handle = spawn_remote_client(app.clone(), stream, payload.token, address.clone())?;
+  *state_guard = Some(handle);
+  emit_remote_status(&app, "connected", None, Some(address));
+  Ok(())
+}
+
+#[tauri::command]
+fn remote_disconnect(
+  app: tauri::AppHandle,
+  state: tauri::State<RemoteClientState>,
+) -> Result<(), String> {
+  let mut state_guard = state
+    .0
+    .lock()
+    .map_err(|_| "Failed to lock remote state".to_string())?;
+  if let Some(handle) = state_guard.take() {
+    let address = handle.address.clone();
+    stop_remote_client(handle);
+    emit_remote_status(&app, "disconnected", None, Some(address));
+  }
+  Ok(())
+}
+
+#[tauri::command]
+fn remote_send(
+  state: tauri::State<RemoteClientState>,
+  payload: RemoteSendPayload,
+) -> Result<(), String> {
+  eprintln!("[remote] send from ui payload={}", payload.payload);
+  let state_guard = state
+    .0
+    .lock()
+    .map_err(|_| "Failed to lock remote state".to_string())?;
+  let handle = state_guard
+    .as_ref()
+    .ok_or_else(|| "Remote is not connected".to_string())?;
+  let safe_payload = match payload.payload {
+    JsonValue::Object(_) => payload.payload,
+    _ => JsonValue::Object(serde_json::Map::new()),
+  };
+  let line = build_remote_payload(safe_payload, handle.token.as_deref())?;
+  handle
+    .sender
+    .send(line)
+    .map_err(|_| "Failed to send remote payload".to_string())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RemoteStatusSnapshot {
+  connected: bool,
+  address: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TcpStatusSnapshot {
+  enabled: bool,
+  bind: Option<String>,
+}
+
+#[tauri::command]
+fn remote_status(state: tauri::State<RemoteClientState>) -> Result<RemoteStatusSnapshot, String> {
+  let guard = state
+    .0
+    .lock()
+    .map_err(|_| "Failed to lock remote state".to_string())?;
+  let address = guard.as_ref().map(|handle| handle.address.clone());
+  Ok(RemoteStatusSnapshot {
+    connected: address.is_some(),
+    address,
+  })
+}
+
+#[tauri::command]
+fn get_tcp_status(state: tauri::State<RuntimeState>) -> TcpStatusSnapshot {
+  TcpStatusSnapshot {
+    enabled: state.tcp_enabled,
+    bind: state.tcp_bind.clone(),
+  }
+}
+
 fn get_entry_name_lower(path: &Path) -> String {
   get_entry_name_string(path).to_lowercase()
+}
+
+fn run_headless(tcp: Option<TcpConfig>) -> Result<(), String> {
+  let config = tcp.ok_or_else(|| "Headless mode requires --tcp".to_string())?;
+  println!("Voxara headless mode listening on {}", config.bind_addr);
+  let server = start_remote_server(config, true)?;
+  server
+    .join
+    .join()
+    .map_err(|_| "Headless server thread terminated".to_string())?;
+  Ok(())
 }
 
 fn resolve_startup_path(args: &[String]) -> Option<String> {
@@ -792,7 +1747,7 @@ fn build_summary(
   children: &HashMap<PathBuf, Vec<PathBuf>>,
   files_by_parent: &HashMap<PathBuf, Vec<ScanFile>>,
   stats: &HashMap<PathBuf, NodeStats>,
-  largest_files: &Vec<ScanFile>,
+  largest_files: &[ScanFile],
   start: Instant,
 ) -> ScanSummary {
   let root_node = build_node(root, children, files_by_parent, stats);
@@ -801,7 +1756,7 @@ fn build_summary(
     file_count: root_node.file_count,
     dir_count: root_node.dir_count,
     root: root_node,
-    largest_files: largest_files.clone(),
+    largest_files: largest_files.to_vec(),
     duration_ms: start.elapsed().as_millis(),
   }
 }
@@ -958,7 +1913,41 @@ fn ensure_window_bounds(window: &tauri::WebviewWindow) {
 fn main() {
   let args: Vec<String> = std::env::args().collect();
   let startup_path = resolve_startup_path(&args);
-  let is_context_menu_launch = startup_path.is_some();
+  let settings_path = resolve_settings_path(&args);
+  let settings = load_settings(&settings_path);
+  let runtime_options = match parse_runtime_options(&args, startup_path.clone(), &settings) {
+    Ok(options) => options,
+    Err(error) => {
+      eprintln!("{error}");
+      return;
+    }
+  };
+  if runtime_options.headless {
+    if let Err(error) = run_headless(runtime_options.tcp) {
+      eprintln!("{error}");
+    }
+    return;
+  }
+  let tcp_server = match runtime_options.tcp.clone() {
+    Some(config) => match start_remote_server(config, false) {
+      Ok(handle) => Some(handle),
+      Err(error) => {
+        eprintln!("{error}");
+        None
+      }
+    },
+    None => None,
+  };
+  let tcp_running = tcp_server.is_some();
+  let tcp_bind = if tcp_running {
+    runtime_options
+      .tcp
+      .as_ref()
+      .map(|value| value.bind_addr.to_string())
+  } else {
+    None
+  };
+  let is_context_menu_launch = runtime_options.startup_path.is_some();
   let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
 
   if !is_context_menu_launch {
@@ -969,7 +1958,7 @@ fn main() {
     builder = builder.plugin(window_state_plugin);
   }
 
-  let startup_path_state = startup_path.clone();
+  let startup_path_state = runtime_options.startup_path.clone();
 
   builder
     .setup(move |app| {
@@ -979,6 +1968,15 @@ fn main() {
       }
       app.manage(StartupPath(Mutex::new(startup_path_state.clone())));
       app.manage(ScanCancellation(Mutex::new(HashMap::new())));
+      app.manage(SettingsState {
+        path: settings_path.clone(),
+        value: Mutex::new(settings.clone()),
+      });
+      app.manage(RuntimeState {
+        tcp_enabled: tcp_running,
+        tcp_bind: tcp_bind.clone(),
+      });
+      app.manage(RemoteClientState(Mutex::new(None)));
       if !is_context_menu_launch {
         if let Some(window) = app.get_webview_window("main") {
           let _ = window.restore_state(StateFlags::POSITION | StateFlags::SIZE);
@@ -992,12 +1990,23 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
       scan_path,
       cancel_scan,
+      get_disk_usage,
       is_context_menu_enabled,
       toggle_context_menu,
       get_startup_path,
       open_path,
-      show_in_explorer
+      show_in_explorer,
+      get_settings,
+      update_settings,
+      remote_connect,
+      remote_disconnect,
+      remote_send,
+      remote_status,
+      get_tcp_status
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+  if let Some(handle) = tcp_server {
+    stop_remote_server(handle);
+  }
 }

@@ -23,6 +23,12 @@ export interface ScanSummary {
   durationMs: number;
 }
 
+export interface DiskUsage {
+  path: string;
+  totalBytes: number;
+  freeBytes: number;
+}
+
 export interface FlatNode {
   depth: number;
   kind: "folder" | "file";

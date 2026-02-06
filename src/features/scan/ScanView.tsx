@@ -3,11 +3,33 @@ import { open } from "@tauri-apps/plugin-dialog";
 import type { CSSProperties, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DetailsModal } from "../../components/DetailsModal";
-import { formatBytes, formatDuration, truncateMiddle } from "../../lib/utils";
+import {
+  formatBytes,
+  formatDuration,
+  toErrorMessage,
+  truncateMiddle,
+} from "../../lib/utils";
 import { useUIStore } from "../../store";
+import {
+  listenRemoteEvent,
+  listenRemoteStatus,
+  requestRemoteDiskUsage,
+  requestRemoteList,
+  requestRemoteStatus,
+  sendRemote,
+} from "../remote/api";
+import RemotePanel from "../remote/RemotePanel";
+import type {
+  RemoteEventPayload,
+  RemoteListPayload,
+  RemoteServer,
+  RemoteStatus,
+} from "../remote/types";
+import SettingsPanel from "../settings/SettingsPanel";
 import {
   cancelScan,
   checkContextMenu,
+  getDiskUsage,
   getStartupPath,
   openPath,
   showInExplorer,
@@ -17,6 +39,7 @@ import {
 import ScanTree from "./ScanTree";
 import Treemap from "./Treemap";
 import type {
+  DiskUsage,
   FlatNode,
   ScanFile,
   ScanFilters,
@@ -147,6 +170,118 @@ const parseRegexToken = (value: string): RegExp | null => {
   } catch {
     return null;
   }
+};
+
+const getRegexErrorMessage = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    new RegExp(trimmed);
+    return null;
+  } catch {
+    return "Invalid regex pattern";
+  }
+};
+
+type SizeInputResult = {
+  value: number | null;
+  error: string | null;
+};
+
+const parseSizeInput = (value: string): SizeInputResult => {
+  const trimmed = value.trim();
+  if (!trimmed) return { value: null, error: null };
+  const parsed = parseSizeValue(trimmed);
+  if (parsed === null) {
+    return { value: null, error: "Use values like 10mb or 500kb" };
+  }
+  return { value: parsed, error: null };
+};
+
+const getRemoteStatusLabel = (status: RemoteStatus): string => {
+  if (status === "connected") return "Online";
+  if (status === "connecting") return "Connecting";
+  if (status === "error") return "Error";
+  return "Offline";
+};
+
+const getRemoteStatusPillClasses = (status: RemoteStatus): string => {
+  if (status === "connected") return "bg-emerald-500/15 text-emerald-200";
+  if (status === "connecting") return "bg-blue-500/15 text-blue-200";
+  if (status === "error") return "bg-red-500/15 text-red-200";
+  return "bg-slate-800/60 text-slate-400";
+};
+
+const getRemoteStatusDotClasses = (status: RemoteStatus): string => {
+  if (status === "connected") return "bg-emerald-400";
+  if (status === "connecting") return "bg-blue-400";
+  if (status === "error") return "bg-red-400";
+  return "bg-slate-500";
+};
+
+type RemoteTreeNode = {
+  path: string;
+  name: string;
+  isDir: boolean;
+  children: string[] | null;
+  loading: boolean;
+  error: string | null;
+};
+
+type RemoteBreadcrumb = {
+  label: string;
+  path: string;
+};
+
+const getRemoteNodeName = (path: string): string => {
+  if (path === "/") return "/";
+  const trimmed = path.replace(/[\\/]+$/, "");
+  const parts = trimmed.split(/[/\\]/).filter(Boolean);
+  return parts[parts.length - 1] ?? path;
+};
+
+const buildRemoteBreadcrumb = (path: string): RemoteBreadcrumb[] => {
+  const trimmed = path.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith("/")) {
+    const segments = trimmed.split("/").filter(Boolean);
+    const crumbs: RemoteBreadcrumb[] = [{ label: "/", path: "/" }];
+    let current = "";
+    for (let i = 0; i < segments.length; i += 1) {
+      const segment = segments[i];
+      if (!segment) continue;
+      current = `${current}/${segment}`;
+      crumbs.push({ label: segment, path: current || "/" });
+    }
+    return crumbs;
+  }
+  const driveMatch = trimmed.match(/^[A-Za-z]:/);
+  if (driveMatch) {
+    const drive = driveMatch[0];
+    const rest = trimmed.slice(drive.length).replace(/^[/\\]+/, "");
+    const parts = rest ? rest.split(/[/\\]+/).filter(Boolean) : [];
+    const crumbs: RemoteBreadcrumb[] = [
+      { label: `${drive}\\`, path: `${drive}\\` },
+    ];
+    let current = `${drive}\\`;
+    for (let i = 0; i < parts.length; i += 1) {
+      const segment = parts[i];
+      if (!segment) continue;
+      current = `${current.replace(/[\\/]+$/, "")}\\${segment}\\`;
+      crumbs.push({ label: segment, path: current });
+    }
+    return crumbs;
+  }
+  const parts = trimmed.split(/[/\\]+/).filter(Boolean);
+  const crumbs: RemoteBreadcrumb[] = [];
+  let current = "";
+  for (let i = 0; i < parts.length; i += 1) {
+    const segment = parts[i];
+    if (!segment) continue;
+    current = current ? `${current}/${segment}` : segment;
+    crumbs.push({ label: segment, path: current });
+  }
+  return crumbs;
 };
 
 const getPathExtension = (path: string): string | null => {
@@ -443,6 +578,19 @@ const getUsageFillPercent = (size: number, maxSize: number): number => {
   return Math.min(100, Math.max(0, Math.round(ratio * 100)));
 };
 
+const createRemoteRequestId = (): string => {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+  return `remote-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const toScanSummary = (value: unknown): ScanSummary | null => {
+  if (!value || typeof value !== "object") return null;
+  if (!("root" in value)) return null;
+  return value as ScanSummary;
+};
+
 const getUsageFillStyle = (percent: number): CSSProperties => {
   if (percent <= 0) {
     return { backgroundClip: "content-box" };
@@ -484,7 +632,7 @@ const buildNodeMap = (root: ScanNode): Map<string, ScanNode> => {
 };
 
 const isEmptyFolder = (node: ScanNode): boolean => {
-  return node.children.length === 0 && node.files.length === 0;
+  return node.sizeBytes === 0 && node.fileCount === 0;
 };
 
 const sortFilesBySize = (files: ScanFile[]): ScanFile[] => {
@@ -651,21 +799,6 @@ const createNextSelectionHistory = (
   return { history: trimmed, index: trimmed.length - 1 };
 };
 
-const getSelectionLabel = (entry: SelectionEntry): string => {
-  const base = entry.path.split(/[/\\]/).pop() ?? entry.path;
-  return entry.kind === "file" ? `FILE • ${base}` : base;
-};
-
-const toErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  return "Unknown error";
-};
-
 type ViewMode = "tree" | "treemap";
 type FilterMode = "simple" | "advanced";
 
@@ -676,6 +809,27 @@ const ScanView = (): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
   const [errorCopied, setErrorCopied] = useState(false);
+  const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const [isRemotePanelOpen, setIsRemotePanelOpen] = useState(true);
+  const [isRemoteScanOpen, setIsRemoteScanOpen] = useState(false);
+  const [remoteListLoading, setRemoteListLoading] = useState(false);
+  const [remoteListError, setRemoteListError] = useState<string | null>(null);
+  const [selectedRemotePath, setSelectedRemotePath] = useState<string | null>(
+    null,
+  );
+  const [remoteOs, setRemoteOs] = useState<"windows" | "unix" | null>(null);
+  const [diskUsage, setDiskUsage] = useState<DiskUsage | null>(null);
+  const [diskUsageError, setDiskUsageError] = useState<string | null>(null);
+  const [remoteTree, setRemoteTree] = useState<Record<string, RemoteTreeNode>>(
+    {},
+  );
+  const [remoteTreeRoots, setRemoteTreeRoots] = useState<string[]>([]);
+  const [remoteTreeExpanded, setRemoteTreeExpanded] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+  const [remoteFocusPath, setRemoteFocusPath] = useState<string | null>(null);
+  const [remotePathInput, setRemotePathInput] = useState<string>("");
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -695,6 +849,7 @@ const ScanView = (): JSX.Element => {
   const {
     isNavigationBarVisible,
     toggleNavigationBar,
+    scanStatus,
     setScanStatus,
     scanHistory,
     addScanHistory,
@@ -731,16 +886,77 @@ const ScanView = (): JSX.Element => {
     setShowExplorerFiles,
     setHideEmptyExplorerFolders,
     resetFilters,
+    remoteSyncEnabled,
+    remoteServers,
+    activeRemoteServerId,
+    updateRemoteServerStatus,
+    setActiveRemoteServerId,
   } = useUIStore();
   const unlistenRef = useRef<(() => void) | null>(null);
+  const remoteUnlistenRef = useRef<(() => void) | null>(null);
   const hasInitializedExpansionRef = useRef(false);
   const hasAutoScanRef = useRef(false);
   const copyTimeoutRef = useRef<number | null>(null);
   const historyIndexRef = useRef<number>(-1);
+  const remoteRequestIdRef = useRef<string | null>(null);
+  const remoteListRequestIdRef = useRef<string | null>(null);
+  const activeScanPathRef = useRef<string | null>(null);
+  const activeScanModeRef = useRef<"local" | "remote" | null>(null);
+  const scanRestartTimeoutRef = useRef<number | null>(null);
+  const scanCompleteTimeoutRef = useRef<number | null>(null);
+  const lastScanPathRef = useRef<string | null>(null);
+  const lastScanModeRef = useRef<"local" | "remote" | null>(null);
+  const lastScanSignatureRef = useRef<string | null>(null);
+  const remoteRescanKeyRef = useRef<string | null>(null);
+  const remoteListRequestMapRef = useRef<Map<string, string | null>>(new Map());
+  const remoteListTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const remoteTreeContainerRef = useRef<HTMLDivElement | null>(null);
+  const remoteTreeScrollTopRef = useRef<number>(0);
+  const remoteTreeRestorePendingRef = useRef<boolean>(false);
+  const remoteDiskRequestIdRef = useRef<string | null>(null);
 
   useEffect((): void => {
     historyIndexRef.current = selectionHistoryIndex;
   }, [selectionHistoryIndex]);
+
+  const clearScanRestartTimeout = useCallback((): void => {
+    if (scanRestartTimeoutRef.current) {
+      window.clearTimeout(scanRestartTimeoutRef.current);
+      scanRestartTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearScanCompleteTimeout = useCallback((): void => {
+    if (scanCompleteTimeoutRef.current) {
+      window.clearTimeout(scanCompleteTimeoutRef.current);
+      scanCompleteTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect((): void => {
+    if (!isRemoteScanOpen) return;
+    setRemotePathInput(remoteFocusPath ?? "");
+  }, [isRemoteScanOpen, remoteFocusPath]);
+
+  useEffect((): (() => void) => {
+    return (): void => {
+      for (const timeoutId of remoteListTimeoutsRef.current.values()) {
+        window.clearTimeout(timeoutId);
+      }
+      remoteListTimeoutsRef.current.clear();
+    };
+  }, []);
+
+  useEffect((): void => {
+    if (!remoteTreeRestorePendingRef.current) return;
+    const container = remoteTreeContainerRef.current;
+    if (!container) return;
+    const top = remoteTreeScrollTopRef.current;
+    requestAnimationFrame(() => {
+      container.scrollTop = top;
+      remoteTreeRestorePendingRef.current = false;
+    });
+  }, [remoteListLoading, remoteTree, remoteTreeExpanded, remoteTreeRoots]);
 
   useEffect((): (() => void) | void => {
     if (!containerRef) return undefined;
@@ -881,38 +1097,15 @@ const ScanView = (): JSX.Element => {
     return results;
   }, [filterMode, simpleFilterSet]);
 
-  const regexErrorMessage = (value: string): string | null => {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    try {
-      new RegExp(trimmed);
-      return null;
-    } catch (err) {
-      return "Invalid regex pattern";
-    }
-  };
-
   const includeRegexError = useMemo<string | null>(() => {
-    return regexErrorMessage(includeRegexInput);
+    return getRegexErrorMessage(includeRegexInput);
   }, [includeRegexInput]);
 
   const excludeRegexError = useMemo<string | null>(() => {
-    return regexErrorMessage(excludeRegexInput);
+    return getRegexErrorMessage(excludeRegexInput);
   }, [excludeRegexInput]);
 
   const hasRegexError = includeRegexError || excludeRegexError;
-
-  const parseSizeInput = (
-    value: string,
-  ): { value: number | null; error: string | null } => {
-    const trimmed = value.trim();
-    if (!trimmed) return { value: null, error: null };
-    const parsed = parseSizeValue(trimmed);
-    if (parsed === null) {
-      return { value: null, error: "Use values like 10mb or 500kb" };
-    }
-    return { value: parsed, error: null };
-  };
 
   const minSizeResult = useMemo(() => {
     return parseSizeInput(minSizeInput);
@@ -988,9 +1181,76 @@ const ScanView = (): JSX.Element => {
       filters: scanFilters,
     };
   }, [priorityMode, scanFilters, throttleLevel]);
+  const scanRestartKey = useMemo<string>(() => {
+    return JSON.stringify({
+      priorityMode,
+      throttleLevel,
+      filterMode,
+      simpleFilterIds,
+      includeExtensionsInput,
+      excludeExtensionsInput,
+      includeNamesInput,
+      excludeNamesInput,
+      minSizeInput,
+      maxSizeInput,
+      includePathsInput,
+      excludePathsInput,
+      includeRegexInput,
+      excludeRegexInput,
+      searchQuery,
+    });
+  }, [
+    priorityMode,
+    throttleLevel,
+    filterMode,
+    simpleFilterIds,
+    includeExtensionsInput,
+    excludeExtensionsInput,
+    includeNamesInput,
+    excludeNamesInput,
+    minSizeInput,
+    maxSizeInput,
+    includePathsInput,
+    excludePathsInput,
+    includeRegexInput,
+    excludeRegexInput,
+    searchQuery,
+  ]);
+  const scanRootPath = useMemo<string | null>(() => {
+    if (summary?.root.path) return summary.root.path;
+    return activeScanPathRef.current ?? null;
+  }, [summary]);
+  const searchScopeLabel = useMemo<string | null>(() => {
+    if (selectedPath) return selectedPath;
+    return scanRootPath;
+  }, [scanRootPath, selectedPath]);
 
   const activeNode = summary ? (selectedNode ?? summary.root) : null;
   const activeChildren = activeNode?.children ?? [];
+  const activeRemoteServer = useMemo(() => {
+    if (!activeRemoteServerId) return null;
+    for (let i = 0; i < remoteServers.length; i += 1) {
+      const server = remoteServers[i];
+      if (server?.id === activeRemoteServerId) return server;
+    }
+    return null;
+  }, [activeRemoteServerId, remoteServers]);
+  const resolveRemoteServerByAddress = useCallback(
+    (address?: string | null): RemoteServer | null => {
+      if (!address) return null;
+      const normalized = address.trim();
+      if (!normalized) return null;
+      for (let i = 0; i < remoteServers.length; i += 1) {
+        const server = remoteServers[i];
+        if (!server) continue;
+        const serverAddress = `${server.host}:${server.port}`;
+        if (serverAddress === normalized) return server;
+      }
+      return null;
+    },
+    [remoteServers],
+  );
+  const isRemoteConnected = activeRemoteServer?.status === "connected";
 
   const filterMatchers = useMemo<FilterMatchers>(() => {
     return buildFilterMatchers(scanFilters);
@@ -1084,6 +1344,29 @@ const ScanView = (): JSX.Element => {
     unlistenRef.current = null;
   };
 
+  const resetScanState = useCallback((): void => {
+    setSummary(null);
+    setSelectedPath(null);
+    setSelectedFilePath(null);
+    setIsScanning(true);
+    setScanStatus("scanning");
+    setError(null);
+    setErrorCopied(false);
+    setIsErrorExpanded(false);
+    setSelectionHistory([]);
+    setSelectionHistoryIndex(-1);
+    historyIndexRef.current = -1;
+    hasInitializedExpansionRef.current = false;
+    setDiskUsage(null);
+    setDiskUsageError(null);
+  }, [setScanStatus]);
+
+  useEffect((): void => {
+    if (scanStatus === "scanning" && !isScanning) {
+      setScanStatus("idle");
+    }
+  }, [isScanning, scanStatus, setScanStatus]);
+
   const handleToggleExpand = useCallback(
     (path: string, currentlyExpanded: boolean) => {
       setExpandedPaths((previous) => {
@@ -1141,6 +1424,13 @@ const ScanView = (): JSX.Element => {
     setIsScanning(false);
     setScanStatus("complete");
     clearListeners();
+    activeScanPathRef.current = null;
+    activeScanModeRef.current = null;
+    clearScanRestartTimeout();
+    clearScanCompleteTimeout();
+    scanCompleteTimeoutRef.current = window.setTimeout(() => {
+      setScanStatus("idle");
+    }, 1500);
   };
 
   const failScan = (message: string): void => {
@@ -1149,27 +1439,208 @@ const ScanView = (): JSX.Element => {
     setIsScanning(false);
     setScanStatus("idle");
     clearListeners();
+    activeScanPathRef.current = null;
+    activeScanModeRef.current = null;
+    clearScanRestartTimeout();
+    clearScanCompleteTimeout();
   };
 
   const cancelScanRun = (_message: string): void => {
     setIsScanning(false);
     setScanStatus("idle");
     clearListeners();
+    activeScanPathRef.current = null;
+    activeScanModeRef.current = null;
+    clearScanRestartTimeout();
+    clearScanCompleteTimeout();
   };
 
+  const handleRemoteEvent = useCallback(
+    (payload: RemoteEventPayload): void => {
+      if (!remoteSyncEnabled) return;
+      if (payload.event === "list-complete") {
+        const listId = remoteListRequestIdRef.current;
+        if (payload.id && listId && payload.id !== listId) return;
+        const data = payload.data as RemoteListPayload | undefined;
+        let requestPath: string | null = null;
+        if (data) {
+          const entries = data.entries ?? [];
+          if (data.os) {
+            setRemoteOs(data.os);
+          }
+          requestPath = payload.id
+            ? (remoteListRequestMapRef.current.get(payload.id) ?? null)
+            : null;
+          const isWindows = data.os === "windows";
+          const normalizedListPath =
+            isWindows && data.path === "/" ? null : data.path;
+          const listPath = normalizedListPath ?? requestPath ?? null;
+          setRemoteFocusPath(listPath);
+          if (payload.id) {
+            remoteListRequestMapRef.current.delete(payload.id);
+            const timeoutId = remoteListTimeoutsRef.current.get(payload.id);
+            if (timeoutId) window.clearTimeout(timeoutId);
+            remoteListTimeoutsRef.current.delete(payload.id);
+          }
+          setRemoteTree((previous) => {
+            const next = { ...previous };
+            const childPaths: string[] = [];
+            for (let i = 0; i < entries.length; i += 1) {
+              const entry = entries[i];
+              if (!entry) continue;
+              childPaths.push(entry.path);
+              const existing = next[entry.path];
+              next[entry.path] = {
+                path: entry.path,
+                name: entry.name,
+                isDir: entry.isDir,
+                children: existing?.children ?? null,
+                loading: false,
+                error: null,
+              };
+            }
+            if (listPath) {
+              const existing = next[listPath];
+              next[listPath] = {
+                path: listPath,
+                name: getRemoteNodeName(listPath),
+                isDir: true,
+                children: childPaths,
+                loading: false,
+                error: null,
+              };
+            }
+            return next;
+          });
+          if (requestPath === null && listPath === "/") {
+            setRemoteTreeRoots(["/"]);
+            setRemoteTreeExpanded((previous) => {
+              const next = new Set(previous);
+              next.add("/");
+              return next;
+            });
+          } else if (requestPath === null && listPath === null) {
+            setRemoteTreeRoots(entries.map((entry) => entry.path));
+          }
+        }
+        if (requestPath === null) {
+          setRemoteListLoading(false);
+          setRemoteListError(null);
+        }
+        return;
+      }
+      if (payload.event === "list-error") {
+        if (payload.id) {
+          const requestPath =
+            remoteListRequestMapRef.current.get(payload.id) ?? null;
+          remoteListRequestMapRef.current.delete(payload.id);
+          const timeoutId = remoteListTimeoutsRef.current.get(payload.id);
+          if (timeoutId) window.clearTimeout(timeoutId);
+          remoteListTimeoutsRef.current.delete(payload.id);
+          if (requestPath) {
+            setRemoteTree((previous) => {
+              const next = { ...previous };
+              const existing = next[requestPath];
+              if (existing) {
+                next[requestPath] = {
+                  ...existing,
+                  loading: false,
+                  error: payload.message ?? "Failed to list remote folder",
+                };
+              }
+              return next;
+            });
+          }
+        }
+        if (!payload.id) {
+          setRemoteListLoading(false);
+          setRemoteListError(payload.message ?? "Failed to list remote folder");
+        }
+        return;
+      }
+      if (payload.event === "error") {
+        if (payload.id) {
+          const requestPath =
+            remoteListRequestMapRef.current.get(payload.id) ?? null;
+          remoteListRequestMapRef.current.delete(payload.id);
+          const timeoutId = remoteListTimeoutsRef.current.get(payload.id);
+          if (timeoutId) window.clearTimeout(timeoutId);
+          remoteListTimeoutsRef.current.delete(payload.id);
+          if (requestPath) {
+            setRemoteTree((previous) => {
+              const next = { ...previous };
+              const existing = next[requestPath];
+              if (existing) {
+                next[requestPath] = {
+                  ...existing,
+                  loading: false,
+                  error: payload.message ?? "Remote error",
+                };
+              }
+              return next;
+            });
+          }
+        }
+        setRemoteListLoading(false);
+        setRemoteListError(payload.message ?? "Remote error");
+        return;
+      }
+      if (payload.event === "disk-info") {
+        const requestId = remoteDiskRequestIdRef.current;
+        if (payload.id && requestId && payload.id !== requestId) return;
+        const data = payload.data as DiskUsage | undefined;
+        if (data) {
+          setDiskUsage(data);
+          setDiskUsageError(null);
+        }
+        remoteDiskRequestIdRef.current = null;
+        return;
+      }
+      if (payload.event === "disk-error") {
+        const requestId = remoteDiskRequestIdRef.current;
+        if (payload.id && requestId && payload.id !== requestId) return;
+        setDiskUsageError(payload.message ?? "Failed to load disk usage");
+        remoteDiskRequestIdRef.current = null;
+        return;
+      }
+      const activeId = remoteRequestIdRef.current;
+      if (payload.event === "scan-progress") {
+        if (payload.id && activeId && payload.id !== activeId) return;
+        const summary = toScanSummary(payload.data);
+        if (summary) applySummary(summary);
+        return;
+      }
+      if (payload.event === "scan-complete") {
+        if (payload.id && activeId && payload.id !== activeId) return;
+        const summary = toScanSummary(payload.data);
+        if (summary) finishScan(summary);
+        remoteRequestIdRef.current = null;
+        return;
+      }
+      if (payload.event === "scan-error") {
+        if (payload.id && activeId && payload.id !== activeId) return;
+        failScan(payload.message ?? "Remote scan error");
+        remoteRequestIdRef.current = null;
+        return;
+      }
+      if (payload.event === "scan-cancelled") {
+        if (payload.id && activeId && payload.id !== activeId) return;
+        cancelScanRun(payload.message ?? "Remote scan cancelled");
+        remoteRequestIdRef.current = null;
+      }
+    },
+    [applySummary, cancelScanRun, failScan, finishScan, remoteSyncEnabled],
+  );
+
   const startScanWithFolder = async (folder: string): Promise<void> => {
+    clearScanCompleteTimeout();
+    activeScanPathRef.current = folder;
+    activeScanModeRef.current = "local";
+    lastScanPathRef.current = folder;
+    lastScanModeRef.current = "local";
+    lastScanSignatureRef.current = scanRestartKey;
     clearListeners();
-    setSummary(null);
-    setSelectedPath(null);
-    setSelectedFilePath(null);
-    setIsScanning(true);
-    setScanStatus("scanning");
-    setErrorCopied(false);
-    setIsErrorExpanded(false);
-    setSelectionHistory([]);
-    setSelectionHistoryIndex(-1);
-    historyIndexRef.current = -1;
-    hasInitializedExpansionRef.current = false;
+    resetScanState();
     try {
       unlistenRef.current = await startScan(folder, scanOptions, {
         onProgress: applySummary,
@@ -1182,12 +1653,307 @@ const ScanView = (): JSX.Element => {
     }
   };
 
+  const startRemoteScanWithPath = async (path: string): Promise<void> => {
+    if (!remoteSyncEnabled) {
+      setError("Remote sync is disabled.");
+      return;
+    }
+    clearScanCompleteTimeout();
+    activeScanPathRef.current = path;
+    activeScanModeRef.current = "remote";
+    lastScanPathRef.current = path;
+    lastScanModeRef.current = "remote";
+    lastScanSignatureRef.current = scanRestartKey;
+    clearListeners();
+    resetScanState();
+    const requestId = createRemoteRequestId();
+    remoteRequestIdRef.current = requestId;
+    try {
+      await sendRemote({
+        action: "scan",
+        id: requestId,
+        path,
+        options: scanOptions,
+      });
+    } catch (err) {
+      failScan(toErrorMessage(err));
+    }
+  };
+
+  const cancelRemoteScan = async (): Promise<void> => {
+    const requestId = remoteRequestIdRef.current ?? undefined;
+    try {
+      await sendRemote({ action: "cancel", id: requestId });
+    } catch (err) {
+      failScan(toErrorMessage(err));
+    }
+  };
+
+  const requestRemoteListing = useCallback(
+    (path?: string | null): void => {
+      if (!remoteSyncEnabled) {
+        setRemoteListError("Remote sync is disabled.");
+        return;
+      }
+      if (!isRemoteConnected) {
+        setRemoteListError("No remote server connected.");
+        return;
+      }
+      const isTopLevelRequest = !path;
+      const requestId = createRemoteRequestId();
+      console.debug("[remote] request listing", {
+        requestId,
+        path: path ?? null,
+      });
+      remoteListRequestIdRef.current = requestId;
+      remoteListRequestMapRef.current.set(requestId, path ?? null);
+      if (remoteListTimeoutsRef.current.has(requestId)) {
+        const previousTimeout = remoteListTimeoutsRef.current.get(requestId);
+        if (previousTimeout) window.clearTimeout(previousTimeout);
+        remoteListTimeoutsRef.current.delete(requestId);
+      }
+      if (isTopLevelRequest) {
+        setRemoteListLoading(true);
+        setRemoteListError(null);
+      }
+      setRemoteFocusPath(path ?? null);
+      if (path) {
+        setRemoteTreeExpanded((previous) => {
+          const next = new Set(previous);
+          next.add(path);
+          return next;
+        });
+        setRemoteTree((previous) => {
+          const existing = previous[path];
+          if (!existing) {
+            return {
+              ...previous,
+              [path]: {
+                path,
+                name: getRemoteNodeName(path),
+                isDir: true,
+                children: null,
+                loading: true,
+                error: null,
+              },
+            };
+          }
+          return {
+            ...previous,
+            [path]: { ...existing, loading: true, error: null },
+          };
+        });
+      }
+      const timeoutId = window.setTimeout(() => {
+        const requestPath =
+          remoteListRequestMapRef.current.get(requestId) ?? null;
+        console.warn("[remote] list timeout", { requestId, requestPath });
+        remoteListRequestMapRef.current.delete(requestId);
+        remoteListTimeoutsRef.current.delete(requestId);
+        if (!requestPath) {
+          setRemoteListLoading(false);
+          setRemoteListError("Remote list request timed out.");
+          return;
+        }
+        setRemoteTree((previous) => {
+          const next = { ...previous };
+          const existing = next[requestPath];
+          if (existing) {
+            next[requestPath] = {
+              ...existing,
+              loading: false,
+              error: "Remote list request timed out.",
+            };
+          }
+          return next;
+        });
+      }, 5000);
+      remoteListTimeoutsRef.current.set(requestId, timeoutId);
+      void requestRemoteList(requestId, path).catch((err) => {
+        console.warn("[remote] list request failed", { requestId, err });
+        if (isTopLevelRequest) {
+          setRemoteListLoading(false);
+          setRemoteListError(toErrorMessage(err));
+        }
+      });
+    },
+    [isRemoteConnected, remoteSyncEnabled],
+  );
+
+  useEffect((): (() => void) | void => {
+    if (!isScanning || !activeScanPathRef.current) {
+      clearScanRestartTimeout();
+      return undefined;
+    }
+    clearScanRestartTimeout();
+    scanRestartTimeoutRef.current = window.setTimeout(() => {
+      const path = activeScanPathRef.current;
+      const mode = activeScanModeRef.current;
+      if (!path || !mode) return;
+      if (mode === "remote") {
+        void (async () => {
+          await cancelRemoteScan();
+          await startRemoteScanWithPath(path);
+        })();
+        return;
+      }
+      void (async () => {
+        await cancelScan();
+        await startScanWithFolder(path);
+      })();
+    }, 300);
+    return (): void => {
+      clearScanRestartTimeout();
+    };
+  }, [
+    cancelRemoteScan,
+    clearScanRestartTimeout,
+    isScanning,
+    scanOptions,
+    startRemoteScanWithPath,
+    startScanWithFolder,
+  ]);
+
+  useEffect((): (() => void) | void => {
+    if (hasFilterError) {
+      clearScanRestartTimeout();
+      return undefined;
+    }
+    const path = lastScanPathRef.current;
+    const mode = lastScanModeRef.current;
+    if (!path || !mode) {
+      clearScanRestartTimeout();
+      return undefined;
+    }
+    if (scanRestartKey === lastScanSignatureRef.current) {
+      return undefined;
+    }
+    if (mode === "remote") {
+      return undefined;
+    }
+    if (!remoteSyncEnabled) {
+      return undefined;
+    }
+    clearScanRestartTimeout();
+    scanRestartTimeoutRef.current = window.setTimeout(() => {
+      void (async () => {
+        lastScanSignatureRef.current = scanRestartKey;
+        if (isScanning) {
+          if (mode === "remote") {
+            await cancelRemoteScan();
+          } else {
+            await cancelScan();
+          }
+        }
+        if (mode === "remote") {
+          await startRemoteScanWithPath(path);
+          return;
+        }
+        await startScanWithFolder(path);
+      })();
+    }, 350);
+    return (): void => {
+      clearScanRestartTimeout();
+    };
+  }, [
+    cancelRemoteScan,
+    cancelScan,
+    clearScanRestartTimeout,
+    hasFilterError,
+    isScanning,
+    remoteSyncEnabled,
+    scanRestartKey,
+    startRemoteScanWithPath,
+    startScanWithFolder,
+  ]);
+
+  useEffect((): (() => void) | void => {
+    if (!scanRootPath) return undefined;
+    if (activeScanModeRef.current === "remote") {
+      if (!remoteSyncEnabled || !isRemoteConnected) return undefined;
+      const requestId = createRemoteRequestId();
+      remoteDiskRequestIdRef.current = requestId;
+      setDiskUsageError(null);
+      void requestRemoteDiskUsage(requestId, scanRootPath);
+      return undefined;
+    }
+    let active = true;
+    setDiskUsageError(null);
+    getDiskUsage(scanRootPath)
+      .then((usage) => {
+        if (!active) return;
+        setDiskUsage(usage);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setDiskUsageError(toErrorMessage(err));
+      });
+    return (): void => {
+      active = false;
+    };
+  }, [
+    getDiskUsage,
+    isRemoteConnected,
+    remoteSyncEnabled,
+    scanRootPath,
+    requestRemoteDiskUsage,
+  ]);
+
+  useEffect((): (() => void) | void => {
+    if (!remoteSyncEnabled) return undefined;
+    if (hasFilterError) return undefined;
+    if (lastScanModeRef.current !== "remote") return undefined;
+    const path = lastScanPathRef.current;
+    if (!path) return undefined;
+    if (remoteRescanKeyRef.current === scanRestartKey) return undefined;
+    remoteRescanKeyRef.current = scanRestartKey;
+    clearScanRestartTimeout();
+    scanRestartTimeoutRef.current = window.setTimeout(() => {
+      void (async () => {
+        if (isScanning) {
+          await cancelRemoteScan();
+        }
+        await startRemoteScanWithPath(path);
+      })();
+    }, 300);
+    return (): void => {
+      clearScanRestartTimeout();
+    };
+  }, [
+    cancelRemoteScan,
+    clearScanRestartTimeout,
+    hasFilterError,
+    isScanning,
+    remoteSyncEnabled,
+    scanRestartKey,
+    startRemoteScanWithPath,
+  ]);
+
+  const openRemoteScanModal = useCallback((): void => {
+    setIsRemoteScanOpen(true);
+    setSelectedRemotePath(null);
+    requestRemoteListing(null);
+  }, [requestRemoteListing]);
+
+  const handleRemoteScanConfirm = async (): Promise<void> => {
+    if (!selectedRemotePath) {
+      setRemoteListError("Select a remote folder to scan.");
+      return;
+    }
+    setIsRemoteScanOpen(false);
+    await startRemoteScanWithPath(selectedRemotePath);
+  };
+
   const handleScan = async (): Promise<void> => {
     setError(null);
     setIsErrorExpanded(false);
     if (hasFilterError) {
       setError("Fix filter errors before starting a scan.");
       setIsErrorExpanded(false);
+      return;
+    }
+    if (isRemoteConnected && remoteSyncEnabled) {
+      openRemoteScanModal();
       return;
     }
     const folder = await resolveFolderSelection();
@@ -1218,6 +1984,14 @@ const ScanView = (): JSX.Element => {
 
   const handleCancelScan = async (): Promise<void> => {
     try {
+      if (
+        remoteSyncEnabled &&
+        isRemoteConnected &&
+        remoteRequestIdRef.current
+      ) {
+        await cancelRemoteScan();
+        return;
+      }
       await cancelScan();
     } catch (err) {
       failScan(toErrorMessage(err));
@@ -1290,6 +2064,132 @@ const ScanView = (): JSX.Element => {
     }
   }, []);
 
+  const remoteBreadcrumb = useMemo<RemoteBreadcrumb[]>(() => {
+    if (!remoteFocusPath) return [];
+    return buildRemoteBreadcrumb(remoteFocusPath);
+  }, [remoteFocusPath]);
+  const remoteBreadcrumbItems = useMemo<RemoteBreadcrumb[]>(() => {
+    if (remoteBreadcrumb.length === 0) return [];
+    return remoteBreadcrumb.filter((crumb) => crumb.path !== "/");
+  }, [remoteBreadcrumb]);
+  const remoteRootLabel = remoteOs === "windows" ? "/" : "/";
+  const remoteRootRequestPath = remoteOs === "windows" ? null : "/";
+  const remotePathPlaceholder =
+    remoteOs === "windows" ? "C:\\ or D:\\" : "/home/user";
+  const captureRemoteTreeScroll = useCallback((): void => {
+    const container = remoteTreeContainerRef.current;
+    if (!container) return;
+    remoteTreeScrollTopRef.current = container.scrollTop;
+    remoteTreeRestorePendingRef.current = true;
+  }, []);
+
+  const toggleRemoteTreeNode = useCallback(
+    (path: string): void => {
+      const node = remoteTree[path];
+      if (!node || !node.isDir) return;
+      captureRemoteTreeScroll();
+      const isExpanded = remoteTreeExpanded.has(path);
+      if (!isExpanded) {
+        setRemoteTreeExpanded((previous) => {
+          const next = new Set(previous);
+          next.add(path);
+          return next;
+        });
+        if (node.children === null && !node.loading) {
+          requestRemoteListing(path);
+        }
+        return;
+      }
+      setRemoteTreeExpanded((previous) => {
+        const next = new Set(previous);
+        next.delete(path);
+        return next;
+      });
+    },
+    [
+      captureRemoteTreeScroll,
+      remoteTree,
+      remoteTreeExpanded,
+      requestRemoteListing,
+    ],
+  );
+
+  const renderRemoteTreeNode = useCallback(
+    (path: string, depth: number): JSX.Element | null => {
+      const node = remoteTree[path];
+      if (!node) return null;
+      const isExpanded = remoteTreeExpanded.has(path);
+      const hasChildren = node.children && node.children.length > 0;
+      const indent = depth * 12;
+      return (
+        <li key={path}>
+          <div
+            className={`flex items-stretch gap-2 px-3 text-xs transition ${
+              selectedRemotePath === path
+                ? "bg-blue-500/15 text-blue-100"
+                : "text-slate-200 hover:bg-slate-800/60"
+            }`}
+            style={{ paddingLeft: `${indent + 12}px` }}
+          >
+            <button
+              type="button"
+              onClick={(): void => toggleRemoteTreeNode(path)}
+              className="flex h-full w-5 items-center justify-center rounded-md py-2 text-slate-400 hover:bg-slate-800"
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+            >
+              {node.isDir ? (
+                <span className="text-[10px]">{isExpanded ? "▾" : "▸"}</span>
+              ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={(): void => {
+                captureRemoteTreeScroll();
+                setSelectedRemotePath(path);
+                setRemoteFocusPath(path);
+              }}
+              onDoubleClick={(): void => {
+                toggleRemoteTreeNode(path);
+              }}
+              className="flex-1 text-left py-2"
+            >
+              {node.name}
+            </button>
+          </div>
+          {node.error ? (
+            <div className="px-5 pb-2 text-[11px] text-red-300">
+              {node.error}
+            </div>
+          ) : null}
+          {node.loading ? (
+            <div className="px-5 pb-2 text-[11px] text-slate-400">
+              Loading...
+            </div>
+          ) : null}
+          {isExpanded && hasChildren ? (
+            <ul>
+              {node.children?.map((childPath) =>
+                renderRemoteTreeNode(childPath, depth + 1),
+              )}
+            </ul>
+          ) : null}
+        </li>
+      );
+    },
+    [
+      captureRemoteTreeScroll,
+      remoteTree,
+      remoteTreeExpanded,
+      selectedRemotePath,
+      toggleRemoteTreeNode,
+    ],
+  );
+
+  const contextMenuTitle = contextMenu ? getMenuTitle(contextMenu) : "";
+  const contextMenuTitleShort = contextMenu
+    ? truncateMiddle(contextMenuTitle, 32)
+    : "";
+
   const openFolderContextMenu = useCallback(
     (event: MouseEvent, node: ScanNode): void => {
       event.preventDefault();
@@ -1340,6 +2240,82 @@ const ScanView = (): JSX.Element => {
       clearListeners();
     };
   }, []);
+  useEffect((): (() => void) => {
+    let active = true;
+    requestRemoteStatus()
+      .then((status) => {
+        if (!active) return;
+        if (status.connected) {
+          const matched = resolveRemoteServerByAddress(status.address ?? null);
+          if (matched) {
+            updateRemoteServerStatus(matched.id, "connected");
+            setActiveRemoteServerId(matched.id);
+            return;
+          }
+          if (activeRemoteServerId) {
+            updateRemoteServerStatus(activeRemoteServerId, "connected");
+          }
+          return;
+        }
+        for (let i = 0; i < remoteServers.length; i += 1) {
+          const server = remoteServers[i];
+          if (!server) continue;
+          if (server.status !== "disconnected") {
+            updateRemoteServerStatus(server.id, "disconnected", null);
+          }
+        }
+        setActiveRemoteServerId(null);
+      })
+      .catch(() => undefined);
+    return (): void => {
+      active = false;
+    };
+  }, [
+    activeRemoteServerId,
+    remoteServers,
+    resolveRemoteServerByAddress,
+    setActiveRemoteServerId,
+    updateRemoteServerStatus,
+  ]);
+  useEffect((): (() => void) => {
+    let cleanup: (() => void) | null = null;
+    listenRemoteStatus((payload) => {
+      const matched = resolveRemoteServerByAddress(payload.address ?? null);
+      const targetId = matched?.id ?? activeRemoteServerId;
+      if (!targetId) return;
+      updateRemoteServerStatus(
+        targetId,
+        payload.status,
+        payload.message ?? null,
+      );
+      if (payload.status === "connected" && matched?.id) {
+        setActiveRemoteServerId(matched.id);
+      }
+    })
+      .then((unlisten) => {
+        cleanup = unlisten;
+      })
+      .catch(() => undefined);
+    return (): void => {
+      cleanup?.();
+    };
+  }, [
+    activeRemoteServerId,
+    resolveRemoteServerByAddress,
+    setActiveRemoteServerId,
+    updateRemoteServerStatus,
+  ]);
+  useEffect((): (() => void) => {
+    listenRemoteEvent(handleRemoteEvent)
+      .then((unlisten) => {
+        remoteUnlistenRef.current = unlisten;
+      })
+      .catch(() => undefined);
+    return (): void => {
+      remoteUnlistenRef.current?.();
+      remoteUnlistenRef.current = null;
+    };
+  }, [handleRemoteEvent]);
   useEffect((): (() => void) => {
     return (): void => {
       if (copyTimeoutRef.current) {
@@ -1427,6 +2403,193 @@ const ScanView = (): JSX.Element => {
         isOpen={!!detailsNode}
         onClose={() => setDetailsNode(null)}
       />
+      {isRemoteModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+          <div className="w-full max-w-5xl rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-xl">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-800/70 pb-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-slate-500">
+                  Remote Console
+                </p>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Remote Management & Settings
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={(): void => setIsRemoteModalOpen(false)}
+                className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1 text-xs text-slate-200 hover:bg-slate-800"
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4">
+              <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-3">
+                <button
+                  type="button"
+                  onClick={(): void =>
+                    setIsRemotePanelOpen((current) => !current)
+                  }
+                  className="flex w-full items-center justify-between text-left text-xs font-semibold text-slate-200"
+                >
+                  <span>Remote Management</span>
+                  <span className="text-slate-500">
+                    {isRemotePanelOpen ? "Hide" : "Show"}
+                  </span>
+                </button>
+                {isRemotePanelOpen ? (
+                  <div className="mt-3">
+                    <RemotePanel />
+                  </div>
+                ) : null}
+              </div>
+              <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-3">
+                <button
+                  type="button"
+                  onClick={(): void => setIsSettingsOpen((current) => !current)}
+                  className="flex w-full items-center justify-between text-left text-xs font-semibold text-slate-200"
+                >
+                  <span>Settings</span>
+                  <span className="text-slate-500">
+                    {isSettingsOpen ? "Hide" : "Show"}
+                  </span>
+                </button>
+                {isSettingsOpen ? (
+                  <div className="mt-3">
+                    <SettingsPanel />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {isRemoteScanOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-xl">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-800/70 pb-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-slate-500">
+                  Remote Scan
+                </p>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Sync & Select a Remote Folder
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={(): void => setIsRemoteScanOpen(false)}
+                className="rounded-md border border-slate-700 bg-slate-900/60 px-3 py-1 text-xs text-slate-200 hover:bg-slate-800"
+              >
+                Close
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4">
+              <div className="grid gap-3 text-xs text-slate-400">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-slate-500">Path:</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(): void =>
+                        requestRemoteListing(remoteRootRequestPath)
+                      }
+                      className="rounded-md border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[11px] text-slate-200 hover:bg-slate-800"
+                    >
+                      {remoteRootLabel}
+                    </button>
+                    {remoteBreadcrumbItems.map((crumb) => (
+                      <button
+                        key={crumb.path}
+                        type="button"
+                        onClick={(): void => requestRemoteListing(crumb.path)}
+                        className="rounded-md border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[11px] text-slate-200 hover:bg-slate-800"
+                      >
+                        {crumb.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={remotePathInput}
+                    onChange={(event): void =>
+                      setRemotePathInput(event.target.value)
+                    }
+                    onKeyDown={(event): void => {
+                      if (event.key === "Enter") {
+                        requestRemoteListing(remotePathInput.trim() || null);
+                      }
+                    }}
+                    placeholder={remotePathPlaceholder}
+                    className="flex-1 min-w-[220px] rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={(): void =>
+                      requestRemoteListing(remotePathInput.trim() || null)
+                    }
+                    className="rounded-md border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
+                  >
+                    Go
+                  </button>
+                </div>
+              </div>
+              {remoteListError ? (
+                <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                  {remoteListError}
+                </div>
+              ) : null}
+              <div
+                ref={remoteTreeContainerRef}
+                className="max-h-[360px] overflow-auto rounded-lg border border-slate-800/60 bg-slate-950/40"
+              >
+                {remoteListLoading ? (
+                  <div className="px-4 py-6 text-xs text-slate-400">
+                    Loading remote folders...
+                  </div>
+                ) : remoteTreeRoots.length === 0 ? (
+                  <div className="px-4 py-6 text-xs text-slate-500">
+                    No folders available.
+                  </div>
+                ) : (
+                  <ul className="py-1">
+                    {remoteTreeRoots.map((rootPath) =>
+                      renderRemoteTreeNode(rootPath, 0),
+                    )}
+                  </ul>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-slate-400">
+                  Selected: {selectedRemotePath ?? "None"}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={(): void => {
+                      setIsRemoteScanOpen(false);
+                    }}
+                    className="rounded-md border border-red-500/50 bg-red-500/10 px-3 py-1 text-xs text-red-200 hover:bg-red-500/20"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(): void => {
+                      void handleRemoteScanConfirm();
+                    }}
+                    disabled={!selectedRemotePath}
+                    className="rounded-md bg-emerald-500/80 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:bg-slate-700 disabled:cursor-not-allowed"
+                  >
+                    Start Remote Scan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {contextMenu ? (
         <div
           className="fixed z-50 min-w-[220px] rounded-lg border border-slate-800/80 bg-slate-950/95 shadow-xl shadow-black/40 backdrop-blur ring-1 ring-slate-800/60"
@@ -1435,9 +2598,9 @@ const ScanView = (): JSX.Element => {
         >
           <div
             className="px-3 py-2 text-[11px] font-semibold text-slate-400 border-b border-slate-800/70 whitespace-nowrap"
-            title={getMenuTitle(contextMenu)}
+            title={contextMenuTitle}
           >
-            {truncateMiddle(getMenuTitle(contextMenu), 32)}
+            {contextMenuTitleShort}
           </div>
           {contextMenu.kind === "folder" ? (
             <>
@@ -1505,10 +2668,37 @@ const ScanView = (): JSX.Element => {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-xl font-semibold">Storage Scan</h2>
+              {activeRemoteServer ? (
+                <div className="flex flex-wrap items-center gap-2 rounded-full border border-slate-800/70 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-300">
+                  <span
+                    className={`h-2 w-2 rounded-full ${getRemoteStatusDotClasses(
+                      activeRemoteServer.status,
+                    )}`}
+                  />
+                  <span className="font-medium">
+                    Remote: {activeRemoteServer.name}
+                  </span>
+                  <span className="text-slate-500">
+                    {activeRemoteServer.host}:{activeRemoteServer.port}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 ${getRemoteStatusPillClasses(
+                      activeRemoteServer.status,
+                    )}`}
+                  >
+                    {getRemoteStatusLabel(activeRemoteServer.status)}
+                  </span>
+                </div>
+              ) : null}
             </div>
             <p className="text-xs text-slate-400">
               Select a folder to analyze.
             </p>
+            {searchScopeLabel ? (
+              <p className="text-[11px] text-slate-500">
+                Search scope: {truncateMiddle(searchScopeLabel, 60)}
+              </p>
+            ) : null}
           </div>
           <div className="h-8 w-px bg-slate-800/50" />
           <div className="flex items-center gap-2">
@@ -1521,6 +2711,12 @@ const ScanView = (): JSX.Element => {
               }`}
             >
               {isNavigationBarVisible ? "Hide History" : "Show History"}
+            </button>
+            <button
+              onClick={(): void => setIsRemoteModalOpen(true)}
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800/60 text-slate-200 hover:bg-slate-800 transition"
+            >
+              Remote
             </button>
           </div>
         </div>
@@ -2179,7 +3375,12 @@ const ScanView = (): JSX.Element => {
               </div>
             </div>
 
-            <UsageCharts node={activeNode} />
+            <UsageCharts node={activeNode} diskUsage={diskUsage} />
+            {diskUsageError ? (
+              <p className="mt-2 text-[11px] text-amber-200">
+                {diskUsageError}
+              </p>
+            ) : null}
 
             <div className="shrink-0 rounded-xl border border-slate-800/80 bg-slate-900/55 shadow-sm overflow-hidden flex flex-col max-h-[260px]">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">

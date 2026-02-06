@@ -1,4 +1,4 @@
-import type { CSSProperties, MouseEvent } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { memo, useMemo } from "react";
 import { formatBytes, truncateMiddle } from "../../lib/utils";
 import type { FlatNode, ScanFile, ScanNode } from "./types";
@@ -90,6 +90,51 @@ const ScanTree = memo(
       return getMaxSizeByDepth(treeItems);
     }, [treeItems]);
 
+    const handleSelect = (item: FlatNode): void => {
+      if (item.kind === "folder") {
+        onSelectFolder(item.path);
+        return;
+      }
+      if (item.parentPath) {
+        onSelectFile(item.path, item.parentPath);
+      }
+    };
+
+    const handleContextMenu = (
+      event: MouseEvent<HTMLDivElement>,
+      item: FlatNode,
+    ): void => {
+      if (item.kind === "folder" && item.node) {
+        onContextMenu?.(event, item.node);
+        return;
+      }
+      if (item.kind === "file" && item.file && onContextMenuFile) {
+        onContextMenuFile(event, item.file);
+      }
+    };
+
+    const handleDoubleClick = (
+      event: MouseEvent<HTMLDivElement>,
+      item: FlatNode,
+    ): void => {
+      event.stopPropagation();
+      if (item.kind === "folder" && item.node) {
+        onDouble(item.node);
+        return;
+      }
+      onOpenFile(item.path ?? null);
+    };
+
+    const handleKeyDown = (
+      event: KeyboardEvent<HTMLDivElement>,
+      item: FlatNode,
+    ): void => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleSelect(item);
+      }
+    };
+
     return (
       <>
         {treeItems.map((item) => {
@@ -120,46 +165,12 @@ const ScanTree = memo(
               key={item.path}
               className={rowClass}
               style={depthStyle}
-              onClick={() => {
-                if (isFolder) {
-                  onSelectFolder(item.path);
-                  return;
-                }
-                if (item.parentPath) {
-                  onSelectFile(item.path, item.parentPath);
-                }
-              }}
-              onContextMenu={(event) => {
-                if (isFolder && item.node) {
-                  onContextMenu?.(event, item.node);
-                  return;
-                }
-                if (!isFolder && item.file && onContextMenuFile) {
-                  onContextMenuFile(event, item.file);
-                }
-              }}
-              onDoubleClick={(event) => {
-                event.stopPropagation();
-                if (isFolder && item.node) {
-                  onDouble(item.node);
-                  return;
-                }
-                onOpenFile(item.path ?? null);
-              }}
+              onClick={(): void => handleSelect(item)}
+              onContextMenu={(event): void => handleContextMenu(event, item)}
+              onDoubleClick={(event): void => handleDoubleClick(event, item)}
               role="button"
               tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  if (isFolder) {
-                    onSelectFolder(item.path);
-                    return;
-                  }
-                  if (item.parentPath) {
-                    onSelectFile(item.path, item.parentPath);
-                  }
-                }
-              }}
+              onKeyDown={(event): void => handleKeyDown(event, item)}
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2">
                 <button

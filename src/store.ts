@@ -1,7 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { RemoteServer, RemoteStatus } from "./features/remote/types";
 
 type ScanStatus = "idle" | "scanning" | "complete";
+
+const SCAN_HISTORY_LIMIT = 10;
 
 interface UIState {
   isNavigationBarVisible: boolean;
@@ -44,7 +47,63 @@ interface UIState {
   setShowExplorerFiles: (value: boolean) => void;
   setHideEmptyExplorerFolders: (value: boolean) => void;
   resetFilters: () => void;
+  remoteServers: RemoteServer[];
+  activeRemoteServerId: string | null;
+  remoteSyncEnabled: boolean;
+  remoteInstallerStatus: "ready" | "unavailable";
+  addRemoteServer: (server: RemoteServer) => void;
+  removeRemoteServer: (id: string) => void;
+  updateRemoteServer: (id: string, update: Partial<RemoteServer>) => void;
+  toggleRemoteFavorite: (id: string) => void;
+  updateRemoteServerStatus: (
+    id: string,
+    status: RemoteStatus,
+    message?: string | null,
+  ) => void;
+  setActiveRemoteServerId: (id: string | null) => void;
+  setRemoteSyncEnabled: (value: boolean) => void;
 }
+
+type FilterState = Pick<
+  UIState,
+  | "filterMode"
+  | "simpleFilterIds"
+  | "includeExtensionsInput"
+  | "excludeExtensionsInput"
+  | "includeNamesInput"
+  | "excludeNamesInput"
+  | "minSizeInput"
+  | "maxSizeInput"
+  | "includePathsInput"
+  | "excludePathsInput"
+  | "includeRegexInput"
+  | "excludeRegexInput"
+>;
+
+const defaultFilterState: FilterState = {
+  filterMode: "simple",
+  simpleFilterIds: [],
+  includeExtensionsInput: "",
+  excludeExtensionsInput: "",
+  includeNamesInput: "",
+  excludeNamesInput: "",
+  minSizeInput: "",
+  maxSizeInput: "",
+  includePathsInput: "",
+  excludePathsInput: "",
+  includeRegexInput: "",
+  excludeRegexInput: "",
+};
+
+const buildScanHistory = (
+  history: string[],
+  path: string,
+  limit: number,
+): string[] => {
+  const next = [path, ...history.filter((value) => value !== path)];
+  if (next.length <= limit) return next;
+  return next.slice(0, limit);
+};
 
 export const useUIStore = create<UIState>()(
   persist(
@@ -62,10 +121,11 @@ export const useUIStore = create<UIState>()(
       scanHistory: [],
       addScanHistory: (path: string): void => {
         void set((state) => {
-          const newHistory = [
+          const newHistory = buildScanHistory(
+            state.scanHistory,
             path,
-            ...state.scanHistory.filter((p) => p !== path),
-          ].slice(0, 10);
+            SCAN_HISTORY_LIMIT,
+          );
           return { scanHistory: newHistory };
         });
       },
@@ -76,18 +136,18 @@ export const useUIStore = create<UIState>()(
       hideEmptyExplorerFolders: false,
       priorityMode: "balanced",
       throttleLevel: "off",
-      filterMode: "simple",
-      simpleFilterIds: [],
-      includeExtensionsInput: "",
-      excludeExtensionsInput: "",
-      includeNamesInput: "",
-      excludeNamesInput: "",
-      minSizeInput: "",
-      maxSizeInput: "",
-      includePathsInput: "",
-      excludePathsInput: "",
-      includeRegexInput: "",
-      excludeRegexInput: "",
+      filterMode: defaultFilterState.filterMode,
+      simpleFilterIds: [...defaultFilterState.simpleFilterIds],
+      includeExtensionsInput: defaultFilterState.includeExtensionsInput,
+      excludeExtensionsInput: defaultFilterState.excludeExtensionsInput,
+      includeNamesInput: defaultFilterState.includeNamesInput,
+      excludeNamesInput: defaultFilterState.excludeNamesInput,
+      minSizeInput: defaultFilterState.minSizeInput,
+      maxSizeInput: defaultFilterState.maxSizeInput,
+      includePathsInput: defaultFilterState.includePathsInput,
+      excludePathsInput: defaultFilterState.excludePathsInput,
+      includeRegexInput: defaultFilterState.includeRegexInput,
+      excludeRegexInput: defaultFilterState.excludeRegexInput,
       setPriorityMode: (value): void => {
         void set({ priorityMode: value });
       },
@@ -138,19 +198,50 @@ export const useUIStore = create<UIState>()(
       },
       resetFilters: (): void => {
         void set({
-          filterMode: "simple",
-          simpleFilterIds: [],
-          includeExtensionsInput: "",
-          excludeExtensionsInput: "",
-          includeNamesInput: "",
-          excludeNamesInput: "",
-          minSizeInput: "",
-          maxSizeInput: "",
-          includePathsInput: "",
-          excludePathsInput: "",
-          includeRegexInput: "",
-          excludeRegexInput: "",
+          ...defaultFilterState,
+          simpleFilterIds: [...defaultFilterState.simpleFilterIds],
         });
+      },
+      remoteServers: [],
+      activeRemoteServerId: null,
+      remoteSyncEnabled: true,
+      remoteInstallerStatus: "ready",
+      addRemoteServer: (server): void => {
+        void set((state) => ({
+          remoteServers: [...state.remoteServers, server],
+        }));
+      },
+      removeRemoteServer: (id): void => {
+        void set((state) => ({
+          remoteServers: state.remoteServers.filter((item) => item.id !== id),
+        }));
+      },
+      updateRemoteServer: (id, update): void => {
+        void set((state) => ({
+          remoteServers: state.remoteServers.map((item) =>
+            item.id === id ? { ...item, ...update } : item,
+          ),
+        }));
+      },
+      toggleRemoteFavorite: (id): void => {
+        void set((state) => ({
+          remoteServers: state.remoteServers.map((item) =>
+            item.id === id ? { ...item, favorite: !item.favorite } : item,
+          ),
+        }));
+      },
+      updateRemoteServerStatus: (id, status, message = null): void => {
+        void set((state) => ({
+          remoteServers: state.remoteServers.map((item) =>
+            item.id === id ? { ...item, status, lastMessage: message } : item,
+          ),
+        }));
+      },
+      setActiveRemoteServerId: (id): void => {
+        void set({ activeRemoteServerId: id });
+      },
+      setRemoteSyncEnabled: (value): void => {
+        void set({ remoteSyncEnabled: value });
       },
     }),
     {

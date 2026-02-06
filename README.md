@@ -1,3 +1,7 @@
+<p align="center">
+	<img src="./.github/assets/image.png" alt="Voxara banner" width="100%" />
+</p>
+
 # Voxara
 
 Voxara is a desktop storage analysis app that turns disk usage into clear, actionable insights. It is built for speed, transparency, and clean-up workflows that scale from power users to IT teams.
@@ -46,6 +50,14 @@ Voxara is a desktop storage analysis app that turns disk usage into clear, actio
 - Rust toolchain
 - Tauri prerequisites for your OS
 
+#### Linux build dependencies
+
+- `libgtk-3-dev`
+- `libayatana-appindicator3-dev`
+- `libwebkit2gtk-4.0-dev`
+- `webkit2gtk-driver` (for WebDriver testing)
+- `xvfb` (for headless CI or windowless runs)
+
 ### Run the app
 
 1. Install dependencies.
@@ -89,6 +101,7 @@ npm run tauri:build
 ### In Progress
 
 - Search and filters (age/metadata filters pending).
+- Linux bundles (deb/rpm/appimage) and headless/TCP controls.
 
 ### Planned
 
@@ -140,5 +153,53 @@ npm run tauri:build
 - React + TypeScript
 - Tailwind CSS + shadcn/ui
 - TanStack Router + TanStack Query
+
+## Linux Support
+
+Voxara ships Linux bundle targets via `src-tauri/tauri.linux.conf.json`. The Linux config is merged using JSON Merge Patch during builds, allowing Linux-specific bundle settings without affecting Windows or macOS builds.
+
+## Headless Mode & Remote Management
+
+Voxara can run without a GUI for server workflows and remote administration. Headless mode starts the TCP management server and avoids creating any windows.
+
+### CLI flags
+
+- `--headless` Runs Voxara without a GUI (requires `--tcp`).
+- `--tcp` Enables TCP management on `127.0.0.1:4799` by default.
+- `--tcp-bind=HOST:PORT` Overrides the bind address.
+- `--tcp-token=TOKEN` Requires the token for all TCP requests.
+
+### Environment variables
+
+- `VOXARA_HEADLESS=1` Enables headless mode.
+- `VOXARA_TCP_BIND=127.0.0.1:4799` TCP bind address.
+- `VOXARA_TCP_TOKEN=change_me` Shared secret for TCP access.
+
+### TCP protocol (NDJSON)
+
+Each line is a JSON object with an `action` field. Responses are JSON with an `event` field. All scan events stream back to every connected client.
+
+Example request:
+
+```
+{"action":"ping","id":"1"}
+```
+
+Example scan:
+
+```
+{"action":"scan","id":"scan-1","path":"/data","options":{"priorityMode":"balanced","throttleLevel":"low","filters":{}}}
+```
+
+### Security best practices
+
+- Bind to `127.0.0.1` unless you’re running behind a secure tunnel.
+- Use a TCP token for any non-loopback binding.
+- Prefer TLS or mTLS termination via a reverse proxy or SSH tunnel for remote access.
+- Rate-limit requests and monitor logs when exposing the port to administrators.
+
+## Headless CI tips
+
+When running Voxara tests or UI automation on Linux without a display, use Xvfb. For concurrent CI runs, prefer `xvfb-run -a` to avoid display collisions.
 
 [^perf]: Performance can differ significantly between SSDs, HDDs, network drives, and restricted folders.
