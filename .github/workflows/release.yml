@@ -20,7 +20,7 @@ jobs:
     outputs:
       changed: ${{ steps.compare.outputs.changed }}
       version: ${{ steps.current.outputs.version }}
-      release_body: ${{ steps.changelog.outputs.content }}
+      release_body: ${{ steps.release_body.outputs.body }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,10 +60,21 @@ jobs:
         id: changelog
         with:
           config: cliff.toml
-          args: --latest --strip header
+          args: --strip header
         env:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
+        continue-on-error: true
+      - name: Set release body
+        if: steps.compare.outputs.changed == 'true'
+        id: release_body
+        shell: bash
+        run: |
+          body="${{ steps.changelog.outputs.content }}"
+          if [ -z "$body" ] && [ -f CHANGES.md ]; then
+            body="$(cat CHANGES.md)"
+          fi
+          printf "body<<EOF\n%s\nEOF\n" "$body" >> "$GITHUB_OUTPUT"
       - name: Create tag
         if: steps.compare.outputs.changed == 'true'
         shell: bash
