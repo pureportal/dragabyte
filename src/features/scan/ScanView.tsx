@@ -1839,15 +1839,7 @@ const ScanView = (): JSX.Element => {
       void (async () => {
         lastScanSignatureRef.current = scanRestartKey;
         if (isScanning) {
-          if (mode === "remote") {
-            await cancelRemoteScan();
-          } else {
-            await cancelScan();
-          }
-        }
-        if (mode === "remote") {
-          await startRemoteScanWithPath(path);
-          return;
+          await cancelScan();
         }
         await startScanWithFolder(path);
       })();
