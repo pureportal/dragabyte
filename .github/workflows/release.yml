@@ -101,6 +101,28 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "$tag" -m "Release $tag"
           git push origin "$tag"
+      - name: Create Release
+        if: steps.compare.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BODY: ${{ steps.release_body.outputs.body }}
+        shell: bash
+        run: |
+          version="${{ steps.current.outputs.version }}"
+          tag="v$version"
+          echo "$RELEASE_BODY" > release_notes.md
+          
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists. Updating notes..."
+            gh release edit "$tag" --notes-file release_notes.md
+          else
+            echo "Creating new release $tag..."
+            gh release create "$tag" \
+              --title "Dragabyte $tag" \
+              --notes-file release_notes.md \
+              --draft=false \
+              --prerelease=false
+          fi
 
   build-and-release:
     needs: check-version
@@ -145,10 +167,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v${{ needs.check-version.outputs.version }}
-          releaseName: Dragabyte v${{ needs.check-version.outputs.version }}
-          releaseBody: ${{ needs.check-version.outputs.release_body }}
-          generateReleaseNotes: true
-          prerelease: false
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:

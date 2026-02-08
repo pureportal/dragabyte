@@ -1,12 +1,12 @@
 <p align="center">
-	<img src="./.github/assets/image.png" alt="Dragabyte banner" width="100%" />
-</p>
-
-<p align="center">
 	<img src="./.github/assets/icon.png" alt="Dragabyte icon" width="120" />
 </p>
 
 # Dragabyte
+
+<p align="center">
+	<img src="./.github/assets/image.png" alt="Dragabyte banner" width="100%" />
+</p>
 
 Dragabyte is a desktop storage analysis app that turns disk usage into clear, actionable insights. It is built for speed, transparency, and clean-up workflows that scale from power users to IT teams.
 
