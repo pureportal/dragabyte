@@ -37,11 +37,11 @@ Dragabyte is a desktop storage analysis app that turns disk usage into clear, ac
 
 **Scan workflow**
 
-<video src="./.github/assets/Scan.mp4" controls muted playsinline width="100%"></video>
+https://github.com/user-attachments/assets/2f3ee274-d62f-4cb9-97a1-1fcd72bf9abd
 
 **Bulk rename workflow**
 
-<video src="./.github/assets/Rename.mp4" controls muted playsinline width="100%"></video>
+https://github.com/user-attachments/assets/4ff211aa-7d77-4728-9a27-48f045202dde
 
 ## Who It’s For
 
