@@ -751,7 +751,7 @@ const resolveScanPath = (ctx: {
   path: string | null;
   paths: string[];
 }): string | null => {
-  if (ctx.paths.length > 0) return ctx.paths[0];
+  if (ctx.paths.length > 0) return ctx.paths[0] ?? null;
   return ctx.path ?? null;
 };
 
