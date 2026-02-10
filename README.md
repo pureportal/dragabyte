@@ -33,6 +33,16 @@ Dragabyte is a desktop storage analysis app that turns disk usage into clear, ac
 - **Actionable cleanup** with large-file focus and deep filters.
 - **Audit-friendly** views with history shortcuts and per-item details.
 
+### Demo videos
+
+**Scan workflow**
+
+<video src="./.github/assets/Scan.mp4" controls muted playsinline width="100%"></video>
+
+**Bulk rename workflow**
+
+<video src="./.github/assets/Rename.mp4" controls muted playsinline width="100%"></video>
+
 ## Who It’s For
 
 - Power users who want immediate, no-nonsense disk visibility.
