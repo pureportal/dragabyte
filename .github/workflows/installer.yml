@@ -47,8 +47,6 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          uploadWorkflowArtifacts: true
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -102,3 +100,43 @@ jobs:
         with:
           subject-path: ${{ steps.bundles.outputs.paths }}
           sbom-path: sbom-${{ matrix.platform }}.spdx.json
+
+  build-microsoft-store:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Verify version sync
+        run: npm run sync:version:check
+      - name: Build Microsoft Store offline installer
+        run: npm run tauri:build:microsoft-store
+      - name: Upload Microsoft Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: microsoft-store-installers
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+
+  build-snap:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build snap package
+        uses: snapcore/action-build@v1
+        id: snapcraft
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+          if-no-files-found: error

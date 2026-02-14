@@ -1582,7 +1582,7 @@ const ScanView = (): JSX.Element => {
 
   const largestFiles = useMemo<ScanFile[]>(() => {
     if (!summary || !activeNode) return [];
-    return getLargestFilesForNode(activeNode, 10, (file): boolean => {
+    return getLargestFilesForNode(activeNode, 100, (file): boolean => {
       if (!matchesFilterFile(file, filterMatchers)) return false;
       if (searchParams && !matchesSearchEntry(file, searchParams)) return false;
       return true;
@@ -4433,7 +4433,7 @@ const ScanView = (): JSX.Element => {
             <div className="shrink-0 rounded-xl border border-slate-800/80 bg-slate-900/55 shadow-sm overflow-hidden flex flex-col max-h-[260px]">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
                 <span className="text-slate-400">Largest files</span>
-                <span className="text-[10px] text-slate-500">Top 10</span>
+                <span className="text-[10px] text-slate-500">Top 100</span>
               </div>
               <div className="flex-1 overflow-auto divide-y divide-slate-800/50">
                 {largestFiles.map((file) => {

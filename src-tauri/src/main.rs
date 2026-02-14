@@ -705,7 +705,7 @@ fn run_scan(
                         modified,
                     });
             }
-            update_largest_files(&mut largest_files, &entry_path, size, modified, 10);
+            update_largest_files(&mut largest_files, &entry_path, size, modified, 100);
             if let Some(parent) = entry_path.parent() {
                 let parent_stats = stats.entry(parent.to_path_buf()).or_default();
                 parent_stats.direct_bytes += size;

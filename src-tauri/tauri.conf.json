@@ -33,10 +33,13 @@
         "silent": true
       },
       "wix": {
-        "language": "en-US"
+        "language": "en-US",
+        "fragmentPaths": ["./windows/fragments/context-menu.wxs"],
+        "componentRefs": ["DragabyteContextMenuEntries"]
       },
       "nsis": {
-        "installMode": "perMachine"
+        "installMode": "perMachine",
+        "installerHooks": "windows/installer-hooks.nsh"
       }
     }
   },

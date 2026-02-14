@@ -1,7 +1,7 @@
 {
   "name": "dragabyte",
   "private": true,
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,8 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "tauri:build:microsoft-store": "tauri build --no-bundle && tauri bundle --bundles msi,nsis --config src-tauri/tauri.microsoftstore.conf.json",
+    "tauri:build:linux": "tauri build -- --config src-tauri/tauri.linux.conf.json",
     "sync:version": "node scripts/sync-version.cjs",
     "sync:version:check": "node scripts/sync-version.cjs --check",
     "bump:patch": "node scripts/bump-version.cjs patch",

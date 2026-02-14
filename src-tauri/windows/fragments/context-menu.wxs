@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="DragabyteContextMenuEntries" Guid="*">
+        <RegistryKey Root="HKCU" Key="Software\Classes\Directory\shell\Dragabyte" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Scan with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Directory\shell\Dragabyte\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; &quot;%1&quot;" KeyPath="yes" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\Drive\shell\Dragabyte" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Scan with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Drive\shell\Dragabyte\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; &quot;%1&quot;" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\directory\Background\shell\Dragabyte" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Scan with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\directory\Background\shell\Dragabyte\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; &quot;%V&quot;" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\Directory\shell\DragabyteRename" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Rename with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+          <RegistryValue Type="string" Name="MultiSelectModel" Value="Player" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Directory\shell\DragabyteRename\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; --rename %*" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\Drive\shell\DragabyteRename" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Rename with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+          <RegistryValue Type="string" Name="MultiSelectModel" Value="Player" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\Drive\shell\DragabyteRename\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; --rename %*" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\directory\Background\shell\DragabyteRename" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Rename with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+          <RegistryValue Type="string" Name="MultiSelectModel" Value="Player" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\directory\Background\shell\DragabyteRename\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; --rename &quot;%V&quot;" />
+        </RegistryKey>
+
+        <RegistryKey Root="HKCU" Key="Software\Classes\*\shell\DragabyteRename" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="Rename with Dragabyte" />
+          <RegistryValue Type="string" Name="Icon" Value="[INSTALLDIR]dragabyte.exe" />
+          <RegistryValue Type="string" Name="MultiSelectModel" Value="Player" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\*\shell\DragabyteRename\command" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Value="&quot;[INSTALLDIR]dragabyte.exe&quot; --rename %*" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

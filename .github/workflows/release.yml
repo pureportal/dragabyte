@@ -239,3 +239,65 @@ jobs:
           echo "Build failed. Deleting release $tag..."
           gh release delete "$tag" --yes --cleanup-tag
 
+  build-microsoft-store-release:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Verify version sync
+        run: npm run sync:version:check
+      - name: Build Microsoft Store offline installer
+        run: npm run tauri:build:microsoft-store
+      - name: Upload Microsoft Store installers to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          tag="v${{ needs.check-version.outputs.version }}"
+          shopt -s nullglob
+          files=(
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+          )
+
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No Microsoft Store installer artifacts found"
+            exit 1
+          fi
+
+          gh release upload "$tag" "${files[@]}" --clobber
+
+  build-snap-release:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Build snap package
+        uses: snapcore/action-build@v1
+        id: snapcraft
+      - name: Upload snap package to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ needs.check-version.outputs.version }}"
+          gh release upload "$tag" "${{ steps.snapcraft.outputs.snap }}" --clobber
+
