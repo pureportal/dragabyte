@@ -957,6 +957,27 @@ const buildTreeItems = (
   return result;
 };
 
+const collectCalculatingFolderPaths = (root: ScanNode): Set<string> => {
+  const calculating = new Set<string>();
+  const stack: ScanNode[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node) continue;
+    const hasPendingChildren = node.dirCount > node.children.length;
+    const hasPendingFiles = node.fileCount > node.files.length;
+    if (hasPendingChildren || hasPendingFiles) {
+      calculating.add(node.path);
+    }
+    for (let i = 0; i < node.children.length; i += 1) {
+      const child = node.children[i];
+      if (child) {
+        stack.push(child);
+      }
+    }
+  }
+  return calculating;
+};
+
 const buildInitialExpandedPaths = (root: ScanNode): Set<string> => {
   const next = new Set<string>();
   next.add(root.path);
@@ -1247,6 +1268,13 @@ const ScanView = (): JSX.Element => {
       : [];
   }, [expandedPaths, hideEmptyExplorerFolders, showExplorerFiles, summary]);
 
+  const calculatingFolderPaths = useMemo<Set<string>>(() => {
+    if (!summary || !isScanning) {
+      return new Set<string>();
+    }
+    return collectCalculatingFolderPaths(summary.root);
+  }, [isScanning, summary]);
+
   const addSelectionHistory = useCallback((entry: SelectionEntry): void => {
     setSelectionHistory((previous) => {
       const result = createNextSelectionHistory(
@@ -1490,8 +1518,6 @@ const ScanView = (): JSX.Element => {
   }, [priorityMode, scanFilters, throttleLevel]);
   const scanRestartKey = useMemo<string>(() => {
     return JSON.stringify({
-      priorityMode,
-      throttleLevel,
       filterMode,
       simpleFilterIds,
       includeExtensionsInput,
@@ -1509,8 +1535,6 @@ const ScanView = (): JSX.Element => {
       searchQuery,
     });
   }, [
-    priorityMode,
-    throttleLevel,
     filterMode,
     simpleFilterIds,
     includeExtensionsInput,
@@ -4324,6 +4348,7 @@ const ScanView = (): JSX.Element => {
               ) : viewMode === "tree" ? (
                 <ScanTree
                   treeItems={treeItems}
+                  calculatingFolderPaths={calculatingFolderPaths}
                   expandedPaths={expandedPaths}
                   selectedPath={selectedPath}
                   selectedFilePath={selectedFilePath}

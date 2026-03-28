@@ -2190,7 +2190,9 @@ fn build_summary(
     max_children: Option<usize>,
 ) -> ScanSummary {
     let (max_depth, max_files) = if compact {
-        (Some(1), Some(0))
+        // Keep progress payloads compact, but include a bounded file list so
+        // files can appear in the explorer before the scan completes.
+        (Some(1), Some(32))
     } else {
         (None, None)
     };

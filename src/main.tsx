@@ -1,11 +1,11 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
-import { router } from "./router";
+import React from "react";
+import ReactDOM from "react-dom/client";
 import { fetchSettings } from "./features/settings/api";
-import { installUpdateIfAvailable } from "./lib/updater";
 import "./index.css";
+import { promptUpdateIfAvailable } from "./lib/updater";
+import { router } from "./router";
 
 const queryClient = new QueryClient();
 
@@ -18,7 +18,7 @@ const startAutoUpdate = async (): Promise<void> => {
   try {
     const settings = await fetchSettings();
     if (settings.autoUpdate === false) return;
-    await installUpdateIfAvailable();
+    await promptUpdateIfAvailable();
   } catch {
     return;
   }

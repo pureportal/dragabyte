@@ -56,8 +56,29 @@ const getRowFillStyle = (percent: number): CSSProperties => {
   };
 };
 
+const FolderProgressSpinner = (): JSX.Element => {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 animate-spin text-blue-300"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="9" />
+      <path
+        className="opacity-90"
+        strokeLinecap="round"
+        d="M21 12a9 9 0 00-9-9"
+      />
+    </svg>
+  );
+};
+
 interface ScanTreeProps {
   treeItems: FlatNode[];
+  calculatingFolderPaths: Set<string>;
   expandedPaths: Set<string>;
   selectedPath: string | null;
   selectedFilePath: string | null;
@@ -76,6 +97,7 @@ interface ScanTreeProps {
 const ScanTree = memo(
   ({
     treeItems,
+    calculatingFolderPaths,
     expandedPaths,
     selectedPath,
     selectedFilePath,
@@ -142,6 +164,8 @@ const ScanTree = memo(
           const isFolder = item.kind === "folder";
           const isExpanded = isFolder && expandedPaths.has(item.path);
           const hasChildren = isFolder && item.hasChildren;
+          const isCalculating =
+            isFolder && calculatingFolderPaths.has(item.path);
           const isActive = isFolder
             ? item.path === selectedPath
             : item.path === selectedFilePath;
@@ -192,6 +216,7 @@ const ScanTree = memo(
                   {isExpanded ? "▾" : "▸"}
                 </button>
                 <Icon className={`h-4 w-4 ${iconClassName}`} />
+                {isCalculating ? <FolderProgressSpinner /> : null}
                 <span
                   className="min-w-0 flex-1 truncate whitespace-nowrap"
                   title={item.path}
@@ -199,9 +224,14 @@ const ScanTree = memo(
                   {displayName}
                 </span>
               </div>
-              <div className="sticky right-0 ml-auto flex-none w-24 py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-sm border-l border-white/5">
+              <div className="sticky right-0 ml-auto flex-none w-32 py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-sm border-l border-white/5">
                 <div className="flex flex-col items-end gap-1">
-                  <span>{formatBytes(item.sizeBytes)}</span>
+                  <span className="text-slate-200">
+                    {formatBytes(item.sizeBytes)}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {fillPercent}% occupied
+                  </span>
                   <div className="h-1 w-full rounded bg-slate-800/70">
                     <div
                       className="h-1 rounded bg-blue-400/70"
