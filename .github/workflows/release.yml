@@ -24,6 +24,7 @@ jobs:
       changed: ${{ steps.compare.outputs.changed }}
       version: ${{ steps.current.outputs.version }}
       release_body: ${{ steps.release_body.outputs.body }}
+      release_id: ${{ steps.release.outputs.release_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,6 +104,7 @@ jobs:
           git push origin "$tag"
       - name: Create Release
         if: steps.compare.outputs.changed == 'true'
+        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_BODY: ${{ steps.release_body.outputs.body }}
@@ -110,19 +112,35 @@ jobs:
         run: |
           version="${{ steps.current.outputs.version }}"
           tag="v$version"
+          title="Dragabyte $tag"
           echo "$RELEASE_BODY" > release_notes.md
           
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag already exists. Updating notes..."
-            gh release edit "$tag" --notes-file release_notes.md
+          if gh release view "$tag" --json isDraft >/dev/null 2>&1; then
+            is_draft="$(gh release view "$tag" --json isDraft --jq '.isDraft')"
+
+            if [ "$is_draft" = "true" ]; then
+              echo "Release $tag already exists as a draft. Publishing it and updating notes..."
+              gh release edit "$tag" \
+                --title "$title" \
+                --notes-file release_notes.md \
+                --draft=false
+            else
+              echo "Release $tag already exists. Updating notes..."
+              gh release edit "$tag" \
+                --title "$title" \
+                --notes-file release_notes.md
+            fi
           else
             echo "Creating new release $tag..."
             gh release create "$tag" \
-              --title "Dragabyte $tag" \
+              --title "$title" \
               --notes-file release_notes.md \
               --draft=false \
               --prerelease=false
           fi
+
+          release_id="$(gh release view "$tag" --json databaseId --jq '.databaseId')"
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
 
   build-and-release:
     needs: check-version
@@ -166,6 +184,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          releaseId: ${{ needs.check-version.outputs.release_id }}
           tagName: v${{ needs.check-version.outputs.version }}
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
