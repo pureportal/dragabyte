@@ -3,9 +3,9 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCenter,
-  type DragEndEvent,
   useSensor,
   useSensors,
+  type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -32,7 +32,7 @@ import {
   Play,
   Save,
   Trash2,
-  X
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -106,6 +106,78 @@ type RenameContextItem = {
   isDirectory: boolean;
 };
 
+type RenameTargetType = NonNullable<RenameRule["targetType"]>;
+type RenameCaseType = NonNullable<RenameRule["caseType"]>;
+type RenameRemoveFromType = NonNullable<RenameRule["removeFrom"]>;
+type RenameAddToType = NonNullable<RenameRule["addTo"]>;
+
+type BatchRenameItem = {
+  path: string;
+  new_path: string;
+};
+
+type BatchRenameResult = {
+  successCount: number;
+  errors: string[];
+};
+
+const FILTER_TYPE_OPTIONS: SelectOption<FilterRuleType>[] = [
+  { label: "Include", value: "include" },
+  { label: "Exclude", value: "exclude" },
+];
+
+const TARGET_TYPE_OPTIONS: SelectOption<RenameTargetType>[] = [
+  { label: "Both", value: "both" },
+  { label: "Files", value: "file" },
+  { label: "Folders", value: "folder" },
+];
+
+const CASE_TYPE_OPTIONS: SelectOption<RenameCaseType>[] = [
+  { label: "lowercase", value: "lowercase" },
+  { label: "UPPERCASE", value: "uppercase" },
+  { label: "camelCase", value: "camelCase" },
+  { label: "PascalCase", value: "pascalCase" },
+  { label: "Sentence case", value: "sentenceCase" },
+  { label: "kebab-case", value: "kebabCase" },
+];
+
+const EXTENSION_CASE_OPTIONS: SelectOption<RenameCaseType>[] = [
+  { label: "lowercase", value: "lowercase" },
+  { label: "UPPERCASE", value: "uppercase" },
+];
+
+const REMOVE_FROM_OPTIONS: SelectOption<RenameRemoveFromType>[] = [
+  { label: "Start", value: "start" },
+  { label: "End", value: "end" },
+];
+
+const ADD_TO_OPTIONS: SelectOption<RenameAddToType>[] = [
+  { label: "Suffix", value: "suffix" },
+  { label: "Prefix", value: "prefix" },
+];
+
+const createId = (): string => {
+  return Math.random().toString(36).slice(2, 11);
+};
+
+const matchesFilterRule = (name: string, rule: FilterRule): boolean => {
+  if (!rule.text) {
+    return false;
+  }
+
+  if (rule.useRegex) {
+    try {
+      return new RegExp(rule.text, rule.matchCase ? "" : "i").test(name);
+    } catch {
+      return false;
+    }
+  }
+
+  const text = rule.matchCase ? rule.text : rule.text.toLowerCase();
+  const value = rule.matchCase ? name : name.toLowerCase();
+  return value.includes(text);
+};
+
 const buildFileItem = (
   path: string,
   name: string,
@@ -139,10 +211,7 @@ const applyRulesToItems = (
   return next;
 };
 
-const applyFilters = (
-  items: FileItem[],
-  filters: FilterRule[],
-): FileItem[] => {
+const applyFilters = (items: FileItem[], filters: FilterRule[]): FileItem[] => {
   const activeFilters = filters.filter((f) => f.active);
   if (activeFilters.length === 0) return items;
 
@@ -150,61 +219,19 @@ const applyFilters = (
   const excludes = activeFilters.filter((f) => f.type === "exclude");
 
   return items.filter((item) => {
-    // Exclude logic
     for (const rule of excludes) {
-      if (!rule.text) continue;
-      let match = false;
-      const nameToCheck = item.originalName;
-      if (rule.useRegex) {
-        try {
-          const regex = new RegExp(
-            rule.text,
-            rule.matchCase ? "" : "i",
-          );
-          if (regex.test(nameToCheck)) match = true;
-        } catch {
-          // ignore
-        }
-      } else {
-        const text = rule.matchCase ? rule.text : rule.text.toLowerCase();
-        const val = rule.matchCase
-          ? nameToCheck
-          : nameToCheck.toLowerCase();
-        if (val.includes(text)) match = true;
+      if (matchesFilterRule(item.originalName, rule)) {
+        return false;
       }
-      if (match) return false;
     }
 
-    // Include logic
     if (includes.length > 0) {
-      let matchedAny = false;
       for (const rule of includes) {
-        if (!rule.text) continue;
-        let match = false;
-        const nameToCheck = item.originalName;
-        if (rule.useRegex) {
-          try {
-            const regex = new RegExp(
-              rule.text,
-              rule.matchCase ? "" : "i",
-            );
-            if (regex.test(nameToCheck)) match = true;
-          } catch {
-            // ignore
-          }
-        } else {
-          const text = rule.matchCase ? rule.text : rule.text.toLowerCase();
-          const val = rule.matchCase
-            ? nameToCheck
-            : nameToCheck.toLowerCase();
-          if (val.includes(text)) match = true;
-        }
-        if (match) {
-          matchedAny = true;
-          break;
+        if (matchesFilterRule(item.originalName, rule)) {
+          return true;
         }
       }
-      if (!matchedAny) return false;
+      return false;
     }
 
     return true;
@@ -294,11 +321,8 @@ const FilterRuleItem = ({
         <div className="flex-1 flex gap-2 items-center">
           <Select
             value={rule.type}
-            onChange={(val) => onUpdate(rule.id, { type: val as any })}
-            options={[
-              { label: "Include", value: "include" },
-              { label: "Exclude", value: "exclude" },
-            ]}
+            onChange={(value) => onUpdate(rule.id, { type: value })}
+            options={FILTER_TYPE_OPTIONS}
             triggerClassName={cn(
               "px-2 py-0.5 text-[10px] min-w-[70px] border-transparent font-bold uppercase tracking-wider",
               rule.type === "include" ? "text-emerald-400" : "text-rose-400",
@@ -361,12 +385,10 @@ const FilterRuleItem = ({
 
 const RuleItem = ({
   rule,
-  index,
   onUpdate,
   onRemove,
 }: {
   rule: RenameRule;
-  index: number;
   onUpdate: (id: string, updates: Partial<RenameRule>) => void;
   onRemove: (id: string) => void;
 }) => {
@@ -395,12 +417,8 @@ const RuleItem = ({
 
           <Select
             value={rule.targetType || "both"}
-            onChange={(val) => onUpdate(rule.id, { targetType: val as any })}
-            options={[
-              { label: "Both", value: "both" },
-              { label: "Files", value: "file" },
-              { label: "Folders", value: "folder" },
-            ]}
+            onChange={(value) => onUpdate(rule.id, { targetType: value })}
+            options={TARGET_TYPE_OPTIONS}
             triggerClassName="px-2 py-0.5 text-[10px] border-slate-700 bg-transparent min-w-[70px]"
           />
         </div>
@@ -479,15 +497,8 @@ const RuleItem = ({
           <>
             <Select
               value={rule.caseType || "lowercase"}
-              onChange={(val) => onUpdate(rule.id, { caseType: val as any })}
-              options={[
-                { label: "lowercase", value: "lowercase" },
-                { label: "UPPERCASE", value: "uppercase" },
-                { label: "camelCase", value: "camelCase" },
-                { label: "PascalCase", value: "pascalCase" },
-                { label: "Sentence case", value: "sentenceCase" },
-                { label: "kebab-case", value: "kebabCase" },
-              ]}
+              onChange={(value) => onUpdate(rule.id, { caseType: value })}
+              options={CASE_TYPE_OPTIONS}
               triggerClassName="w-full text-sm py-1.5"
             />
             <div className="flex gap-2 items-center text-xs text-slate-400 border-t border-slate-800/50 pt-1 mt-1">
@@ -517,11 +528,8 @@ const RuleItem = ({
         {rule.type === "extension" && (
           <Select
             value={rule.caseType || "lowercase"}
-            onChange={(val) => onUpdate(rule.id, { caseType: val as any })}
-            options={[
-              { label: "lowercase", value: "lowercase" },
-              { label: "UPPERCASE", value: "uppercase" },
-            ]}
+            onChange={(value) => onUpdate(rule.id, { caseType: value })}
+            options={EXTENSION_CASE_OPTIONS}
             triggerClassName="w-full text-sm py-1.5"
           />
         )}
@@ -543,11 +551,8 @@ const RuleItem = ({
             <span className="text-sm text-slate-400">chars from</span>
             <Select
               value={rule.removeFrom || "start"}
-              onChange={(val) => onUpdate(rule.id, { removeFrom: val as any })}
-              options={[
-                { label: "Start", value: "start" },
-                { label: "End", value: "end" },
-              ]}
+              onChange={(value) => onUpdate(rule.id, { removeFrom: value })}
+              options={REMOVE_FROM_OPTIONS}
               triggerClassName="w-24 text-sm py-1"
             />
           </div>
@@ -585,11 +590,8 @@ const RuleItem = ({
               <span className="text-sm text-slate-400 w-12">Add to</span>
               <Select
                 value={rule.addTo || "suffix"}
-                onChange={(val) => onUpdate(rule.id, { addTo: val as any })}
-                options={[
-                  { label: "Suffix", value: "suffix" },
-                  { label: "Prefix", value: "prefix" },
-                ]}
+                onChange={(value) => onUpdate(rule.id, { addTo: value })}
+                options={ADD_TO_OPTIONS}
                 triggerClassName="w-32 text-sm py-1"
               />
             </div>
@@ -607,7 +609,6 @@ export default function BulkRenameView() {
   const [activeTab, setActiveTab] = useState<"rename" | "filter">("rename");
   const [isApplying, setIsApplying] = useState(false);
 
-  // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -627,7 +628,6 @@ export default function BulkRenameView() {
     }
   };
 
-  // Templates
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [saveMode, setSaveMode] = useState<"rules" | "filters">("rules");
   const [templates, setTemplates] = useState<SavedTemplate[]>([]);
@@ -637,10 +637,10 @@ export default function BulkRenameView() {
     () => applyFilters(files, filterRules),
     [files, filterRules],
   );
-  
+
   const visibleFileIds = useMemo(
-    () => new Set(filteredFiles.map(f => f.id)),
-    [filteredFiles]
+    () => new Set(filteredFiles.map((f) => f.id)),
+    [filteredFiles],
   );
 
   useEffect(() => {
@@ -655,62 +655,45 @@ export default function BulkRenameView() {
   }, []);
 
   const saveTemplate = (name: string) => {
-    // Check for overwrite
     const existingIndex = templates.findIndex((t) => t.name === name);
-    
+    const existingTemplate = existingIndex >= 0 ? templates[existingIndex] : undefined;
+
     const newTemplate: SavedTemplate = {
-      id: (existingIndex >= 0 && templates[existingIndex]) ? templates[existingIndex].id : Math.random().toString(36).substr(2, 9),
+      id: existingTemplate?.id ?? createId(),
       name,
       createdAt: Date.now(),
-      // If saving rules, include rules. If saving filters, include filters.
-      // We essentially "upsert" or "fresh save"? 
-      // Requirement: "Save current rules" / "Save current filters".
-      // If I overwrite, I should probably replace the TYPE I am saving, but what about the other?
-      // "If we save a filter or rule template with the same name, override it"
-      // This implies replacing the entry.
-      rules: saveMode === 'rules' ? rules : [],
-      filters: saveMode === 'filters' ? filterRules : []
+      rules: saveMode === "rules" ? rules : [],
+      filters: saveMode === "filters" ? filterRules : [],
     };
-    
-    // However, if we overwrite, maybe we want to preserve the OTHER part if it exists?
-    // User phrasing "override it" usually means full replace in simple apps.
-    // But if I have a template "MySetup" with rules, and I save "MySetup" filters, do I want to lose rules?
-    // Let's assume full override for simplicity based on "override it".
-    // Actually, distinct buttons imply distinct saved artifacts.
-    // If I want to mix them, I needs a "Save All" button.
-    // Let's stick to: Save Rules -> Template with rules. Save Filters -> Template with filters.
-    
+
     let updated;
     if (existingIndex >= 0) {
-        updated = [...templates];
-        updated[existingIndex] = newTemplate;
+      updated = [...templates];
+      updated[existingIndex] = newTemplate;
     } else {
-        updated = [...templates, newTemplate];
+      updated = [...templates, newTemplate];
     }
-    
+
     setTemplates(updated);
     localStorage.setItem("rename_templates", JSON.stringify(updated));
     setShowSaveTemplate(false);
   };
 
   const loadTemplate = (t: SavedTemplate) => {
-    // Regenerate IDs
     if (t.rules && t.rules.length > 0) {
-        const newRules = t.rules.map((r) => ({
-          ...r,
-          id: Math.random().toString(36).substr(2, 9),
-        }));
-        setRules(newRules);
+      const newRules = t.rules.map((r) => ({
+        ...r,
+        id: createId(),
+      }));
+      setRules(newRules);
     }
-    
+
     if (t.filters && t.filters.length > 0) {
-        // We'll regenerate IDs for filters too if needed, though simple array copy is ok if ID is unique enough
-        // safely:
-        const newFilters = t.filters.map((f) => ({
-            ...f,
-            id: Math.random().toString(36).substr(2, 9)
-        }));
-        setFilterRules(newFilters);
+      const newFilters = t.filters.map((f) => ({
+        ...f,
+        id: createId(),
+      }));
+      setFilterRules(newFilters);
     }
     setShowTemplateMenu(false);
   };
@@ -746,10 +729,13 @@ export default function BulkRenameView() {
   const loadContextItems = useCallback(
     async (paths: string[], recursive: boolean = false): Promise<void> => {
       try {
-        const items = await invoke<RenameContextItem[]>("collect_rename_items", {
-          paths,
-          recursive,
-        });
+        const items = await invoke<RenameContextItem[]>(
+          "collect_rename_items",
+          {
+            paths,
+            recursive,
+          },
+        );
         mergeItems(
           items.map((item) =>
             buildFileItem(item.path, item.name, item.isDirectory),
@@ -773,18 +759,13 @@ export default function BulkRenameView() {
   const processFilesToAdd = (
     paths: string[],
     areDirectories: boolean = false,
-  ) => {
+  ): void => {
     const newFiles: FileItem[] = paths.map((path) =>
       buildFileItem(path, getPathName(path), areDirectories),
     );
 
-    // Current files map for dedup
     const existing = new Set(files.map((f) => f.path));
-
-    // Merge
     const merged = [...files, ...newFiles.filter((f) => !existing.has(f.path))];
-
-    // Apply rules
     setFiles(
       merged.map((f, idx) => ({
         ...f,
@@ -810,7 +791,6 @@ export default function BulkRenameView() {
     }
   };
 
-  // Add Folder as Renamable Item
   const handleAddFolders = async () => {
     try {
       const selected = await open({
@@ -828,7 +808,6 @@ export default function BulkRenameView() {
     }
   };
 
-  // Import Folder Contents
   const handleImportFolder = async () => {
     try {
       const selected = await open({
@@ -848,7 +827,7 @@ export default function BulkRenameView() {
   const handleClearFiles = () => setFiles([]);
 
   const addFilterRule = (type: FilterRuleType) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = createId();
     const newRule: FilterRule = {
       id,
       type,
@@ -871,7 +850,7 @@ export default function BulkRenameView() {
   };
 
   const addRule = (type: RenameRuleType) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = createId();
     const newRule: RenameRule = {
       id,
       type,
@@ -882,11 +861,10 @@ export default function BulkRenameView() {
       caseType: "lowercase",
       numberStart: 1,
       numberStep: 1,
-      targetType: "both", // Default
+      targetType: "both",
     };
     setRules((prev) => {
       const updated = [...prev, newRule];
-      // Re-apply immediate
       setFiles(
         files.map((f, idx) => ({
           ...f,
@@ -899,11 +877,7 @@ export default function BulkRenameView() {
 
   const updateRule = (id: string, updates: Partial<RenameRule>) => {
     setRules((prev) => {
-      const updated = prev.map((r) => (r.id === id ? { ...r, ...updates } : r));
-      // We need to re-apply rules to file list whenever rules change
-      // Doing it in effect is cleaner but can have stale closure if not careful.
-      // Let's keep the effect I added before: useEffect depends on [rules].
-      return updated;
+      return prev.map((r) => (r.id === id ? { ...r, ...updates } : r));
     });
   };
 
@@ -911,12 +885,9 @@ export default function BulkRenameView() {
     setRules((prev) => prev.filter((r) => r.id !== id));
   };
 
-  // Effect for re-applying rules
   useEffect(() => {
     setFiles((prev) =>
       prev.map((f, idx) => {
-        // Don't modify status if it was success/error unless we want to reset?
-        // Usually if user changes rules, they want to re-try.
         return {
           ...f,
           newName: applyRules(f.originalName, rules, idx, f.isDirectory),
@@ -929,7 +900,7 @@ export default function BulkRenameView() {
   const handleApply = async () => {
     setIsApplying(true);
     try {
-      const itemsToRename = filteredFiles
+      const itemsToRename: BatchRenameItem[] = filteredFiles
         .map((f) => ({
           path: f.path,
           new_path:
@@ -937,7 +908,7 @@ export default function BulkRenameView() {
               ? f.directory + (f.directory.endsWith(SEP) ? "" : SEP)
               : "") + f.newName,
         }))
-        .filter((f) => f.path !== f.new_path); // Only process changes
+        .filter((f) => f.path !== f.new_path);
 
       if (itemsToRename.length === 0) {
         alert("No changes to apply.");
@@ -945,22 +916,13 @@ export default function BulkRenameView() {
         return;
       }
 
-      // Call Backend
-      // Note: Our backend 'batch_rename' needs to support renaming folders if we pass folders.
-      // Rust side likely uses fs::rename which supports both.
-      const result: any = await invoke("batch_rename", {
+      const result = await invoke<BatchRenameResult>("batch_rename", {
         items: itemsToRename,
       });
 
       if (result.errors && result.errors.length > 0) {
         alert("Some errors occurred:\n" + result.errors.join("\n"));
       }
-
-      // Mark successes
-      // Since we don't have per-file success map easily, we assume if not in error...
-      // But errors are strings.
-      // Let's just update all to success and rely on user to refresh if things broke.
-      // Better: update paths of renamed files so subsequent renames work.
 
       setFiles((prev) =>
         prev.map((f) => {
@@ -977,11 +939,9 @@ export default function BulkRenameView() {
           return f;
         }),
       );
-
-      // Wait for file system?
-    } catch (e) {
-      console.error(e);
-      alert("Failed to execute rename: " + e);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to execute rename: " + String(error));
     } finally {
       setIsApplying(false);
     }
@@ -992,20 +952,19 @@ export default function BulkRenameView() {
       <InputModal
         isOpen={showSaveTemplate}
         onCancel={() => setShowSaveTemplate(false)}
-        title={saveMode === 'rules' ? "Save Rules Template" : "Save Filter Template"}
+        title={
+          saveMode === "rules" ? "Save Rules Template" : "Save Filter Template"
+        }
         label="Enter a name for this template"
         defaultValue="My Template"
         onSubmit={saveTemplate}
       />
 
-      {/* Left Panel: Files */}
       <div className="flex-1 flex flex-col border-r border-slate-800 min-w-0">
         <div className="h-12 border-b border-slate-800 flex items-center px-4 gap-2 bg-slate-900/50">
           <span className="font-semibold text-slate-100 hidden md:inline">
             Files ({filteredFiles.length}
-            {files.length !== filteredFiles.length
-              ? ` / ${files.length}`
-              : ""})
+            {files.length !== filteredFiles.length ? ` / ${files.length}` : ""})
           </span>
           <div className="flex-1" />
 
@@ -1061,60 +1020,58 @@ export default function BulkRenameView() {
                 <div>New Name</div>
               </div>
               {files.map((file, idx) => {
-                  const isVisible = visibleFileIds.has(file.id);
-                  return (
-                <div
-                  key={file.id + idx}
-                  className={cn(
-                    "grid grid-cols-[1fr_20px_1fr] md:grid-cols-[1.5fr_20px_1.5fr] gap-2 items-center px-3 py-2 rounded border transition-colors",
-                    !isVisible && "opacity-30 grayscale",
-                    file.status === "success"
-                      ? "bg-green-900/10 border-green-900/30"
-                      : file.status === "error"
-                        ? "bg-red-900/10 border-red-900/30"
-                        : "bg-slate-900/40 border-slate-800/50 hover:bg-slate-800/60",
-                  )}
-                >
+                const isVisible = visibleFileIds.has(file.id);
+                return (
                   <div
-                    className="truncate text-sm text-slate-400 flex items-center gap-2"
-                    title={file.path}
-                  >
-                    {file.isDirectory ? (
-                      <Folder className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                    ) : (
-                      <FileIcon className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                    )}
-                    {file.originalName}
-                  </div>
-                  <div className="flex justify-center text-slate-600">
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                  <div
+                    key={file.id + idx}
                     className={cn(
-                      "truncate text-sm flex items-center gap-2",
-                      file.originalName !== file.newName
-                        ? "text-blue-300 font-medium"
-                        : "text-slate-500",
+                      "grid grid-cols-[1fr_20px_1fr] md:grid-cols-[1.5fr_20px_1.5fr] gap-2 items-center px-3 py-2 rounded border transition-colors",
+                      !isVisible && "opacity-30 grayscale",
+                      file.status === "success"
+                        ? "bg-green-900/10 border-green-900/30"
+                        : file.status === "error"
+                          ? "bg-red-900/10 border-red-900/30"
+                          : "bg-slate-900/40 border-slate-800/50 hover:bg-slate-800/60",
                     )}
-                    title={file.newName}
                   >
-                    {file.newName}
-                    {file.status === "success" && (
-                      <Check className="w-3.5 h-3.5 text-green-500" />
-                    )}
+                    <div
+                      className="truncate text-sm text-slate-400 flex items-center gap-2"
+                      title={file.path}
+                    >
+                      {file.isDirectory ? (
+                        <Folder className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                      ) : (
+                        <FileIcon className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                      )}
+                      {file.originalName}
+                    </div>
+                    <div className="flex justify-center text-slate-600">
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                    <div
+                      className={cn(
+                        "truncate text-sm flex items-center gap-2",
+                        file.originalName !== file.newName
+                          ? "text-blue-300 font-medium"
+                          : "text-slate-500",
+                      )}
+                      title={file.newName}
+                    >
+                      {file.newName}
+                      {file.status === "success" && (
+                        <Check className="w-3.5 h-3.5 text-green-500" />
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-             })}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* Right Panel: Rules */}
       <div className="w-80 flex flex-col bg-slate-950 border-l border-slate-800/50">
         <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-900/50 gap-2">
-          {/* Tabs */}
           <div className="flex bg-slate-800 p-0.5 rounded-lg flex-1">
             <button
               onClick={() => setActiveTab("rename")}
@@ -1147,7 +1104,6 @@ export default function BulkRenameView() {
             </button>
           </div>
 
-          {/* Templates Menu */}
           <div className="relative">
             <button
               onClick={() => setShowTemplateMenu(!showTemplateMenu)}
@@ -1243,11 +1199,10 @@ export default function BulkRenameView() {
                 items={rules}
                 strategy={verticalListSortingStrategy}
               >
-                {rules.map((rule, idx) => (
+                {rules.map((rule) => (
                   <RuleItem
                     key={rule.id}
                     rule={rule}
-                    index={idx}
                     onUpdate={updateRule}
                     onRemove={removeRule}
                   />
@@ -1349,7 +1304,8 @@ export default function BulkRenameView() {
             ) : (
               <Play className="w-4 h-4 fill-current" />
             )}
-            Rename {filteredFiles.length > 0 ? `${filteredFiles.length} Item(s)` : ""}
+            Rename{" "}
+            {filteredFiles.length > 0 ? `${filteredFiles.length} Item(s)` : ""}
           </button>
         </div>
       </div>

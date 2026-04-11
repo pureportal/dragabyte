@@ -13,6 +13,10 @@ use std::time::{Duration, Instant, SystemTime};
 
 const MAX_CONNECTIONS: usize = 50;
 const MAX_LINE_LENGTH: u64 = 10 * 1024 * 1024; // 10MB
+#[cfg(target_os = "windows")]
+const LAUNCH_COALESCE_WINDOW_MS: u64 = 450;
+#[cfg(target_os = "windows")]
+const LAUNCH_COALESCE_STALE_MS: u128 = 5_000;
 
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
@@ -20,6 +24,8 @@ use winreg::enums::*;
 use winreg::RegKey;
 
 use base64::prelude::*;
+#[cfg(target_os = "windows")]
+use fs2::FileExt;
 use jwalk::{Parallelism, WalkDir};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -44,6 +50,15 @@ struct LaunchContext {
     path: Option<String>,
     paths: Vec<String>,
     mode: String,
+}
+
+#[cfg(target_os = "windows")]
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PendingLaunchContext {
+    leader_pid: u32,
+    updated_at_ms: u128,
+    paths: Vec<String>,
 }
 
 struct RuntimeState {
@@ -2008,6 +2023,132 @@ fn resolve_launch_context(args: &[String]) -> LaunchContext {
 }
 
 #[cfg(target_os = "windows")]
+fn current_unix_time_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|duration| duration.as_millis())
+        .unwrap_or(0)
+}
+
+#[cfg(target_os = "windows")]
+fn dedupe_paths(paths: Vec<String>) -> Vec<String> {
+    let mut unique = Vec::new();
+    for path in paths {
+        if !unique.contains(&path) {
+            unique.push(path);
+        }
+    }
+    unique
+}
+
+#[cfg(target_os = "windows")]
+fn merge_paths(target: &mut Vec<String>, additions: &[String]) {
+    for path in additions {
+        if !target.contains(path) {
+            target.push(path.clone());
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn launch_coalesce_dir() -> PathBuf {
+    std::env::temp_dir().join("dragabyte")
+}
+
+#[cfg(target_os = "windows")]
+fn pending_launch_state_path(mode: &str) -> PathBuf {
+    launch_coalesce_dir().join(format!("launch-context-{}.json", mode))
+}
+
+#[cfg(target_os = "windows")]
+fn pending_launch_lock_path(mode: &str) -> PathBuf {
+    launch_coalesce_dir().join(format!("launch-context-{}.lock", mode))
+}
+
+#[cfg(target_os = "windows")]
+fn read_pending_launch_context(path: &Path) -> Option<PendingLaunchContext> {
+    let contents = fs::read_to_string(path).ok()?;
+    serde_json::from_str(&contents).ok()
+}
+
+#[cfg(target_os = "windows")]
+fn write_pending_launch_context(path: &Path, state: &PendingLaunchContext) -> Result<(), String> {
+    let payload = serde_json::to_string(state).map_err(|e| e.to_string())?;
+    fs::write(path, payload).map_err(|e| e.to_string())
+}
+
+#[cfg(target_os = "windows")]
+fn coalesce_launch_context(launch_context: LaunchContext) -> Result<Option<LaunchContext>, String> {
+    if launch_context.paths.is_empty() {
+        return Ok(Some(launch_context));
+    }
+
+    let coalesce_dir = launch_coalesce_dir();
+    fs::create_dir_all(&coalesce_dir).map_err(|e| e.to_string())?;
+
+    let state_path = pending_launch_state_path(&launch_context.mode);
+    let lock_path = pending_launch_lock_path(&launch_context.mode);
+    let current_pid = std::process::id();
+    let now = current_unix_time_ms();
+
+    let lock_file = fs::OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .open(&lock_path)
+        .map_err(|e| e.to_string())?;
+    lock_file.lock_exclusive().map_err(|e| e.to_string())?;
+
+    let existing = read_pending_launch_context(&state_path);
+    let mut is_leader = true;
+    let next_state = match existing {
+        Some(mut state)
+            if now.saturating_sub(state.updated_at_ms) <= LAUNCH_COALESCE_STALE_MS =>
+        {
+            is_leader = false;
+            state.updated_at_ms = now;
+            merge_paths(&mut state.paths, &launch_context.paths);
+            state
+        }
+        _ => PendingLaunchContext {
+            leader_pid: current_pid,
+            updated_at_ms: now,
+            paths: launch_context.paths.clone(),
+        },
+    };
+
+    write_pending_launch_context(&state_path, &next_state)?;
+    let _ = lock_file.unlock();
+    drop(lock_file);
+
+    if !is_leader {
+        return Ok(None);
+    }
+
+    thread::sleep(Duration::from_millis(LAUNCH_COALESCE_WINDOW_MS));
+
+    let lock_file = fs::OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .open(&lock_path)
+        .map_err(|e| e.to_string())?;
+    lock_file.lock_exclusive().map_err(|e| e.to_string())?;
+
+    let mut resolved = launch_context;
+    if let Some(state) = read_pending_launch_context(&state_path) {
+        if state.leader_pid == current_pid {
+            resolved.paths = dedupe_paths(state.paths);
+            resolved.path = resolved.paths.first().cloned();
+            let _ = fs::remove_file(&state_path);
+        }
+    }
+
+    let _ = lock_file.unlock();
+    Ok(Some(resolved))
+}
+
+#[cfg(target_os = "windows")]
 fn hide_console_window() {
     use windows_sys::Win32::System::Console::GetConsoleWindow;
     use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
@@ -2045,6 +2186,13 @@ fn is_context_menu_key_valid(hkcu: &RegKey, key_path: &str, exe_str: &str) -> bo
             return cmd_lower.contains("--rename") && cmd_lower.contains("%v.");
         }
         if key_path.contains("AllFileSystemObjects") {
+            let multi_select_model: String = match key.get_value("MultiSelectModel") {
+                Ok(value) => value,
+                Err(_) => return false,
+            };
+            if multi_select_model.to_lowercase() != "player" {
+                return false;
+            }
             return cmd_lower.contains("--rename") && cmd_lower.contains("%*");
         }
         if key_path.contains("Drive") {
@@ -2083,12 +2231,19 @@ fn is_context_menu_enabled() -> bool {
             "Software\\Classes\\Drive\\shell\\DragabyteRename",
             "Software\\Classes\\directory\\Background\\shell\\DragabyteRename",
         ];
+        let legacy_rename_keys = [
+            "Software\\Classes\\Directory\\shell\\DragabyteRename",
+            "Software\\Classes\\*\\shell\\DragabyteRename",
+        ];
         scan_keys
             .iter()
             .all(|key_path| is_context_menu_key_valid(&hkcu, key_path, exe_str))
             && rename_keys
                 .iter()
                 .all(|key_path| is_context_menu_key_valid(&hkcu, key_path, exe_str))
+            && legacy_rename_keys
+                .iter()
+                .all(|key_path| hkcu.open_subkey(key_path).is_err())
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -2664,6 +2819,15 @@ fn read_secure_line<R: BufRead>(reader: &mut R, max_len: u64) -> std::io::Result
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let launch_context = resolve_launch_context(&args);
+    #[cfg(target_os = "windows")]
+    let launch_context = match coalesce_launch_context(launch_context) {
+        Ok(Some(value)) => value,
+        Ok(None) => return,
+        Err(error) => {
+            eprintln!("[launch] failed to coalesce launch context: {error}");
+            resolve_launch_context(&args)
+        }
+    };
     let startup_path = launch_context.path.clone();
     let settings_path = resolve_settings_path(&args);
     let settings = load_settings(&settings_path);
