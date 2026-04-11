@@ -45,9 +45,82 @@
   DeleteRegKey HKCU "Software\Classes\*\shell\DragabyteRename"
 !macroend
 
+Function DragabyteHasContextMenuRegistration
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\Directory\shell\Dragabyte" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\Drive\shell\Dragabyte" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\directory\Background\shell\Dragabyte" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\AllFileSystemObjects\shell\DragabyteRename" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\Drive\shell\DragabyteRename" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\directory\Background\shell\DragabyteRename" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\Directory\shell\DragabyteRename" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\*\shell\DragabyteRename" ""
+  ${IfNot} ${Errors}
+    Push 1
+    Return
+  ${EndIf}
+
+  Push 0
+FunctionEnd
+
 !macro NSIS_HOOK_POSTINSTALL
-  ; Default checked behavior: Yes is default selection.
+  ; Preserve the user's existing choice during updates and passive installs.
+  Call DragabyteHasContextMenuRegistration
+  Pop $1
   StrCpy $0 "$INSTDIR\${MAINBINARYNAME}.exe"
+
+  ${If} $1 = 1
+    Goto dragabyte_skip_menu
+  ${EndIf}
+
+  ${If} $UpdateMode = 1
+  ${OrIf} $PassiveMode = 1
+    Goto dragabyte_skip_menu
+  ${EndIf}
+
+  ; Default checked behavior: Yes is default selection.
   IfSilent dragabyte_apply_menu
   MessageBox MB_YESNO|MB_DEFBUTTON1 "Add Dragabyte to the context menu?" IDYES dragabyte_apply_menu IDNO dragabyte_skip_menu
 dragabyte_apply_menu:
@@ -56,5 +129,7 @@ dragabyte_skip_menu:
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
-  !insertmacro _DRAGABYTE_REMOVE_CONTEXT_MENU
+  ${If} $UpdateMode <> 1
+    !insertmacro _DRAGABYTE_REMOVE_CONTEXT_MENU
+  ${EndIf}
 !macroend

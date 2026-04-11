@@ -13,7 +13,6 @@ use std::time::{Duration, Instant, SystemTime};
 
 const MAX_CONNECTIONS: usize = 50;
 const MAX_LINE_LENGTH: u64 = 10 * 1024 * 1024; // 10MB
-const LAUNCH_CONTEXT_MERGE_WINDOW_MS: u128 = 800;
 #[cfg(target_os = "windows")]
 const LAUNCH_COALESCE_WINDOW_MS: u64 = 450;
 #[cfg(target_os = "windows")]
@@ -37,7 +36,7 @@ use tauri_plugin_updater::UpdaterExt;
 use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 struct StartupPath(Mutex<Option<String>>);
-struct LaunchContextState(Mutex<StoredLaunchContext>);
+struct LaunchContextState(Mutex<LaunchContext>);
 struct ScanCancellation(Mutex<HashMap<String, Arc<AtomicBool>>>);
 struct RemoteClientState(Mutex<Option<RemoteClientHandle>>);
 struct SettingsState {
@@ -51,12 +50,6 @@ struct LaunchContext {
     path: Option<String>,
     paths: Vec<String>,
     mode: String,
-}
-
-#[derive(Clone, Default)]
-struct StoredLaunchContext {
-    context: LaunchContext,
-    updated_at_ms: u128,
 }
 
 #[cfg(target_os = "windows")]
@@ -523,7 +516,7 @@ fn get_startup_path(state: tauri::State<StartupPath>) -> Option<String> {
 
 #[tauri::command]
 fn get_launch_context(state: tauri::State<LaunchContextState>) -> LaunchContext {
-    state.0.lock().unwrap().context.clone()
+    state.0.lock().unwrap().clone()
 }
 
 #[tauri::command]
@@ -1999,6 +1992,33 @@ fn get_entry_name_lower(path: &Path) -> String {
     get_entry_name_string(path).to_lowercase()
 }
 
+fn extract_context_paths(value: &str) -> Vec<String> {
+    if let Some(candidate) = normalize_context_path(value) {
+        if Path::new(&candidate).exists() {
+            return vec![candidate];
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let mut resolved = Vec::new();
+        for token in split_context_argument(value) {
+            let Some(candidate) = normalize_context_path(&token) else {
+                continue;
+            };
+            if Path::new(&candidate).exists() && !resolved.contains(&candidate) {
+                resolved.push(candidate);
+            }
+        }
+        return resolved;
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Vec::new()
+    }
+}
+
 fn resolve_launch_context(args: &[String]) -> LaunchContext {
     let mut paths = Vec::new();
     let mut mode = "scan".to_string();
@@ -2013,14 +2033,10 @@ fn resolve_launch_context(args: &[String]) -> LaunchContext {
             continue;
         }
 
-        let Some(candidate) = normalize_context_path(arg) else {
-            continue;
-        };
-        if !Path::new(&candidate).exists() {
-            continue;
-        }
-        if !paths.contains(&candidate) {
-            paths.push(candidate);
+        for candidate in extract_context_paths(arg) {
+            if !paths.contains(&candidate) {
+                paths.push(candidate);
+            }
         }
     }
 
@@ -2029,6 +2045,7 @@ fn resolve_launch_context(args: &[String]) -> LaunchContext {
     LaunchContext { path, paths, mode }
 }
 
+#[cfg(target_os = "windows")]
 fn current_unix_time_ms() -> u128 {
     SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -2047,12 +2064,43 @@ fn dedupe_paths(paths: Vec<String>) -> Vec<String> {
     unique
 }
 
+#[cfg(target_os = "windows")]
 fn merge_paths(target: &mut Vec<String>, additions: &[String]) {
     for path in additions {
         if !target.contains(path) {
             target.push(path.clone());
         }
     }
+}
+
+#[cfg(target_os = "windows")]
+fn split_context_argument(value: &str) -> Vec<String> {
+    let mut parts = Vec::new();
+    let mut current = String::new();
+    let mut in_quotes = false;
+
+    for ch in value.chars() {
+        match ch {
+            '"' => {
+                in_quotes = !in_quotes;
+            }
+            c if c.is_whitespace() && !in_quotes => {
+                let token = current.trim();
+                if !token.is_empty() {
+                    parts.push(token.to_string());
+                }
+                current.clear();
+            }
+            _ => current.push(ch),
+        }
+    }
+
+    let token = current.trim();
+    if !token.is_empty() {
+        parts.push(token.to_string());
+    }
+
+    parts
 }
 
 #[cfg(target_os = "windows")]
@@ -2151,61 +2199,6 @@ fn coalesce_launch_context(launch_context: LaunchContext) -> Result<Option<Launc
 
     let _ = lock_file.unlock();
     Ok(Some(resolved))
-}
-
-fn update_launch_context_state(
-    state: &mut StoredLaunchContext,
-    incoming: LaunchContext,
-) -> LaunchContext {
-    let now = current_unix_time_ms();
-    let should_merge = !incoming.paths.is_empty()
-        && state.updated_at_ms > 0
-        && now.saturating_sub(state.updated_at_ms) <= LAUNCH_CONTEXT_MERGE_WINDOW_MS
-        && state.context.mode == incoming.mode;
-
-    if should_merge {
-        merge_paths(&mut state.context.paths, &incoming.paths);
-        state.context.path = state.context.paths.first().cloned();
-    } else {
-        state.context = incoming;
-    }
-
-    state.updated_at_ms = now;
-    state.context.clone()
-}
-
-fn focus_main_window(app: &tauri::AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.unminimize();
-        let _ = window.set_focus();
-    }
-}
-
-fn apply_launch_context_update(app: &tauri::AppHandle, incoming: LaunchContext) {
-    if incoming.paths.is_empty() {
-        focus_main_window(app);
-        return;
-    }
-
-    let next_context = {
-        let state = app.state::<LaunchContextState>();
-        let mut guard = match state.0.lock() {
-            Ok(value) => value,
-            Err(_) => {
-                focus_main_window(app);
-                return;
-            }
-        };
-        update_launch_context_state(&mut guard, incoming)
-    };
-
-    if let Ok(mut startup_path) = app.state::<StartupPath>().0.lock() {
-        *startup_path = next_context.path.clone();
-    }
-
-    let _ = app.emit("launch-context", next_context);
-    focus_main_window(app);
 }
 
 #[cfg(target_os = "windows")]
@@ -2948,17 +2941,7 @@ fn main() {
     };
     let headless_mode = runtime_options.headless;
     let updater_enabled = runtime_options.updater_enabled;
-    let mut builder = tauri::Builder::default();
-
-    #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
-    if !headless_mode {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            let launch_context = resolve_launch_context(&args);
-            apply_launch_context_update(app, launch_context);
-        }));
-    }
-
-    builder = builder
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
@@ -2985,10 +2968,7 @@ fn main() {
                 hide_console_window();
             }
             app.manage(StartupPath(Mutex::new(startup_path_state.clone())));
-            app.manage(LaunchContextState(Mutex::new(StoredLaunchContext {
-                context: launch_context_state.clone(),
-                updated_at_ms: current_unix_time_ms(),
-            })));
+            app.manage(LaunchContextState(Mutex::new(launch_context_state.clone())));
             app.manage(ScanCancellation(Mutex::new(HashMap::new())));
             app.manage(SettingsState {
                 path: settings_path.clone(),

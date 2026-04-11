@@ -2,9 +2,9 @@ import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { useCallback, useEffect, useRef, useState } from "react";
 import dragabyteLogoUrl from "../.github/assets/icon.png";
+import { UpdateModal } from "./components/UpdateModal";
 import {
   getLaunchContext,
-  listenForLaunchContext,
   type LaunchContext,
 } from "./features/scan/api";
 import { useUIStore } from "./store";
@@ -68,18 +68,6 @@ const App = (): JSX.Element => {
     hasCheckedLaunchContext.current = true;
 
     getLaunchContext().then(handleLaunchContext).catch(console.error);
-  }, [handleLaunchContext]);
-
-  useEffect((): (() => void) => {
-    let cleanup: (() => void) | null = null;
-    listenForLaunchContext(handleLaunchContext)
-      .then((unlisten) => {
-        cleanup = unlisten;
-      })
-      .catch(console.error);
-    return (): void => {
-      cleanup?.();
-    };
   }, [handleLaunchContext]);
 
   useEffect((): (() => void) => {
@@ -245,6 +233,7 @@ const App = (): JSX.Element => {
       <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4">
         <Outlet />
       </main>
+      <UpdateModal />
     </div>
   );
 };

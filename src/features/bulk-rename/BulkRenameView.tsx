@@ -37,11 +37,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { InputModal } from "../../components/InputModal";
-import {
-  getLaunchContext,
-  listenForLaunchContext,
-  type LaunchContext,
-} from "../scan/api";
+import { getLaunchContext, type LaunchContext } from "../scan/api";
 import { applyRules } from "./renameLogic";
 import type {
   FileItem,
@@ -770,18 +766,6 @@ export default function BulkRenameView() {
     }
     getLaunchContext().then(loadRenameLaunchContext).catch(console.error);
   }, [loadContextItems, loadRenameLaunchContext]);
-
-  useEffect((): (() => void) => {
-    let cleanup: (() => void) | null = null;
-    listenForLaunchContext(loadRenameLaunchContext)
-      .then((unlisten) => {
-        cleanup = unlisten;
-      })
-      .catch(console.error);
-    return (): void => {
-      cleanup?.();
-    };
-  }, [loadRenameLaunchContext]);
 
   const processFilesToAdd = (
     paths: string[],

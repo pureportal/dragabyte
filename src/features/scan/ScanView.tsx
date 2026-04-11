@@ -42,7 +42,6 @@ import {
   deleteItem,
   getDiskUsage,
   getLaunchContext,
-  listenForLaunchContext,
   openPath,
   renameItem,
   showInExplorer,
@@ -2134,17 +2133,6 @@ const ScanView = (): JSX.Element => {
     }
   };
 
-  const handleLaunchContextUpdate = useCallback(
-    (ctx: { path: string | null; paths: string[]; mode: string }): void => {
-      const scanPath = resolveScanPath(ctx);
-      if (!scanPath || ctx.mode !== "scan") {
-        return;
-      }
-      void startScanWithFolder(scanPath).catch(console.error);
-    },
-    [startScanWithFolder],
-  );
-
   const startRemoteScanWithPath = async (path: string): Promise<void> => {
     clearScanCompleteTimeout();
     activeScanPathRef.current = path;
@@ -3051,18 +3039,6 @@ const ScanView = (): JSX.Element => {
       })
       .catch(console.error);
   }, []);
-
-  useEffect((): (() => void) => {
-    let cleanup: (() => void) | null = null;
-    listenForLaunchContext(handleLaunchContextUpdate)
-      .then((unlisten) => {
-        cleanup = unlisten;
-      })
-      .catch(console.error);
-    return (): void => {
-      cleanup?.();
-    };
-  }, [handleLaunchContextUpdate]);
 
   useEffect((): (() => void) | void => {
     if (!contextMenu) {
