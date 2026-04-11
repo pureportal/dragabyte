@@ -1,4 +1,4 @@
-import { RenameRule, FileItem } from './types';
+import type { RenameRule } from './types';
 
 export function applyRules(originalName: string, rules: RenameRule[], index: number, isDirectory: boolean = false): string {
   // 1. Separate Name and Extension

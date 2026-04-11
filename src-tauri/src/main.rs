@@ -436,6 +436,14 @@ struct BatchRenameItem {
     new_path: String,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RenameContextItem {
+    path: String,
+    name: String,
+    is_directory: bool,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BatchRenameResult {
@@ -494,6 +502,31 @@ fn get_startup_path(state: tauri::State<StartupPath>) -> Option<String> {
 #[tauri::command]
 fn get_launch_context(state: tauri::State<LaunchContextState>) -> LaunchContext {
     state.0.lock().unwrap().clone()
+}
+
+#[tauri::command]
+fn collect_rename_items(
+    paths: Vec<String>,
+    recursive: bool,
+) -> Result<Vec<RenameContextItem>, String> {
+    let mut items = Vec::new();
+    let mut seen = HashSet::new();
+
+    for raw_path in paths {
+        let Some(path) = normalize_context_path(&raw_path) else {
+            continue;
+        };
+        collect_rename_items_from_path(Path::new(&path), recursive, &mut items, &mut seen)?;
+    }
+
+    items.sort_by(|left, right| {
+        left.path
+            .to_lowercase()
+            .cmp(&right.path.to_lowercase())
+            .then_with(|| left.name.to_lowercase().cmp(&right.name.to_lowercase()))
+    });
+
+    Ok(items)
 }
 
 #[tauri::command]
@@ -889,6 +922,120 @@ fn should_emit_progress(processed: u64, last_emit: &Instant, config: &ScanConfig
 
 fn get_path_string(path: &Path) -> String {
     path.to_string_lossy().to_string()
+}
+
+#[cfg(target_os = "windows")]
+fn normalize_context_path(value: &str) -> Option<String> {
+    let mut candidate = value.trim().trim_matches('"').replace('/', "\\");
+    if candidate.is_empty() {
+        return None;
+    }
+
+    if candidate.len() == 2 {
+        let bytes = candidate.as_bytes();
+        if bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
+            candidate.push('\\');
+            return Some(candidate);
+        }
+    }
+
+    if candidate.ends_with('.') {
+        let trimmed = candidate.trim_end_matches('.');
+        if !trimmed.is_empty() && Path::new(trimmed).exists() {
+            candidate = trimmed.to_string();
+        }
+    }
+
+    Some(candidate)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn normalize_context_path(value: &str) -> Option<String> {
+    let candidate = value.trim().trim_matches('"');
+    if candidate.is_empty() {
+        return None;
+    }
+    Some(candidate.to_string())
+}
+
+fn push_rename_context_item(
+    path: &Path,
+    is_directory: bool,
+    items: &mut Vec<RenameContextItem>,
+    seen: &mut HashSet<String>,
+) {
+    let item_path = get_path_string(path);
+    if !seen.insert(item_path.clone()) {
+        return;
+    }
+    items.push(RenameContextItem {
+        path: item_path,
+        name: get_entry_name_string(path),
+        is_directory,
+    });
+}
+
+fn collect_rename_files_recursive(
+    dir: &Path,
+    items: &mut Vec<RenameContextItem>,
+    seen: &mut HashSet<String>,
+) -> Result<(), String> {
+    let read_dir =
+        fs::read_dir(dir).map_err(|e| format!("Failed to read {}: {}", get_path_string(dir), e))?;
+
+    for entry in read_dir {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let entry_path = entry.path();
+        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+        if file_type.is_dir() {
+            collect_rename_files_recursive(&entry_path, items, seen)?;
+            continue;
+        }
+        if file_type.is_file() {
+            push_rename_context_item(&entry_path, false, items, seen);
+        }
+    }
+
+    Ok(())
+}
+
+fn collect_rename_items_from_path(
+    path: &Path,
+    recursive: bool,
+    items: &mut Vec<RenameContextItem>,
+    seen: &mut HashSet<String>,
+) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+
+    if path.is_file() {
+        push_rename_context_item(path, false, items, seen);
+        return Ok(());
+    }
+
+    if !path.is_dir() {
+        return Ok(());
+    }
+
+    if recursive {
+        return collect_rename_files_recursive(path, items, seen);
+    }
+
+    let read_dir =
+        fs::read_dir(path).map_err(|e| format!("Failed to read {}: {}", get_path_string(path), e))?;
+
+    for entry in read_dir {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let entry_path = entry.path();
+        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+        if !file_type.is_dir() && !file_type.is_file() {
+            continue;
+        }
+        push_rename_context_item(&entry_path, file_type.is_dir(), items, seen);
+    }
+
+    Ok(())
 }
 
 fn compute_disk_usage(path: &Path) -> Result<DiskUsageSnapshot, String> {
@@ -1831,31 +1978,31 @@ fn get_entry_name_lower(path: &Path) -> String {
 }
 
 fn resolve_launch_context(args: &[String]) -> LaunchContext {
-    let mut path = None;
     let mut paths = Vec::new();
     let mut mode = "scan".to_string();
 
     for arg in args.iter().skip(1) {
         if arg == "--rename" {
             mode = "rename".to_string();
-        } else if !arg.starts_with('-') && path.is_none() {
-            if Path::new(arg).exists() {
-                path = Some(arg.clone());
-            }
-        } else if !arg.starts_with('-') {
-            if Path::new(arg).exists() {
-                paths.push(arg.clone());
-            }
+            continue;
+        }
+
+        if arg.starts_with('-') {
+            continue;
+        }
+
+        let Some(candidate) = normalize_context_path(arg) else {
+            continue;
+        };
+        if !Path::new(&candidate).exists() {
+            continue;
+        }
+        if !paths.contains(&candidate) {
+            paths.push(candidate);
         }
     }
 
-    if path.is_none() && !paths.is_empty() {
-        path = Some(paths[0].clone());
-    } else if let Some(value) = path.clone() {
-        if !paths.contains(&value) {
-            paths.insert(0, value.clone());
-        }
-    }
+    let path = paths.first().cloned();
 
     LaunchContext { path, paths, mode }
 }
@@ -1892,10 +2039,25 @@ fn is_context_menu_key_valid(hkcu: &RegKey, key_path: &str, exe_str: &str) -> bo
     if !cmd_lower.contains(&exe_lower) {
         return false;
     }
-    if key_path.contains("Background") {
-        return cmd_lower.contains("%v") || cmd_lower.contains("%1");
+
+    if key_path.contains("DragabyteRename") {
+        if key_path.contains("Background") {
+            return cmd_lower.contains("--rename") && cmd_lower.contains("%v.");
+        }
+        if key_path.contains("AllFileSystemObjects") {
+            return cmd_lower.contains("--rename") && cmd_lower.contains("%*");
+        }
+        if key_path.contains("Drive") {
+            return cmd_lower.contains("--rename") && cmd_lower.contains("%1.");
+        }
+        return cmd_lower.contains("--rename") && cmd_lower.contains("%1");
     }
-    cmd_lower.contains("%1") || cmd_lower.contains("%*")
+
+    if key_path.contains("Background") {
+        return cmd_lower.contains("%v.");
+    }
+
+    cmd_lower.contains("%1.")
 }
 
 #[tauri::command]
@@ -1917,10 +2079,9 @@ fn is_context_menu_enabled() -> bool {
             "Software\\Classes\\directory\\Background\\shell\\Dragabyte",
         ];
         let rename_keys = [
-            "Software\\Classes\\Directory\\shell\\DragabyteRename",
+            "Software\\Classes\\AllFileSystemObjects\\shell\\DragabyteRename",
             "Software\\Classes\\Drive\\shell\\DragabyteRename",
             "Software\\Classes\\directory\\Background\\shell\\DragabyteRename",
-            "Software\\Classes\\*\\shell\\DragabyteRename",
         ];
         scan_keys
             .iter()
@@ -1952,17 +2113,26 @@ fn toggle_context_menu(_enable: bool) -> Result<(), String> {
             "Software\\Classes\\directory\\Background\\shell\\Dragabyte",
         ];
         let rename_keys = [
-            "Software\\Classes\\Directory\\shell\\DragabyteRename",
+            "Software\\Classes\\AllFileSystemObjects\\shell\\DragabyteRename",
             "Software\\Classes\\Drive\\shell\\DragabyteRename",
             "Software\\Classes\\directory\\Background\\shell\\DragabyteRename",
+        ];
+        let legacy_rename_keys = [
+            "Software\\Classes\\Directory\\shell\\DragabyteRename",
             "Software\\Classes\\*\\shell\\DragabyteRename",
         ];
 
         if _enable {
             let exe_path = std::env::current_exe().map_err(|e| e.to_string())?;
             let exe_str = exe_path.to_str().ok_or("Invalid path")?;
-            let scan_cmd = format!("\"{}\" \"%1\"", exe_str);
-            let rename_cmd = format!("\"{}\" --rename %*", exe_str);
+            let scan_cmd = format!("\"{}\" \"%1.\"", exe_str);
+            let rename_drive_cmd = format!("\"{}\" --rename \"%1.\"", exe_str);
+            let rename_background_cmd = format!("\"{}\" --rename \"%V.\"", exe_str);
+            let rename_multi_cmd = format!("\"{}\" --rename %*", exe_str);
+
+            for key_path in legacy_rename_keys {
+                let _ = hkcu.delete_subkey_all(key_path);
+            }
 
             for key_path in scan_keys {
                 let (key, _) = hkcu.create_subkey(key_path).map_err(|e| e.to_string())?;
@@ -1973,7 +2143,7 @@ fn toggle_context_menu(_enable: bool) -> Result<(), String> {
                 let (cmd_key, _) = key.create_subkey("command").map_err(|e| e.to_string())?;
 
                 let cmd_val = if key_path.contains("Background") {
-                    format!("\"{}\" \"%V\"", exe_str)
+                    format!("\"{}\" \"%V.\"", exe_str)
                 } else {
                     scan_cmd.clone()
                 };
@@ -1996,9 +2166,11 @@ fn toggle_context_menu(_enable: bool) -> Result<(), String> {
                     .create_subkey("command")
                     .map_err(|e| e.to_string())?;
                 let r_cmd_val = if key_path.contains("Background") {
-                    format!("\"{}\" --rename \"%V\"", exe_str)
+                    rename_background_cmd.clone()
+                } else if key_path.contains("AllFileSystemObjects") {
+                    rename_multi_cmd.clone()
                 } else {
-                    rename_cmd.clone()
+                    rename_drive_cmd.clone()
                 };
                 r_cmd_key
                     .set_value("", &r_cmd_val)
@@ -2009,6 +2181,12 @@ fn toggle_context_menu(_enable: bool) -> Result<(), String> {
                 let _ = hkcu.delete_subkey_all(key_path);
             }
             for key_path in rename_keys {
+                let _ = hkcu.delete_subkey_all(key_path);
+            }
+            for key_path in [
+                "Software\\Classes\\Directory\\shell\\DragabyteRename",
+                "Software\\Classes\\*\\shell\\DragabyteRename",
+            ] {
                 let _ = hkcu.delete_subkey_all(key_path);
             }
         }
@@ -2582,6 +2760,7 @@ fn main() {
             reset_context_menu,
             get_startup_path,
             get_launch_context,
+            collect_rename_items,
             open_path,
             save_temp_and_open,
             show_in_explorer,

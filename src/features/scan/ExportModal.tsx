@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { handleExport, ExportFormat } from './exportUtils';
+import { handleExport, type ExportFormat } from './exportUtils';
 import type { ScanSummary } from './types';
 import { FileText, Table, FileSpreadsheet, Code } from 'lucide-react';
 import { cn } from '../../lib/utils';

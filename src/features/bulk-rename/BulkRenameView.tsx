@@ -1,9 +1,9 @@
 import {
   DndContext,
-  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   closestCenter,
+  type DragEndEvent,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -17,7 +17,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { readDir, stat } from "@tauri-apps/plugin-fs";
 import { clsx, type ClassValue } from "clsx";
 import {
   ArrowRight,
@@ -39,7 +38,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { InputModal } from "../../components/InputModal";
 import { applyRules } from "./renameLogic";
-import {
+import type {
   FileItem,
   FilterRule,
   FilterRuleType,
@@ -55,17 +54,38 @@ function cn(...inputs: ClassValue[]) {
 const SEP = navigator.userAgent.includes("Win") ? "\\" : "/";
 
 const getPathName = (path: string): string => {
-  const parts = path.split(/[\\/]/);
-  return parts[parts.length - 1] ?? path;
+  const normalized = path.replace(/[\\/]+$/, "");
+  if (!normalized) return path;
+  const parts = normalized.split(/[\\/]/);
+  return parts[parts.length - 1] ?? normalized;
 };
 
-const getPathDirectory = (path: string, name: string): string => {
-  if (!name) return "";
-  return path.slice(0, -(name.length + 1));
+const getPathDirectory = (path: string): string => {
+  const normalized = path.replace(/[\\/]+$/, "");
+  const lastSeparator = Math.max(
+    normalized.lastIndexOf("/"),
+    normalized.lastIndexOf("\\"),
+  );
+
+  if (lastSeparator < 0) {
+    return "";
+  }
+
+  if (lastSeparator === 0) {
+    return normalized.slice(0, 1);
+  }
+
+  const directory = normalized.slice(0, lastSeparator);
+  if (/^[A-Za-z]:$/.test(directory)) {
+    return `${directory}${normalized[lastSeparator]}`;
+  }
+
+  return directory;
 };
 
 const parseContextPaths = (): string[] => {
   const params = new URLSearchParams(window.location.search);
+  const single = params.get("path");
   const rawPaths = params.get("paths");
   if (rawPaths) {
     try {
@@ -74,11 +94,16 @@ const parseContextPaths = (): string[] => {
         return parsed.filter((value) => typeof value === "string");
       }
     } catch {
-      return [];
+      return single ? [single] : [];
     }
   }
-  const single = params.get("path");
   return single ? [single] : [];
+};
+
+type RenameContextItem = {
+  path: string;
+  name: string;
+  isDirectory: boolean;
 };
 
 const buildFileItem = (
@@ -89,7 +114,7 @@ const buildFileItem = (
   return {
     id: path,
     path,
-    directory: getPathDirectory(path, name),
+    directory: getPathDirectory(path),
     originalName: name,
     newName: name,
     status: "pending",
@@ -697,26 +722,6 @@ export default function BulkRenameView() {
     localStorage.setItem("rename_templates", JSON.stringify(updated));
   };
 
-  const collectItemsFromPath = useCallback(
-    async (path: string): Promise<FileItem[]> => {
-      const info = await stat(path);
-      if (!info.isDirectory) {
-        const name = getPathName(path);
-        return [buildFileItem(path, name, false)];
-      }
-      const entries = await readDir(path);
-      const items: FileItem[] = [];
-      for (let i = 0; i < entries.length; i += 1) {
-        const entry = entries[i];
-        if (!entry || (!entry.isFile && !entry.isDirectory)) continue;
-        const fullPath = path + (path.endsWith(SEP) ? "" : SEP) + entry.name;
-        items.push(buildFileItem(fullPath, entry.name, entry.isDirectory));
-      }
-      return items;
-    },
-    [],
-  );
-
   const mergeItems = useCallback(
     (incoming: FileItem[]): void => {
       if (incoming.length === 0) return;
@@ -738,31 +743,29 @@ export default function BulkRenameView() {
     [rules],
   );
 
-  const handleLoadPaths = useCallback(
-    async (paths: string[]): Promise<void> => {
+  const loadContextItems = useCallback(
+    async (paths: string[], recursive: boolean = false): Promise<void> => {
       try {
-        const collected: FileItem[] = [];
-        for (let i = 0; i < paths.length; i += 1) {
-          const path = paths[i];
-          if (!path) continue;
-          const items = await collectItemsFromPath(path);
-          for (let j = 0; j < items.length; j += 1) {
-            const item = items[j];
-            if (item) collected.push(item);
-          }
-        }
-        mergeItems(collected);
+        const items = await invoke<RenameContextItem[]>("collect_rename_items", {
+          paths,
+          recursive,
+        });
+        mergeItems(
+          items.map((item) =>
+            buildFileItem(item.path, item.name, item.isDirectory),
+          ),
+        );
       } catch (error) {
         console.error(error);
       }
     },
-    [collectItemsFromPath, mergeItems],
+    [mergeItems],
   );
 
   useEffect(() => {
     const paths = parseContextPaths();
     if (paths.length > 0) {
-      void handleLoadPaths(paths);
+      void loadContextItems(paths);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -771,20 +774,9 @@ export default function BulkRenameView() {
     paths: string[],
     areDirectories: boolean = false,
   ) => {
-    const newFiles: FileItem[] = paths.map((path) => {
-      const name = path.split(/[\\/]/).pop() || path;
-      const directory = path.slice(0, -(name.length + 1));
-      return {
-        id: path,
-        path,
-        directory,
-        originalName: name,
-        newName: name,
-        status: "pending",
-        isDirectory: areDirectories,
-        size: 0,
-      };
-    });
+    const newFiles: FileItem[] = paths.map((path) =>
+      buildFileItem(path, getPathName(path), areDirectories),
+    );
 
     // Current files map for dedup
     const existing = new Set(files.map((f) => f.path));
@@ -836,27 +828,6 @@ export default function BulkRenameView() {
     }
   };
 
-  // Recursive helper
-  const getFilesRecursively = async (dir: string): Promise<string[]> => {
-    try {
-      const entries = await readDir(dir);
-      let results: string[] = [];
-      for (const entry of entries) {
-        const fullPath = dir + (dir.endsWith(SEP) ? "" : SEP) + entry.name;
-        if (entry.isDirectory) {
-          const subRequest = await getFilesRecursively(fullPath);
-          results = [...results, ...subRequest];
-        } else {
-          results.push(fullPath);
-        }
-      }
-      return results;
-    } catch (e) {
-      console.error("Error reading dir", dir, e);
-      return [];
-    }
-  };
-
   // Import Folder Contents
   const handleImportFolder = async () => {
     try {
@@ -866,22 +837,8 @@ export default function BulkRenameView() {
       });
 
       if (selected) {
-        const msg = "Do you want to scan directories recursively?";
-        const recursive = await confirm(msg); // Native confirm for now, or use custom modal?
-        // Wait, native confirm in Tauri/WebView?
-        // Better use user preference or just do recursive by default for "Import".
-        // Let's assume recursive for now as user asked for "Add Files... support folders".
-
         const paths = Array.isArray(selected) ? selected : [selected];
-        let allFiles: string[] = [];
-
-        // Show loading state if needed?
-        for (const path of paths) {
-          const found = await getFilesRecursively(path);
-          allFiles = [...allFiles, ...found];
-        }
-
-        processFilesToAdd(allFiles, false);
+        await loadContextItems(paths, true);
       }
     } catch (error) {
       console.error(error);
@@ -1012,6 +969,7 @@ export default function BulkRenameView() {
             return {
               ...f,
               path: newItem.new_path,
+              directory: getPathDirectory(newItem.new_path),
               originalName: f.newName,
               status: "success",
             };

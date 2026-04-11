@@ -42,15 +42,23 @@ const App = (): JSX.Element => {
 
     getLaunchContext()
       .then((ctx) => {
-        if (ctx.mode === "rename" && ctx.paths.length > 0) {
+        const nextPath = ctx.path ?? ctx.paths[0];
+        if (!nextPath) {
+          return;
+        }
+
+        if (ctx.mode === "rename") {
           void navigate({
             to: "/bulk-rename",
             search: {
-              path: ctx.path ?? ctx.paths[0],
+              path: nextPath,
               paths: serializePaths(ctx.paths),
             },
           });
+          return;
         }
+
+        void navigate({ to: "/" });
       })
       .catch(console.error);
   }, [navigate]);

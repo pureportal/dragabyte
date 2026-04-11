@@ -21,9 +21,11 @@ commands.allow = [
 	"reset_context_menu",
 	"get_startup_path",
 	"get_launch_context",
+	"collect_rename_items",
 	"delete_item",
 	"rename_item",
 	"create_folder",
 	"copy_item",
-	"save_temp_and_open"
+	"save_temp_and_open",
+	"batch_rename"
 ]
