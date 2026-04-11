@@ -13,6 +13,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 const MAX_CONNECTIONS: usize = 50;
 const MAX_LINE_LENGTH: u64 = 10 * 1024 * 1024; // 10MB
+const LAUNCH_CONTEXT_MERGE_WINDOW_MS: u128 = 800;
 #[cfg(target_os = "windows")]
 const LAUNCH_COALESCE_WINDOW_MS: u64 = 450;
 #[cfg(target_os = "windows")]
@@ -36,7 +37,7 @@ use tauri_plugin_updater::UpdaterExt;
 use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 struct StartupPath(Mutex<Option<String>>);
-struct LaunchContextState(Mutex<LaunchContext>);
+struct LaunchContextState(Mutex<StoredLaunchContext>);
 struct ScanCancellation(Mutex<HashMap<String, Arc<AtomicBool>>>);
 struct RemoteClientState(Mutex<Option<RemoteClientHandle>>);
 struct SettingsState {
@@ -50,6 +51,12 @@ struct LaunchContext {
     path: Option<String>,
     paths: Vec<String>,
     mode: String,
+}
+
+#[derive(Clone, Default)]
+struct StoredLaunchContext {
+    context: LaunchContext,
+    updated_at_ms: u128,
 }
 
 #[cfg(target_os = "windows")]
@@ -516,7 +523,7 @@ fn get_startup_path(state: tauri::State<StartupPath>) -> Option<String> {
 
 #[tauri::command]
 fn get_launch_context(state: tauri::State<LaunchContextState>) -> LaunchContext {
-    state.0.lock().unwrap().clone()
+    state.0.lock().unwrap().context.clone()
 }
 
 #[tauri::command]
@@ -2022,7 +2029,6 @@ fn resolve_launch_context(args: &[String]) -> LaunchContext {
     LaunchContext { path, paths, mode }
 }
 
-#[cfg(target_os = "windows")]
 fn current_unix_time_ms() -> u128 {
     SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -2041,7 +2047,6 @@ fn dedupe_paths(paths: Vec<String>) -> Vec<String> {
     unique
 }
 
-#[cfg(target_os = "windows")]
 fn merge_paths(target: &mut Vec<String>, additions: &[String]) {
     for path in additions {
         if !target.contains(path) {
@@ -2148,6 +2153,61 @@ fn coalesce_launch_context(launch_context: LaunchContext) -> Result<Option<Launc
     Ok(Some(resolved))
 }
 
+fn update_launch_context_state(
+    state: &mut StoredLaunchContext,
+    incoming: LaunchContext,
+) -> LaunchContext {
+    let now = current_unix_time_ms();
+    let should_merge = !incoming.paths.is_empty()
+        && state.updated_at_ms > 0
+        && now.saturating_sub(state.updated_at_ms) <= LAUNCH_CONTEXT_MERGE_WINDOW_MS
+        && state.context.mode == incoming.mode;
+
+    if should_merge {
+        merge_paths(&mut state.context.paths, &incoming.paths);
+        state.context.path = state.context.paths.first().cloned();
+    } else {
+        state.context = incoming;
+    }
+
+    state.updated_at_ms = now;
+    state.context.clone()
+}
+
+fn focus_main_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
+
+fn apply_launch_context_update(app: &tauri::AppHandle, incoming: LaunchContext) {
+    if incoming.paths.is_empty() {
+        focus_main_window(app);
+        return;
+    }
+
+    let next_context = {
+        let state = app.state::<LaunchContextState>();
+        let mut guard = match state.0.lock() {
+            Ok(value) => value,
+            Err(_) => {
+                focus_main_window(app);
+                return;
+            }
+        };
+        update_launch_context_state(&mut guard, incoming)
+    };
+
+    if let Ok(mut startup_path) = app.state::<StartupPath>().0.lock() {
+        *startup_path = next_context.path.clone();
+    }
+
+    let _ = app.emit("launch-context", next_context);
+    focus_main_window(app);
+}
+
 #[cfg(target_os = "windows")]
 fn hide_console_window() {
     use windows_sys::Win32::System::Console::GetConsoleWindow;
@@ -2206,6 +2266,31 @@ fn is_context_menu_key_valid(hkcu: &RegKey, key_path: &str, exe_str: &str) -> bo
     }
 
     cmd_lower.contains("%1.")
+}
+
+#[cfg(target_os = "windows")]
+fn has_any_context_menu_registration(hkcu: &RegKey) -> bool {
+    [
+        "Software\\Classes\\Directory\\shell\\Dragabyte",
+        "Software\\Classes\\Drive\\shell\\Dragabyte",
+        "Software\\Classes\\directory\\Background\\shell\\Dragabyte",
+        "Software\\Classes\\AllFileSystemObjects\\shell\\DragabyteRename",
+        "Software\\Classes\\Drive\\shell\\DragabyteRename",
+        "Software\\Classes\\directory\\Background\\shell\\DragabyteRename",
+        "Software\\Classes\\Directory\\shell\\DragabyteRename",
+        "Software\\Classes\\*\\shell\\DragabyteRename",
+    ]
+    .iter()
+    .any(|key_path| hkcu.open_subkey(key_path).is_ok())
+}
+
+#[cfg(target_os = "windows")]
+fn repair_context_menu_if_needed() -> Result<(), String> {
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    if !has_any_context_menu_registration(&hkcu) || is_context_menu_enabled() {
+        return Ok(());
+    }
+    reset_context_menu()
 }
 
 #[tauri::command]
@@ -2863,7 +2948,17 @@ fn main() {
     };
     let headless_mode = runtime_options.headless;
     let updater_enabled = runtime_options.updater_enabled;
-    let mut builder = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
+    if !headless_mode {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            let launch_context = resolve_launch_context(&args);
+            apply_launch_context_update(app, launch_context);
+        }));
+    }
+
+    builder = builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
@@ -2890,7 +2985,10 @@ fn main() {
                 hide_console_window();
             }
             app.manage(StartupPath(Mutex::new(startup_path_state.clone())));
-            app.manage(LaunchContextState(Mutex::new(launch_context_state.clone())));
+            app.manage(LaunchContextState(Mutex::new(StoredLaunchContext {
+                context: launch_context_state.clone(),
+                updated_at_ms: current_unix_time_ms(),
+            })));
             app.manage(ScanCancellation(Mutex::new(HashMap::new())));
             app.manage(SettingsState {
                 path: settings_path.clone(),
@@ -2901,6 +2999,12 @@ fn main() {
                 tcp_bind: tcp_bind.clone(),
             });
             app.manage(RemoteClientState(Mutex::new(None)));
+            #[cfg(target_os = "windows")]
+            if !headless_mode {
+                if let Err(error) = repair_context_menu_if_needed() {
+                    eprintln!("[shell] failed to repair context menu registration: {error}");
+                }
+            }
             if !headless_mode {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.restore_state(StateFlags::POSITION | StateFlags::SIZE);

@@ -1,8 +1,12 @@
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dragabyteLogoUrl from "../.github/assets/icon.png";
-import { getLaunchContext } from "./features/scan/api";
+import {
+  getLaunchContext,
+  listenForLaunchContext,
+  type LaunchContext,
+} from "./features/scan/api";
 import { useUIStore } from "./store";
 
 const hasMultipleWindows = async (): Promise<boolean> => {
@@ -36,32 +40,47 @@ const App = (): JSX.Element => {
   const navigate = useNavigate();
   const hasCheckedLaunchContext = useRef(false);
 
+  const handleLaunchContext = useCallback(
+    (ctx: LaunchContext): void => {
+      const nextPath = ctx.path ?? ctx.paths[0];
+      if (!nextPath) {
+        return;
+      }
+
+      if (ctx.mode === "rename") {
+        void navigate({
+          to: "/bulk-rename",
+          search: {
+            path: nextPath,
+            paths: serializePaths(ctx.paths),
+          },
+        });
+        return;
+      }
+
+      void navigate({ to: "/" });
+    },
+    [navigate],
+  );
+
   useEffect(() => {
     if (hasCheckedLaunchContext.current) return;
     hasCheckedLaunchContext.current = true;
 
-    getLaunchContext()
-      .then((ctx) => {
-        const nextPath = ctx.path ?? ctx.paths[0];
-        if (!nextPath) {
-          return;
-        }
+    getLaunchContext().then(handleLaunchContext).catch(console.error);
+  }, [handleLaunchContext]);
 
-        if (ctx.mode === "rename") {
-          void navigate({
-            to: "/bulk-rename",
-            search: {
-              path: nextPath,
-              paths: serializePaths(ctx.paths),
-            },
-          });
-          return;
-        }
-
-        void navigate({ to: "/" });
+  useEffect((): (() => void) => {
+    let cleanup: (() => void) | null = null;
+    listenForLaunchContext(handleLaunchContext)
+      .then((unlisten) => {
+        cleanup = unlisten;
       })
       .catch(console.error);
-  }, [navigate]);
+    return (): void => {
+      cleanup?.();
+    };
+  }, [handleLaunchContext]);
 
   useEffect((): (() => void) => {
     const handleContextMenu = (event: MouseEvent): void => {

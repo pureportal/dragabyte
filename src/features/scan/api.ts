@@ -71,6 +71,12 @@ export const getLaunchContext = async (): Promise<LaunchContext> => {
   return invokeCommand<LaunchContext>("get_launch_context");
 };
 
+export const listenForLaunchContext = async (
+  handler: (context: LaunchContext) => void,
+): Promise<() => void> => {
+  return listenToScanEvent<LaunchContext>("launch-context", handler);
+};
+
 export const openPath = async (path: string): Promise<void> => {
   return invokeCommand<void>("open_path", { path });
 };

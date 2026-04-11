@@ -37,6 +37,11 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { InputModal } from "../../components/InputModal";
+import {
+  getLaunchContext,
+  listenForLaunchContext,
+  type LaunchContext,
+} from "../scan/api";
 import { applyRules } from "./renameLogic";
 import type {
   FileItem,
@@ -748,13 +753,35 @@ export default function BulkRenameView() {
     [mergeItems],
   );
 
+  const loadRenameLaunchContext = useCallback(
+    (context: LaunchContext): void => {
+      if (context.mode !== "rename" || context.paths.length === 0) {
+        return;
+      }
+      void loadContextItems(context.paths);
+    },
+    [loadContextItems],
+  );
+
   useEffect(() => {
     const paths = parseContextPaths();
     if (paths.length > 0) {
       void loadContextItems(paths);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    getLaunchContext().then(loadRenameLaunchContext).catch(console.error);
+  }, [loadContextItems, loadRenameLaunchContext]);
+
+  useEffect((): (() => void) => {
+    let cleanup: (() => void) | null = null;
+    listenForLaunchContext(loadRenameLaunchContext)
+      .then((unlisten) => {
+        cleanup = unlisten;
+      })
+      .catch(console.error);
+    return (): void => {
+      cleanup?.();
+    };
+  }, [loadRenameLaunchContext]);
 
   const processFilesToAdd = (
     paths: string[],
