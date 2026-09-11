@@ -1,6 +1,6 @@
 name: dragabyte
 base: core22
-version: "0.7.4"
+version: "1.0.0"
 summary: Disk usage scanner and bulk rename utility
 description: |
   Dragabyte is a desktop utility for scanning folder usage,
