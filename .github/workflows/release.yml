@@ -184,6 +184,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          projectPath: apps/client
           releaseId: ${{ needs.check-version.outputs.release_id }}
           tagName: v${{ needs.check-version.outputs.version }}
       - name: Generate SBOM
@@ -196,22 +197,22 @@ jobs:
       - name: List bundle outputs
         shell: bash
         run: |
-          ls -la src-tauri/target/release/bundle || true
-          find src-tauri/target/release/bundle -maxdepth 3 -type f || true
+          ls -la apps/client/src-tauri/target/release/bundle || true
+          find apps/client/src-tauri/target/release/bundle -maxdepth 3 -type f || true
       - name: Collect bundle artifacts
         id: bundles
         shell: bash
         run: |
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             patterns=(
-              "src-tauri/target/release/bundle/msi/*.msi"
-              "src-tauri/target/release/bundle/nsis/*-setup.exe"
+              "apps/client/src-tauri/target/release/bundle/msi/*.msi"
+              "apps/client/src-tauri/target/release/bundle/nsis/*-setup.exe"
             )
           else
             patterns=(
-              "src-tauri/target/release/bundle/deb/*.deb"
-              "src-tauri/target/release/bundle/rpm/*.rpm"
-              "src-tauri/target/release/bundle/appimage/*.AppImage"
+              "apps/client/src-tauri/target/release/bundle/deb/*.deb"
+              "apps/client/src-tauri/target/release/bundle/rpm/*.rpm"
+              "apps/client/src-tauri/target/release/bundle/appimage/*.AppImage"
             )
           fi
 
@@ -289,8 +290,8 @@ jobs:
           tag="v${{ needs.check-version.outputs.version }}"
           shopt -s nullglob
           files=(
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*-setup.exe
+            apps/client/src-tauri/target/release/bundle/msi/*.msi
+            apps/client/src-tauri/target/release/bundle/nsis/*-setup.exe
           )
 
           if [ ${#files[@]} -eq 0 ]; then

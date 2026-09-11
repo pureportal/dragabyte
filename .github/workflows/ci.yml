@@ -31,6 +31,6 @@ jobs:
       - name: Verify version sync
         run: npm run sync:version:check
       - name: Type check
-        run: npx tsc -p tsconfig.json --noEmit
+        run: npx tsc -p apps/client/tsconfig.json --noEmit
       - name: Build
         run: npm run build

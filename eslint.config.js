@@ -5,12 +5,12 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist", "node_modules", "src-tauri/gen", "src-tauri/target", "target", "**/*.d.ts"],
+    ignores: ["dist", "node_modules", "apps/client/src-tauri/gen", "apps/client/src-tauri/target", "target", "**/*.d.ts"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/**/*.{ts,tsx}", "vite.config.ts", "tailwind.config.ts"],
+    files: ["apps/client/src/**/*.{ts,tsx}", "apps/client/vite.config.ts", "apps/client/tailwind.config.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -32,7 +32,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["vite.config.ts", "tailwind.config.ts"],
+    files: ["apps/client/vite.config.ts", "apps/client/tailwind.config.ts"],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -40,7 +40,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["apps/client/src/**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
     },

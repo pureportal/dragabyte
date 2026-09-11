@@ -1,11 +1,11 @@
 <p align="center">
-	<img src="./.github/assets/icon.png" alt="Dragabyte icon" width="120" />
+	<img src="./assets/icon.png" alt="Dragabyte icon" width="120" />
 </p>
 
 # Dragabyte
 
 <p align="center">
-	<img src="./.github/assets/image.png" alt="Dragabyte banner" width="100%" />
+	<img src="./assets/image.png" alt="Dragabyte banner" width="100%" />
 </p>
 
 Dragabyte is a desktop storage analysis app that turns disk usage into clear, actionable insights. It is built for speed, transparency, and clean-up workflows that scale from power users to IT teams.
@@ -170,7 +170,7 @@ npm run tauri:build
 
 ## Linux Support
 
-Dragabyte ships Linux bundle targets via `src-tauri/tauri.linux.conf.json`. The Linux config is merged using JSON Merge Patch during builds, allowing Linux-specific bundle settings without affecting Windows or macOS builds.
+Dragabyte ships Linux bundle targets via `apps/client/src-tauri/tauri.linux.conf.json`. The Linux config is merged using JSON Merge Patch during builds, allowing Linux-specific bundle settings without affecting Windows or macOS builds.
 
 ## Headless Mode & Remote Management
 

@@ -4,45 +4,22 @@
   "version": "0.7.4",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint src vite.config.ts tailwind.config.ts",
-    "tauri": "tauri",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:build:microsoft-store": "tauri build --no-bundle && tauri bundle --bundles msi,nsis --config src-tauri/tauri.microsoftstore.conf.json",
-    "tauri:build:linux": "tauri build -- --config src-tauri/tauri.linux.conf.json",
+    "dev": "npm run dev --workspace @dragabyte/client --",
+    "build": "npm run build --workspace @dragabyte/client --",
+    "preview": "npm run preview --workspace @dragabyte/client --",
+    "lint": "npm run lint --workspace @dragabyte/client --",
+    "tauri": "npm run tauri --workspace @dragabyte/client --",
+    "tauri:dev": "npm run tauri:dev --workspace @dragabyte/client --",
+    "tauri:build": "npm run tauri:build --workspace @dragabyte/client --",
+    "tauri:build:microsoft-store": "npm run tauri:build:microsoft-store --workspace @dragabyte/client --",
+    "tauri:build:linux": "npm run tauri:build:linux --workspace @dragabyte/client --",
     "sync:version": "node scripts/sync-version.cjs",
     "sync:version:check": "node scripts/sync-version.cjs --check",
     "bump:patch": "node scripts/bump-version.cjs patch",
     "bump:minor": "node scripts/bump-version.cjs minor",
-    "bump:major": "node scripts/bump-version.cjs major"
-  },
-  "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
-    "@react-pdf/renderer": "^4.3.2",
-    "@tanstack/react-query": "^5.0.0",
-    "@tanstack/react-router": "^1.0.0",
-    "@tauri-apps/api": "2.10.1",
-    "@tauri-apps/plugin-dialog": "2.6.0",
-    "@tauri-apps/plugin-fs": "^2.4.5",
-    "@tauri-apps/plugin-process": "2.3.1",
-    "@tauri-apps/plugin-updater": "2.10.0",
-    "@tauri-apps/plugin-window": "^2.0.0-alpha.1",
-    "@types/papaparse": "^5.5.2",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "exceljs": "^4.4.0",
-    "lucide-react": "^0.563.0",
-    "papaparse": "^5.5.3",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "react-icons": "^5.5.0",
-    "tailwind-merge": "^2.6.1",
-    "zustand": "^5.0.11"
+    "bump:major": "node scripts/bump-version.cjs major",
+    "typecheck": "npm run typecheck --workspace @dragabyte/client --",
+    "test:version": "node --test scripts/version.test.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -59,5 +36,8 @@
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.58.1",
     "vite": "^5.4.0"
-  }
+  },
+  "workspaces": [
+    "apps/client"
+  ]
 }

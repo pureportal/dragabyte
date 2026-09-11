@@ -10,14 +10,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-src-tauri/target/
-src-tauri/tauri-dev.pid
-src-tauri/*.log
-src-tauri/.cargo
-src-tauri/.tauri
+apps/client/src-tauri/target/
+apps/client/src-tauri/tauri-dev.pid
+apps/client/src-tauri/*.log
+apps/client/src-tauri/.cargo
+apps/client/src-tauri/.tauri
 # Tauri v2 generated files
-src-tauri/gen/
+apps/client/src-tauri/gen/
 # Local settings
-src-tauri/dragabyte.settings.json
+apps/client/src-tauri/dragabyte.settings.json
 # System files
 Thumbs.db

@@ -1,6 +1,6 @@
 name: dragabyte
 base: core22
-version: "0.6.1"
+version: "0.7.4"
 summary: Disk usage scanner and bulk rename utility
 description: |
   Dragabyte is a desktop utility for scanning folder usage,
@@ -43,7 +43,7 @@ parts:
     override-build: |
       set -eu
       npm ci
-      npm run tauri build -- --config src-tauri/tauri.linux.conf.json --bundles deb
-      dpkg -x src-tauri/target/release/bundle/deb/*.deb $SNAPCRAFT_PART_INSTALL/
+      npm run tauri:build:linux -- --bundles deb
+      dpkg -x apps/client/src-tauri/target/release/bundle/deb/*.deb $SNAPCRAFT_PART_INSTALL/
       sed -i -e "s|Icon=dragabyte|Icon=/usr/share/icons/hicolor/32x32/apps/dragabyte.png|g" \
         $SNAPCRAFT_PART_INSTALL/usr/share/applications/dragabyte.desktop

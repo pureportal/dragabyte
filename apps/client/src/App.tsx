@@ -1,7 +1,7 @@
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { useCallback, useEffect, useRef, useState } from "react";
-import dragabyteLogoUrl from "../.github/assets/icon.png";
+import dragabyteLogoUrl from "../../../assets/icon.png";
 import { UpdateModal } from "./components/UpdateModal";
 import {
   getLaunchContext,
