@@ -49,6 +49,8 @@ jobs:
           projectPath: apps/client
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
@@ -93,6 +95,18 @@ jobs:
           fi
 
           printf "paths<<EOF\n%s\nEOF\n" "$(printf "%s\n" "${files[@]}")" >> "$GITHUB_OUTPUT"
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}
+          path: |
+            apps/client/src-tauri/target/release/bundle/**/*.msi
+            apps/client/src-tauri/target/release/bundle/**/*-setup.exe
+            apps/client/src-tauri/target/release/bundle/**/*.deb
+            apps/client/src-tauri/target/release/bundle/**/*.rpm
+            apps/client/src-tauri/target/release/bundle/**/*.AppImage
+            apps/client/src-tauri/target/release/bundle/**/*.sig
+          if-no-files-found: error
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v3
         with:

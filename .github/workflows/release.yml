@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   check-version:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request' && github.event.workflow_run.head_repository.full_name == github.repository }}
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.compare.outputs.changed }}
@@ -78,9 +78,11 @@ jobs:
       - name: Set release body
         if: steps.compare.outputs.changed == 'true'
         id: release_body
+        env:
+          CHANGELOG_CONTENT: ${{ steps.changelog.outputs.content }}
         shell: bash
         run: |
-          body="${{ steps.changelog.outputs.content }}"
+          body="$CHANGELOG_CONTENT"
           if [ -z "$body" ] && [ -f CHANGES.md ]; then
             body="$(cat CHANGES.md)"
           fi
@@ -243,7 +245,7 @@ jobs:
 
   cleanup-release:
     name: Cleanup Release on Failure
-    needs: [check-version, build-and-release]
+    needs: [check-version, build-and-release, build-microsoft-store-release, build-snap-release]
     if: failure() && needs.build-and-release.result == 'failure'
     runs-on: ubuntu-latest
     permissions:
@@ -299,7 +301,16 @@ jobs:
             exit 1
           fi
 
-          gh release upload "$tag" "${files[@]}" --clobber
+          artifact_dir="$RUNNER_TEMP/microsoft-store"
+          mkdir -p "$artifact_dir"
+          uploads=()
+          for file in "${files[@]}"; do
+            filename="$(basename "$file")"
+            destination="$artifact_dir/${filename%.*}-microsoft-store.${filename##*.}"
+            cp "$file" "$destination"
+            uploads+=("$destination")
+          done
+          gh release upload "$tag" "${uploads[@]}" --clobber
 
   build-snap-release:
     needs: check-version
