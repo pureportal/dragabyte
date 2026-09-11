@@ -4,8 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 import { pdf } from '@react-pdf/renderer';
-import React, { createElement } from 'react';
-import type { ScanSummary, ScanNode, ScanFile } from './types';
+import type { ScanSummary, ScanNode } from './types';
 import { ScanReportPdf } from './pdf/ScanReportPdf';
 import { formatBytes } from '../../lib/utils';
 
@@ -91,12 +90,7 @@ const flattenScan = (summary: ScanSummary): ExportItem[] => {
   return items;
 };
 
-const flattenLargestFiles = (summary: ScanSummary): ScanFile[] => {
-  return summary.largestFiles;
-};
-
 export const exportToPdf = async (summary: ScanSummary, filename: string) => {
-  // @ts-ignore - The types for @react-pdf/renderer are a bit strict about input, but this works at runtime
   const blob = await pdf(<ScanReportPdf summary={summary} date={new Date().toLocaleDateString()} />).toBlob();
   const buffer = await blob.arrayBuffer();
   await writeFile(filename, new Uint8Array(buffer));

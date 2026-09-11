@@ -1,8 +1,11 @@
-import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { memo, useMemo } from "react";
+import type { JSX, CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import { memo, useMemo, useRef } from "react";
 import { getFileIcon, getFolderIcon } from "../../lib/fileIcons";
 import { formatBytes, truncateMiddle } from "../../lib/utils";
 import type { FlatNode, ScanFile, ScanNode } from "./types";
+import { useVirtualRows } from "./useVirtualRows";
+
+const ROW_HEIGHT = 64;
 
 const getDepthTone = (depth: number): string => {
   return depth % 2 === 0 ? "bg-slate-900/40" : "bg-slate-900/60";
@@ -17,7 +20,7 @@ const getTreeRowClassName = (isActive: boolean, depthTone: string): string => {
 
 const getExpandButtonClassName = (hasChildren: boolean): string => {
   const visibility = hasChildren ? "visible" : "invisible";
-  return `flex h-5 w-5 flex-none items-center justify-center rounded text-xs text-slate-300 transition hover:bg-slate-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 ${visibility}`;
+  return `flex h-5 w-5 flex-none items-center justify-center rounded-sm text-xs text-slate-300 transition hover:bg-slate-800/80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600 ${visibility}`;
 };
 
 const getMaxSizeByDepth = (items: FlatNode[]): Map<number, number> => {
@@ -78,7 +81,8 @@ const FolderProgressSpinner = (): JSX.Element => {
 
 interface ScanTreeProps {
   treeItems: FlatNode[];
-  calculatingFolderPaths: Set<string>;
+  isScanning: boolean;
+  scrollElement: HTMLDivElement | null;
   expandedPaths: Set<string>;
   selectedPath: string | null;
   selectedFilePath: string | null;
@@ -97,7 +101,8 @@ interface ScanTreeProps {
 const ScanTree = memo(
   ({
     treeItems,
-    calculatingFolderPaths,
+    isScanning,
+    scrollElement,
     expandedPaths,
     selectedPath,
     selectedFilePath,
@@ -109,6 +114,8 @@ const ScanTree = memo(
     onContextMenu,
     onContextMenuFile,
   }: ScanTreeProps) => {
+    const rowsRef = useRef<HTMLDivElement>(null);
+    const { start, end, totalHeight } = useVirtualRows(treeItems.length, ROW_HEIGHT, scrollElement);
     const maxSizeByDepth = useMemo(() => {
       return getMaxSizeByDepth(treeItems);
     }, [treeItems]);
@@ -151,21 +158,39 @@ const ScanTree = memo(
     const handleKeyDown = (
       event: KeyboardEvent<HTMLDivElement>,
       item: FlatNode,
+      index: number,
     ): void => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleSelect(item);
+      } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+        event.preventDefault();
+        const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? treeItems.length - 1 :
+          Math.max(0, Math.min(treeItems.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
+        const next = treeItems[nextIndex];
+        if (!next) return;
+        handleSelect(next);
+        if (scrollElement) {
+          const top = nextIndex * ROW_HEIGHT;
+          if (top < scrollElement.scrollTop || top + ROW_HEIGHT > scrollElement.scrollTop + scrollElement.clientHeight) {
+            scrollElement.scrollTo({ top });
+          }
+        }
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          rowsRef.current?.querySelector<HTMLElement>(`[data-row-index="${nextIndex}"]`)?.focus({ preventScroll: true });
+        }));
       }
     };
 
     return (
-      <>
-        {treeItems.map((item) => {
+      <div ref={rowsRef} style={{ height: totalHeight, position: "relative" }} aria-label="Folders and files">
+        {treeItems.slice(start, end).map((item, offset) => {
+          const index = start + offset;
           const isFolder = item.kind === "folder";
           const isExpanded = isFolder && expandedPaths.has(item.path);
           const hasChildren = isFolder && item.hasChildren;
           const isCalculating =
-            isFolder && calculatingFolderPaths.has(item.path);
+            isFolder && isScanning && item.node?.state === "scanning";
           const isActive = isFolder
             ? item.path === selectedPath
             : item.path === selectedFilePath;
@@ -181,6 +206,9 @@ const ScanTree = memo(
           const sizeBarStyle: CSSProperties = { width: `${fillPercent}%` };
           const depthStyle = {
             paddingLeft: 8 + item.depth * 14,
+            position: "absolute" as const,
+            top: index * ROW_HEIGHT,
+            height: ROW_HEIGHT,
             ...getRowFillStyle(fillPercent),
           };
           const rowClass = getTreeRowClassName(
@@ -193,6 +221,8 @@ const ScanTree = memo(
           return (
             <div
               key={item.path}
+              data-row-index={index}
+              aria-busy={isCalculating}
               className={rowClass}
               style={depthStyle}
               onClick={(): void => handleSelect(item)}
@@ -200,7 +230,7 @@ const ScanTree = memo(
               onDoubleClick={(event): void => handleDoubleClick(event, item)}
               role="button"
               tabIndex={0}
-              onKeyDown={(event): void => handleKeyDown(event, item)}
+              onKeyDown={(event): void => handleKeyDown(event, item, index)}
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-2">
                 <button
@@ -224,17 +254,18 @@ const ScanTree = memo(
                   {displayName}
                 </span>
               </div>
-              <div className="sticky right-0 ml-auto flex-none w-32 py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-sm border-l border-white/5">
+              <div className="sticky right-0 ml-auto flex-none w-32 py-1.5 pl-4 pr-2 text-right text-xs text-slate-300 tabular-nums bg-slate-950/70 backdrop-blur-xs border-l border-white/5">
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-slate-200">
+                    {isFolder && item.node?.state !== "complete" ? "≥ " : ""}
                     {formatBytes(item.sizeBytes)}
                   </span>
                   <span className="text-[10px] text-slate-400">
                     {fillPercent}% occupied
                   </span>
-                  <div className="h-1 w-full rounded bg-slate-800/70">
+                  <div className="h-1 w-full rounded-sm bg-slate-800/70">
                     <div
-                      className="h-1 rounded bg-blue-400/70"
+                      className="h-1 rounded-sm bg-blue-400/70"
                       style={sizeBarStyle}
                     />
                   </div>
@@ -243,7 +274,7 @@ const ScanTree = memo(
             </div>
           );
         })}
-      </>
+      </div>
     );
   },
 );

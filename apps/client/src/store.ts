@@ -257,8 +257,9 @@ export const useUIStore = create<UIState>()(
     {
       name: "dragabyte-ui-storage",
       partialize: (state) => {
-        const { scanStatus, ...rest } = state;
-        return rest;
+        const persistedState: Partial<UIState> = { ...state };
+        delete persistedState.scanStatus;
+        return persistedState;
       },
     },
   ),

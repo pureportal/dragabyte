@@ -3,6 +3,7 @@
   "productName": "Dragabyte",
   "identifier": "com.dragabyte.app",
   "build": {
+    "features": ["desktop"],
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
     "devUrl": "http://localhost:5173",

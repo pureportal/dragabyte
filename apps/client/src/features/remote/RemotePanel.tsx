@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useMemo, useState } from "react";
+import { type JSX, useEffect, useMemo, useState } from "react";
 import { FiActivity, FiPower, FiServer, FiTrash2 } from "react-icons/fi";
 import { MdDragIndicator } from "react-icons/md";
 import { useUIStore } from "../../store";
@@ -244,7 +244,7 @@ const SortableServerItem = ({
                   {getStatusLabel(server.status)}
                 </div>
                 {server.lastMessage && (
-                  <span className="text-[10px] text-red-400 bg-red-500/5 px-2 py-0.5 rounded border border-red-500/10 truncate max-w-[200px]">
+                  <span className="text-[10px] text-red-400 bg-red-500/5 px-2 py-0.5 rounded-sm border border-red-500/10 truncate max-w-[200px]">
                     {server.lastMessage}
                   </span>
                 )}
@@ -294,7 +294,7 @@ const SortableServerItem = ({
                 value={server.name}
                 onPointerDown={(e) => e.stopPropagation()}
                 onChange={(e) => onUpdateName(server, e.target.value)}
-                className="w-full bg-slate-950/50 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:border-blue-500/40 focus:bg-slate-950 transition-colors"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-sm px-2.5 py-1.5 text-xs text-slate-300 focus:border-blue-500/40 focus:bg-slate-950 transition-colors"
                 placeholder="Server Name"
               />
             </div>
@@ -308,14 +308,14 @@ const SortableServerItem = ({
                   onPointerDown={(e) => e.stopPropagation()}
                   onChange={(e) => onUpdateToken(server, e.target.value)}
                   type="password"
-                  className="flex-1 bg-slate-950/50 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:border-blue-500/40 focus:bg-slate-950 transition-colors font-mono"
+                  className="flex-1 bg-slate-950/50 border border-slate-800 rounded-sm px-2.5 py-1.5 text-xs text-slate-300 focus:border-blue-500/40 focus:bg-slate-950 transition-colors font-mono"
                   placeholder="Access Token"
                 />
                 <button
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => onRemove(server.id)}
-                  className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-sm bg-slate-900 border border-slate-800 text-slate-500 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/20 transition-colors cursor-pointer"
                   title="Remove Server"
                 >
                   <FiTrash2 size={14} />
@@ -649,14 +649,14 @@ const RemotePanel = (): JSX.Element => {
               <button
                 type="button"
                 onClick={handleSortByName}
-                className="text-xs font-medium text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded hover:bg-slate-800"
+                className="text-xs font-medium text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded-sm hover:bg-slate-800"
               >
                 Name
               </button>
               <button
                 type="button"
                 onClick={handleSortByHost}
-                className="text-xs font-medium text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded hover:bg-slate-800"
+                className="text-xs font-medium text-slate-400 hover:text-slate-200 transition px-2 py-1 rounded-sm hover:bg-slate-800"
               >
                 Host
               </button>

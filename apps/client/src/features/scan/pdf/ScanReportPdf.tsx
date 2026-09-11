@@ -1,4 +1,3 @@
-// @ts-ignore
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { formatBytes } from '../../../lib/utils';
 import type { ScanSummary } from '../types';

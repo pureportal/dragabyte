@@ -266,12 +266,12 @@ const Select = <T extends string | number>({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center justify-between gap-2 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded text-xs text-slate-300 transition-colors min-w-[80px]",
+          "flex items-center justify-between gap-2 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-sm text-xs text-slate-300 transition-colors min-w-[80px]",
           triggerClassName,
         )}
       >
         <span className="truncate">{selected?.label ?? value}</span>
-        <ChevronDown className="w-3 h-3 opacity-50 flex-shrink-0" />
+        <ChevronDown className="w-3 h-3 opacity-50 shrink-0" />
       </button>
       {isOpen && (
         <>
@@ -296,7 +296,7 @@ const Select = <T extends string | number>({
               >
                 <span className="truncate">{opt.label}</span>
                 {value === opt.value && (
-                  <Check className="w-3 h-3 flex-shrink-0" />
+                  <Check className="w-3 h-3 shrink-0" />
                 )}
               </button>
             ))}
@@ -334,7 +334,7 @@ const FilterRuleItem = ({
         <button
           onClick={() => onUpdate(rule.id, { active: !rule.active })}
           className={cn(
-            "text-xs px-2 py-0.5 rounded border transition-colors",
+            "text-xs px-2 py-0.5 rounded-sm border transition-colors",
             rule.active
               ? "border-green-800 bg-green-950/30 text-green-400"
               : "border-slate-700 text-slate-500",
@@ -355,7 +355,7 @@ const FilterRuleItem = ({
           placeholder="Filter text..."
           value={rule.text}
           onChange={(e) => onUpdate(rule.id, { text: e.target.value })}
-          className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+          className="bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
         />
         <div className="flex gap-4">
           <label className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 cursor-pointer">
@@ -412,7 +412,7 @@ const RuleItem = ({
           <GripVertical className="w-4 h-4 text-slate-500" />
         </div>
         <div className="flex-1 flex gap-2 items-center">
-          <span className="text-xs font-semibold text-sky-400 bg-sky-950/30 px-2 py-0.5 rounded capitalize">
+          <span className="text-xs font-semibold text-sky-400 bg-sky-950/30 px-2 py-0.5 rounded-sm capitalize">
             {rule.type}
           </span>
 
@@ -426,7 +426,7 @@ const RuleItem = ({
         <button
           onClick={() => onUpdate(rule.id, { active: !rule.active })}
           className={cn(
-            "text-xs px-2 py-0.5 rounded border transition-colors",
+            "text-xs px-2 py-0.5 rounded-sm border transition-colors",
             rule.active
               ? "border-green-800 bg-green-950/30 text-green-400"
               : "border-slate-700 text-slate-500",
@@ -450,14 +450,14 @@ const RuleItem = ({
               placeholder="Find"
               value={rule.find || ""}
               onChange={(e) => onUpdate(rule.id, { find: e.target.value })}
-              className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+              className="bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
             />
             <input
               type="text"
               placeholder="Replace with"
               value={rule.replace || ""}
               onChange={(e) => onUpdate(rule.id, { replace: e.target.value })}
-              className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+              className="bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
             />
             <div className="flex gap-2">
               <label className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 cursor-pointer">
@@ -490,7 +490,7 @@ const RuleItem = ({
             placeholder="Text to add"
             value={rule.rawText || ""}
             onChange={(e) => onUpdate(rule.id, { rawText: e.target.value })}
-            className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+            className="bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
           />
         )}
 
@@ -520,7 +520,7 @@ const RuleItem = ({
                 placeholder="Regex pattern to apply case to"
                 value={rule.find || ""}
                 onChange={(e) => onUpdate(rule.id, { find: e.target.value })}
-                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 font-mono"
+                className="bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-xs text-slate-200 font-mono"
               />
             )}
           </>
@@ -547,7 +547,7 @@ const RuleItem = ({
                   removeCount: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+              className="w-16 bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
             />
             <span className="text-sm text-slate-400">chars from</span>
             <Select
@@ -571,7 +571,7 @@ const RuleItem = ({
                     numberStart: parseInt(e.target.value) || 0,
                   })
                 }
-                className="w-20 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+                className="w-20 bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
               />
             </div>
             <div className="flex gap-2 items-center">
@@ -584,7 +584,7 @@ const RuleItem = ({
                     numberStep: parseInt(e.target.value) || 1,
                   })
                 }
-                className="w-20 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+                className="w-20 bg-slate-950 border border-slate-800 rounded-sm px-2 py-1 text-sm text-slate-200"
               />
             </div>
             <div className="flex gap-2 items-center">
@@ -604,8 +604,10 @@ const RuleItem = ({
 };
 
 export default function BulkRenameView() {
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [rules, setRules] = useState<RenameRule[]>([]);
+  const [{ files, rules }, setRenameState] = useState<{
+    files: FileItem[];
+    rules: RenameRule[];
+  }>({ files: [], rules: [] });
   const [filterRules, setFilterRules] = useState<FilterRule[]>([]);
   const [activeTab, setActiveTab] = useState<"rename" | "filter">("rename");
   const [isApplying, setIsApplying] = useState(false);
@@ -617,21 +619,37 @@ export default function BulkRenameView() {
     }),
   );
 
+  const updateRules = (nextRules: RenameRule[]): void => {
+    setRenameState((previous) => ({
+      rules: nextRules,
+      files: applyRulesToItems(previous.files, nextRules).map((file) => ({
+        ...file,
+        status: file.status === "success" ? "success" : "pending",
+      })),
+    }));
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setRules((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      const oldIndex = rules.findIndex((item) => item.id === active.id);
+      const newIndex = rules.findIndex((item) => item.id === over.id);
+      updateRules(arrayMove(rules, oldIndex, newIndex));
     }
   };
 
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [saveMode, setSaveMode] = useState<"rules" | "filters">("rules");
-  const [templates, setTemplates] = useState<SavedTemplate[]>([]);
+  const [templates, setTemplates] = useState<SavedTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem("rename_templates");
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  });
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
 
   const filteredFiles = useMemo(
@@ -643,17 +661,6 @@ export default function BulkRenameView() {
     () => new Set(filteredFiles.map((f) => f.id)),
     [filteredFiles],
   );
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("rename_templates");
-      if (saved) {
-        setTemplates(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
 
   const saveTemplate = (name: string) => {
     const existingIndex = templates.findIndex((t) => t.name === name);
@@ -686,7 +693,7 @@ export default function BulkRenameView() {
         ...r,
         id: createId(),
       }));
-      setRules(newRules);
+      updateRules(newRules);
     }
 
     if (t.filters && t.filters.length > 0) {
@@ -709,7 +716,8 @@ export default function BulkRenameView() {
   const mergeItems = useCallback(
     (incoming: FileItem[]): void => {
       if (incoming.length === 0) return;
-      setFiles((prev) => {
+      setRenameState((previous) => {
+        const prev = previous.files;
         const existing = new Set<string>();
         for (let i = 0; i < prev.length; i += 1) {
           existing.add(prev[i]?.path ?? "");
@@ -721,30 +729,21 @@ export default function BulkRenameView() {
           existing.add(item.path);
           merged.push(item);
         }
-        return applyRulesToItems(merged, rules);
+        return { ...previous, files: applyRulesToItems(merged, previous.rules) };
       });
     },
-    [rules],
+    [],
   );
 
   const loadContextItems = useCallback(
-    async (paths: string[], recursive: boolean = false): Promise<void> => {
-      try {
-        const items = await invoke<RenameContextItem[]>(
-          "collect_rename_items",
-          {
-            paths,
-            recursive,
-          },
-        );
-        mergeItems(
-          items.map((item) =>
-            buildFileItem(item.path, item.name, item.isDirectory),
-          ),
-        );
-      } catch (error) {
-        console.error(error);
-      }
+    (paths: string[], recursive: boolean = false): Promise<void> => {
+      return invoke<RenameContextItem[]>("collect_rename_items", { paths, recursive })
+        .then((items) => {
+          mergeItems(
+            items.map((item) => buildFileItem(item.path, item.name, item.isDirectory)),
+          );
+        })
+        .catch(console.error);
     },
     [mergeItems],
   );
@@ -775,14 +774,7 @@ export default function BulkRenameView() {
       buildFileItem(path, getPathName(path), areDirectories),
     );
 
-    const existing = new Set(files.map((f) => f.path));
-    const merged = [...files, ...newFiles.filter((f) => !existing.has(f.path))];
-    setFiles(
-      merged.map((f, idx) => ({
-        ...f,
-        newName: applyRules(f.originalName, rules, idx, f.isDirectory),
-      })),
-    );
+    mergeItems(newFiles);
   };
 
   const handleAddFiles = async () => {
@@ -835,7 +827,9 @@ export default function BulkRenameView() {
     }
   };
 
-  const handleClearFiles = () => setFiles([]);
+  const handleClearFiles = () => {
+    setRenameState((previous) => ({ ...previous, files: [] }));
+  };
 
   const addFilterRule = (type: FilterRuleType) => {
     const id = createId();
@@ -874,39 +868,16 @@ export default function BulkRenameView() {
       numberStep: 1,
       targetType: "both",
     };
-    setRules((prev) => {
-      const updated = [...prev, newRule];
-      setFiles(
-        files.map((f, idx) => ({
-          ...f,
-          newName: applyRules(f.originalName, updated, idx, f.isDirectory),
-        })),
-      );
-      return updated;
-    });
+    updateRules([...rules, newRule]);
   };
 
   const updateRule = (id: string, updates: Partial<RenameRule>) => {
-    setRules((prev) => {
-      return prev.map((r) => (r.id === id ? { ...r, ...updates } : r));
-    });
+    updateRules(rules.map((rule) => (rule.id === id ? { ...rule, ...updates } : rule)));
   };
 
   const removeRule = (id: string) => {
-    setRules((prev) => prev.filter((r) => r.id !== id));
+    updateRules(rules.filter((rule) => rule.id !== id));
   };
-
-  useEffect(() => {
-    setFiles((prev) =>
-      prev.map((f, idx) => {
-        return {
-          ...f,
-          newName: applyRules(f.originalName, rules, idx, f.isDirectory),
-          status: f.status === "success" ? "success" : "pending",
-        };
-      }),
-    );
-  }, [rules]);
 
   const handleApply = async () => {
     setIsApplying(true);
@@ -935,8 +906,9 @@ export default function BulkRenameView() {
         alert("Some errors occurred:\n" + result.errors.join("\n"));
       }
 
-      setFiles((prev) =>
-        prev.map((f) => {
+      setRenameState((previous) => ({
+        ...previous,
+        files: previous.files.map((f) => {
           const newItem = itemsToRename.find((i) => i.path === f.path);
           if (newItem) {
             return {
@@ -949,7 +921,7 @@ export default function BulkRenameView() {
           }
           return f;
         }),
-      );
+      }));
     } catch (error) {
       console.error(error);
       alert("Failed to execute rename: " + String(error));
@@ -979,10 +951,10 @@ export default function BulkRenameView() {
           </span>
           <div className="flex-1" />
 
-          <div className="flex bg-slate-800 rounded p-0.5">
+          <div className="flex bg-slate-800 rounded-sm p-0.5">
             <button
               onClick={handleAddFiles}
-              className="flex items-center gap-1.5 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-sm text-xs font-semibold transition-colors"
               title="Add specific files"
             >
               <FileIcon className="w-3.5 h-3.5" />
@@ -991,7 +963,7 @@ export default function BulkRenameView() {
             <div className="w-px bg-slate-900 mx-0.5" />
             <button
               onClick={handleAddFolders}
-              className="flex items-center gap-1.5 px-3 py-1 hover:bg-slate-600 rounded text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-slate-600 rounded-sm text-xs font-semibold transition-colors"
               title="Add folder (as item to rename)"
             >
               <Folder className="w-3.5 h-3.5" />
@@ -1000,7 +972,7 @@ export default function BulkRenameView() {
             <div className="w-px bg-slate-900 mx-0.5" />
             <button
               onClick={handleImportFolder}
-              className="flex items-center gap-1.5 px-3 py-1 hover:bg-slate-600 rounded text-xs font-semibold transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-slate-600 rounded-sm text-xs font-semibold transition-colors"
               title="Import all files in folder"
             >
               <FolderInput className="w-3.5 h-3.5" />
@@ -1010,7 +982,7 @@ export default function BulkRenameView() {
 
           <button
             onClick={handleClearFiles}
-            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-sm transition-colors"
             title="Clear All"
           >
             <Trash2 className="w-4 h-4" />
@@ -1036,7 +1008,7 @@ export default function BulkRenameView() {
                   <div
                     key={file.id + idx}
                     className={cn(
-                      "grid grid-cols-[1fr_20px_1fr] md:grid-cols-[1.5fr_20px_1.5fr] gap-2 items-center px-3 py-2 rounded border transition-colors",
+                      "grid grid-cols-[1fr_20px_1fr] md:grid-cols-[1.5fr_20px_1.5fr] gap-2 items-center px-3 py-2 rounded-sm border transition-colors",
                       !isVisible && "opacity-30 grayscale",
                       file.status === "success"
                         ? "bg-green-900/10 border-green-900/30"
@@ -1050,9 +1022,9 @@ export default function BulkRenameView() {
                       title={file.path}
                     >
                       {file.isDirectory ? (
-                        <Folder className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                        <Folder className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       ) : (
-                        <FileIcon className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                        <FileIcon className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                       )}
                       {file.originalName}
                     </div>
@@ -1087,9 +1059,9 @@ export default function BulkRenameView() {
             <button
               onClick={() => setActiveTab("rename")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded transition-all",
+                "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded-sm transition-all",
                 activeTab === "rename"
-                  ? "bg-slate-600 text-white shadow-sm"
+                  ? "bg-slate-600 text-white shadow-xs"
                   : "text-slate-400 hover:text-slate-200",
               )}
             >
@@ -1099,9 +1071,9 @@ export default function BulkRenameView() {
             <button
               onClick={() => setActiveTab("filter")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded transition-all",
+                "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded-sm transition-all",
                 activeTab === "filter"
-                  ? "bg-slate-600 text-white shadow-sm"
+                  ? "bg-slate-600 text-white shadow-xs"
                   : "text-slate-400 hover:text-slate-200",
               )}
             >
@@ -1118,7 +1090,7 @@ export default function BulkRenameView() {
           <div className="relative">
             <button
               onClick={() => setShowTemplateMenu(!showTemplateMenu)}
-              className="flex items-center justify-center w-8 h-8 rounded hover:bg-slate-800 text-sky-400 transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-sm hover:bg-slate-800 text-sky-400 transition-colors"
               title="Templates"
             >
               <ListFilter className="w-4 h-4" />
@@ -1186,7 +1158,7 @@ export default function BulkRenameView() {
                           </button>
                           <button
                             onClick={(e) => deleteTemplate(t.id, e)}
-                            className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -1224,43 +1196,43 @@ export default function BulkRenameView() {
             <div className="pt-2 grid grid-cols-2 gap-2">
               <button
                 onClick={() => addRule("replace")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Replace
               </button>
               <button
                 onClick={() => addRule("case")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Case
               </button>
               <button
                 onClick={() => addRule("prefix")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Add Prefix
               </button>
               <button
                 onClick={() => addRule("suffix")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Add Suffix
               </button>
               <button
                 onClick={() => addRule("numbering")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Numbering
               </button>
               <button
                 onClick={() => addRule("remove")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Remove
               </button>
               <button
                 onClick={() => addRule("extension")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors"
               >
                 Extension
               </button>
@@ -1290,13 +1262,13 @@ export default function BulkRenameView() {
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 onClick={() => addFilterRule("include")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors hover:border-emerald-500/30"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors hover:border-emerald-500/30"
               >
                 + Include
               </button>
               <button
                 onClick={() => addFilterRule("exclude")}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors hover:border-rose-500/30"
+                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-sm text-xs text-slate-300 flex items-center justify-center gap-2 transition-colors hover:border-rose-500/30"
               >
                 + Exclude
               </button>
@@ -1308,7 +1280,7 @@ export default function BulkRenameView() {
           <button
             onClick={handleApply}
             disabled={filteredFiles.length === 0 || isApplying}
-            className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 rounded font-semibold text-sm text-white shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2"
+            className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 rounded-sm font-semibold text-sm text-white shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2"
           >
             {isApplying ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

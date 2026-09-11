@@ -1,6 +1,6 @@
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
-import { useEffect, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
 import { fetchSettings } from "../features/settings/api";
 import { toErrorMessage } from "../lib/utils";
 
@@ -123,7 +123,7 @@ export const UpdateModal = (): JSX.Element | null => {
   if (status === "idle" || !update) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 shadow-2xl ring-1 ring-slate-800/60 scale-in duration-200 overflow-hidden">
         <div className="p-5">
           <h3 className="text-lg font-semibold text-slate-100 mb-2">
@@ -160,7 +160,7 @@ export const UpdateModal = (): JSX.Element | null => {
           {status === "error" ? (
             <button
               onClick={() => setStatus("idle")}
-              className="px-3 py-1.5 rounded-md text-sm font-medium border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600"
+              className="px-3 py-1.5 rounded-md text-sm font-medium border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600"
             >
               Close
             </button>
@@ -168,19 +168,19 @@ export const UpdateModal = (): JSX.Element | null => {
             <>
               <button
                 onClick={handleSkip}
-                className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-slate-200 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600"
+                className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-slate-200 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600"
               >
                 Skip
               </button>
               <button
                 onClick={handleRemindLater}
-                className="px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800/50 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600"
+                className="px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800/50 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600"
               >
                 Remind me later
               </button>
               <button
                 onClick={() => void handleUpdate()}
-                className="px-3 py-1.5 rounded-md text-sm font-medium shadow-lg bg-blue-600 hover:bg-blue-500 text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                className="px-3 py-1.5 rounded-md text-sm font-medium shadow-lg bg-blue-600 hover:bg-blue-500 text-white transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500/50"
               >
                 Update Now
               </button>

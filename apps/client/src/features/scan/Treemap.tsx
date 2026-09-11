@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type JSX, useMemo } from "react";
 import { formatBytes } from "../../lib/utils";
 import type { ScanNode } from "./types";
 
@@ -65,14 +65,13 @@ function recursiveSplit(
     if (!node) return [];
     return [{ x, y, w, h, node }];
   }
-  const sorted = sortBySize(nodes);
-  const total = sumNodeSizes(sorted);
+  const total = sumNodeSizes(nodes);
   if (total <= 0) {
     return [];
   }
-  const splitIndex = getSplitIndex(sorted, total);
-  const groupA = sorted.slice(0, splitIndex);
-  const groupB = sorted.slice(splitIndex);
+  const splitIndex = Math.min(nodes.length - 1, getSplitIndex(nodes, total));
+  const groupA = nodes.slice(0, splitIndex);
+  const groupB = nodes.slice(splitIndex);
 
   const sizeA = sumNodeSizes(groupA);
 
@@ -110,7 +109,7 @@ const Treemap = ({
   selectedPath,
 }: TreemapProps): JSX.Element => {
   const rects = useMemo(() => {
-    return recursiveSplit(rootNode.children, 0, 0, width, height);
+    return recursiveSplit(sortBySize(rootNode.children.filter((node) => node.sizeBytes > 0)), 0, 0, width, height);
   }, [rootNode, width, height]);
 
   return (
@@ -126,7 +125,7 @@ const Treemap = ({
           <div
             key={r.node.path}
             onClick={() => onSelect(r.node)}
-            className={`absolute border border-slate-900/50 transition-all hover:brightness-110 cursor-pointer flex items-center justify-center overflow-hidden rounded-sm shadow-sm
+            className={`absolute border border-slate-900/50 transition-all hover:brightness-110 cursor-pointer flex items-center justify-center overflow-hidden rounded-xs shadow-xs
                     ${colorClass}
                     ${isSelected ? "ring-2 ring-white/80 z-10" : "opacity-80"}
                 `}
@@ -136,7 +135,7 @@ const Treemap = ({
               width: r.w,
               height: r.h,
             }}
-            title={`${r.node.name} (${formatBytes(r.node.sizeBytes)})`}
+            title={`${r.node.name} (${r.node.state !== "complete" ? "≥ " : ""}${formatBytes(r.node.sizeBytes)})`}
           >
             {shouldRenderLabel(r) && (
               <span className="text-[10px] sm:text-xs font-semibold text-white/90 truncate px-1 drop-shadow-md cursor-default pointer-events-none select-none">
@@ -148,7 +147,7 @@ const Treemap = ({
       })}
       {rects.length === 0 && (
         <div className="flex items-center justify-center h-full text-slate-500 text-sm">
-          {rootNode.children.length === 0
+          {rootNode.state === "scanning" ? "Scanning…" : rootNode.children.length === 0
             ? "Empty folder"
             : "No sizable content"}
         </div>

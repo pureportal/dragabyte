@@ -1,12 +1,12 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { CSSProperties, MouseEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { JSX, CSSProperties, MouseEvent } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertModal } from "../../components/AlertModal";
 import { ConfirmModal } from "../../components/ConfirmModal";
 import { DetailsModal } from "../../components/DetailsModal";
 import { InputModal } from "../../components/InputModal";
-import { getFileIcon, getFolderIcon } from "../../lib/fileIcons";
+import { getFileIcon } from "../../lib/fileIcons";
 import {
   formatBytes,
   formatDuration,
@@ -50,6 +50,9 @@ import {
 } from "./api";
 import { ExportModal } from "./ExportModal";
 import ScanTree from "./ScanTree";
+import SubfolderTable from "./SubfolderTable";
+import { ScanUpdateQueue } from "./scanResults";
+import { buildNodeMap, buildTreeItems } from "./treeData";
 import Treemap from "./Treemap";
 import type {
   DiskUsage,
@@ -61,6 +64,7 @@ import type {
   ScanPriorityMode,
   ScanSummary,
   ScanThrottleLevel,
+  ScanUpdate,
 } from "./types";
 import UsageCharts from "./UsageCharts";
 
@@ -758,10 +762,13 @@ const resolveScanPath = (ctx: {
 const REMOTE_PING_INTERVAL_MS = 30000;
 const REMOTE_PING_TIMEOUT_MS = 4000;
 
-const toScanSummary = (value: unknown): ScanSummary | null => {
+const toScanUpdate = (value: unknown): ScanUpdate | null => {
   if (!value || typeof value !== "object") return null;
-  if (!("root" in value)) return null;
-  return value as ScanSummary;
+  if (!("folders" in value) || !Array.isArray(value.folders) ||
+      !("files" in value) || !Array.isArray(value.files) ||
+      !("sequence" in value) || !Number.isInteger(value.sequence) ||
+      !("id" in value) || typeof value.id !== "string") return null;
+  return value as ScanUpdate;
 };
 
 const getUsageFillStyle = (percent: number): CSSProperties => {
@@ -786,63 +793,6 @@ const resolveFolderSelection = async (): Promise<string | null> => {
     return result[0] ?? null;
   }
   return null;
-};
-
-const buildNodeMap = (root: ScanNode): Map<string, ScanNode> => {
-  const map = new Map<string, ScanNode>();
-  const stack: ScanNode[] = [root];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) continue;
-    map.set(current.path, current);
-    const children = current.children;
-    for (let i = 0; i < children.length; i += 1) {
-      const child = children[i];
-      if (child) stack.push(child);
-    }
-  }
-  return map;
-};
-
-const isEmptyFolder = (node: ScanNode): boolean => {
-  return node.sizeBytes === 0 && node.fileCount === 0;
-};
-
-type TreeStackItem = {
-  kind: "folder" | "file";
-  depth: number;
-  node?: ScanNode;
-  file?: ScanFile;
-  parentPath?: string;
-  isRoot?: boolean;
-};
-
-type ChildEntry = {
-  kind: "folder" | "file";
-  sizeBytes: number;
-  node?: ScanNode;
-  file?: ScanFile;
-};
-
-const buildChildEntries = (
-  node: ScanNode,
-  includeFiles: boolean,
-): ChildEntry[] => {
-  const entries: ChildEntry[] = [];
-  for (let i = 0; i < node.children.length; i += 1) {
-    const child = node.children[i];
-    if (!child) continue;
-    entries.push({ kind: "folder", sizeBytes: child.sizeBytes, node: child });
-  }
-  if (includeFiles) {
-    for (let i = 0; i < node.files.length; i += 1) {
-      const file = node.files[i];
-      if (!file) continue;
-      entries.push({ kind: "file", sizeBytes: file.sizeBytes, file });
-    }
-  }
-  entries.sort((a, b) => b.sizeBytes - a.sizeBytes);
-  return entries;
 };
 
 const updateLargestFiles = (
@@ -884,111 +834,6 @@ const getLargestFilesForNode = (
     }
   }
   return largest;
-};
-
-const buildTreeItems = (
-  root: ScanNode,
-  expanded: Set<string>,
-  showFiles: boolean,
-  hideEmptyFolders: boolean,
-): FlatNode[] => {
-  const result: FlatNode[] = [];
-  const stack: TreeStackItem[] = [
-    { kind: "folder", node: root, depth: 0, isRoot: true },
-  ];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) {
-      continue;
-    }
-    if (current.kind === "file" && current.file) {
-      result.push({
-        depth: current.depth,
-        kind: "file",
-        path: current.file.path,
-        name: current.file.name,
-        sizeBytes: current.file.sizeBytes,
-        hasChildren: false,
-        file: current.file,
-        parentPath: current.parentPath,
-      });
-      continue;
-    }
-    const node = current.node;
-    if (!node) continue;
-    const shouldHide =
-      hideEmptyFolders && !current.isRoot && isEmptyFolder(node);
-    if (shouldHide) continue;
-    const hasChildren =
-      node.children.length > 0 || (showFiles && node.files.length > 0);
-    result.push({
-      depth: current.depth,
-      kind: "folder",
-      path: node.path,
-      name: node.name,
-      sizeBytes: node.sizeBytes,
-      hasChildren,
-      node,
-    });
-    if (!expanded.has(node.path)) continue;
-    const childEntries = buildChildEntries(node, showFiles);
-    for (let i = childEntries.length - 1; i >= 0; i -= 1) {
-      const entry = childEntries[i];
-      if (!entry) continue;
-      if (entry.kind === "file" && entry.file) {
-        stack.push({
-          kind: "file",
-          depth: current.depth + 1,
-          file: entry.file,
-          parentPath: node.path,
-        });
-        continue;
-      }
-      if (entry.kind === "folder" && entry.node) {
-        stack.push({
-          kind: "folder",
-          depth: current.depth + 1,
-          node: entry.node,
-          isRoot: false,
-        });
-      }
-    }
-  }
-  return result;
-};
-
-const collectCalculatingFolderPaths = (root: ScanNode): Set<string> => {
-  const calculating = new Set<string>();
-  const stack: ScanNode[] = [root];
-  while (stack.length > 0) {
-    const node = stack.pop();
-    if (!node) continue;
-    const hasPendingChildren = node.dirCount > node.children.length;
-    const hasPendingFiles = node.fileCount > node.files.length;
-    if (hasPendingChildren || hasPendingFiles) {
-      calculating.add(node.path);
-    }
-    for (let i = 0; i < node.children.length; i += 1) {
-      const child = node.children[i];
-      if (child) {
-        stack.push(child);
-      }
-    }
-  }
-  return calculating;
-};
-
-const buildInitialExpandedPaths = (root: ScanNode): Set<string> => {
-  const next = new Set<string>();
-  next.add(root.path);
-  const children = root.children;
-  for (let i = 0; i < children.length; i += 1) {
-    const child = children[i];
-    if (child) {
-      next.add(child.path);
-    }
-  }
-  return next;
 };
 
 const getParentPath = (path: string): string | null => {
@@ -1035,7 +880,6 @@ const createNextSelectionHistory = (
 };
 
 type ViewMode = "tree" | "treemap";
-type FilterMode = "simple" | "advanced";
 
 const ScanView = (): JSX.Element => {
   const [summary, setSummary] = useState<ScanSummary | null>(null);
@@ -1046,7 +890,6 @@ const ScanView = (): JSX.Element => {
   const [errorCopied, setErrorCopied] = useState(false);
   const [isRemoteModalOpen, setIsRemoteModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isRemotePanelOpen, setIsRemotePanelOpen] = useState(true);
   const [isRemoteScanOpen, setIsRemoteScanOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [remoteListLoading, setRemoteListLoading] = useState(false);
@@ -1091,6 +934,7 @@ const ScanView = (): JSX.Element => {
   } | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filterTimestamp, setFilterTimestamp] = useState(Date.now);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [selectionHistory, setSelectionHistory] = useState<SelectionEntry[]>(
@@ -1160,6 +1004,7 @@ const ScanView = (): JSX.Element => {
   const activeScanPathRef = useRef<string | null>(null);
   const activeScanModeRef = useRef<"local" | "remote" | null>(null);
   const scanRestartTimeoutRef = useRef<number | null>(null);
+  const scanUpdatesRef = useRef<ScanUpdateQueue | null>(null);
   const activeScanIdRef = useRef<string | null>(null);
   const scanCompleteTimeoutRef = useRef<number | null>(null);
   const lastScanPathRef = useRef<string | null>(null);
@@ -1207,11 +1052,12 @@ const ScanView = (): JSX.Element => {
   }, [isRemoteScanOpen, remoteFocusPath]);
 
   useEffect((): (() => void) => {
+    const timeouts = remoteListTimeoutsRef.current;
     return (): void => {
-      for (const timeoutId of remoteListTimeoutsRef.current.values()) {
+      for (const timeoutId of timeouts.values()) {
         window.clearTimeout(timeoutId);
       }
-      remoteListTimeoutsRef.current.clear();
+      timeouts.clear();
     };
   }, []);
 
@@ -1248,32 +1094,26 @@ const ScanView = (): JSX.Element => {
     }
   }, [summary]);
 
+  const scanRoot = summary?.root ?? null;
   const nodeMap = useMemo<Map<string, ScanNode> | null>(() => {
-    return summary ? buildNodeMap(summary.root) : null;
-  }, [summary]);
+    return scanRoot ? buildNodeMap(scanRoot) : null;
+  }, [scanRoot]);
 
   const selectedNode = useMemo<ScanNode | null>(() => {
-    if (!summary || !nodeMap || !selectedPath) return null;
+    if (!nodeMap || !selectedPath) return null;
     return nodeMap.get(selectedPath) ?? null;
-  }, [nodeMap, selectedPath, summary]);
+  }, [nodeMap, selectedPath]);
 
   const treeItems = useMemo<FlatNode[]>(() => {
-    return summary
+    return scanRoot
       ? buildTreeItems(
-          summary.root,
+          scanRoot,
           expandedPaths,
           showExplorerFiles,
           hideEmptyExplorerFolders,
         )
       : [];
-  }, [expandedPaths, hideEmptyExplorerFolders, showExplorerFiles, summary]);
-
-  const calculatingFolderPaths = useMemo<Set<string>>(() => {
-    if (!summary || !isScanning) {
-      return new Set<string>();
-    }
-    return collectCalculatingFolderPaths(summary.root);
-  }, [isScanning, summary]);
+  }, [expandedPaths, hideEmptyExplorerFolders, showExplorerFiles, scanRoot]);
 
   const addSelectionHistory = useCallback((entry: SelectionEntry): void => {
     setSelectionHistory((previous) => {
@@ -1459,7 +1299,7 @@ const ScanView = (): JSX.Element => {
     ageRangeError,
   );
 
-  const scanFilters = useMemo<ScanFilters>(() => {
+  const createScanFilters = useCallback((timestamp: number): ScanFilters => {
     if (filterMode === "simple") {
       return {
         includeExtensions: simpleExtensions,
@@ -1484,9 +1324,9 @@ const ScanView = (): JSX.Element => {
       minSizeBytes: minSizeResult.value,
       maxSizeBytes: maxSizeResult.value,
       minModifiedTimestamp:
-        maxAgeResult.value !== null ? Date.now() - maxAgeResult.value : null,
+        maxAgeResult.value !== null ? timestamp - maxAgeResult.value : null,
       maxModifiedTimestamp:
-        minAgeResult.value !== null ? Date.now() - minAgeResult.value : null,
+        minAgeResult.value !== null ? timestamp - minAgeResult.value : null,
       includeRegex: includeRegexInput.trim() || null,
       excludeRegex: excludeRegexInput.trim() || null,
       includePaths: parseListInput(includePathsInput),
@@ -1509,13 +1349,20 @@ const ScanView = (): JSX.Element => {
     simpleExtensions,
   ]);
 
-  const scanOptions = useMemo<ScanOptions>(() => {
+  const scanFilters = useMemo(
+    () => createScanFilters(filterTimestamp),
+    [createScanFilters, filterTimestamp],
+  );
+
+  const createScanOptions = useCallback((): ScanOptions => {
+    const timestamp = Date.now();
+    setFilterTimestamp(timestamp);
     return {
       priorityMode,
       throttleLevel,
-      filters: scanFilters,
+      filters: createScanFilters(timestamp),
     };
-  }, [priorityMode, scanFilters, throttleLevel]);
+  }, [priorityMode, createScanFilters, throttleLevel]);
   const scanRestartKey = useMemo<string>(() => {
     return JSON.stringify({
       filterMode,
@@ -1560,12 +1407,7 @@ const ScanView = (): JSX.Element => {
   }, [scanRootPath]);
 
   const activeNode = summary ? (selectedNode ?? summary.root) : null;
-  const activeChildren = activeNode?.children ?? [];
-  const orderedChildren = useMemo<ScanNode[]>(() => {
-    const items = [...activeChildren];
-    items.sort((a, b) => (b?.sizeBytes ?? 0) - (a?.sizeBytes ?? 0));
-    return items;
-  }, [activeChildren]);
+  const activeChildren = useMemo(() => activeNode?.children ?? [], [activeNode]);
   const activeRemoteServer = useMemo(() => {
     if (!activeRemoteServerId) return null;
     for (let i = 0; i < remoteServers.length; i += 1) {
@@ -1606,6 +1448,7 @@ const ScanView = (): JSX.Element => {
 
   const largestFiles = useMemo<ScanFile[]>(() => {
     if (!summary || !activeNode) return [];
+    if (activeNode.id === summary.root.id && !searchParams) return summary.largestFiles;
     return getLargestFilesForNode(activeNode, 100, (file): boolean => {
       if (!matchesFilterFile(file, filterMatchers)) return false;
       if (searchParams && !matchesSearchEntry(file, searchParams)) return false;
@@ -1619,18 +1462,6 @@ const ScanView = (): JSX.Element => {
     }
     return largestFiles[0]?.sizeBytes ?? 0;
   }, [largestFiles]);
-  const maxChildSize = useMemo<number>(() => {
-    let maxSize = 0;
-    for (let i = 0; i < activeChildren.length; i += 1) {
-      const child = activeChildren[i];
-      const size = child?.sizeBytes ?? 0;
-      if (size > maxSize) {
-        maxSize = size;
-      }
-    }
-    return maxSize;
-  }, [activeChildren]);
-
   const canGoBack = selectionHistoryIndex > 0;
   const canGoForward =
     selectionHistoryIndex >= 0 &&
@@ -1681,10 +1512,12 @@ const ScanView = (): JSX.Element => {
     addSelectionHistory({ kind: "folder", path: selectedPath });
   }, [addSelectionHistory, selectedPath, selectionHistory.length, summary]);
 
-  const clearListeners = (): void => {
+  const clearListeners = useCallback((): void => {
+    scanUpdatesRef.current?.dispose();
+    scanUpdatesRef.current = null;
     unlistenRef.current?.();
     unlistenRef.current = null;
-  };
+  }, []);
 
   const resetScanState = useCallback((): void => {
     remoteReadRequestIdRef.current = null;
@@ -1752,7 +1585,7 @@ const ScanView = (): JSX.Element => {
     [],
   );
 
-  const applySummary = (payload: ScanSummary): void => {
+  const applySummary = useCallback((payload: ScanSummary): void => {
     if (
       activeScanIdRef.current &&
       payload.id &&
@@ -1760,16 +1593,16 @@ const ScanView = (): JSX.Element => {
     ) {
       return;
     }
-    setSummary(payload);
+    startTransition(() => setSummary(payload));
     setSelectedPath((previous): string | null => previous ?? payload.root.path);
 
     if (!hasInitializedExpansionRef.current) {
-      setExpandedPaths(buildInitialExpandedPaths(payload.root));
+      setExpandedPaths(new Set([payload.root.path]));
       hasInitializedExpansionRef.current = true;
     }
-  };
+  }, []);
 
-  const finishScan = (payload: ScanSummary): void => {
+  const finishScan = useCallback((payload: ScanSummary): void => {
     if (
       activeScanIdRef.current &&
       payload.id &&
@@ -1781,17 +1614,20 @@ const ScanView = (): JSX.Element => {
     applySummary(payload);
     addScanHistory(payload.root.path);
     setIsScanning(false);
-    setScanStatus("complete");
+    setScanStatus(payload.root.state === "complete" ? "complete" : "idle");
     clearListeners();
+    activeScanIdRef.current = null;
     clearScanRestartTimeout();
     clearScanCompleteTimeout();
     scanCompleteTimeoutRef.current = window.setTimeout(() => {
       setScanStatus("idle");
     }, 1500);
-  };
+  }, [addScanHistory, applySummary, clearListeners, clearScanCompleteTimeout, clearScanRestartTimeout, setScanStatus]);
 
-  const failScan = (message: string): void => {
+  const failScan = useCallback((message: string): void => {
     remoteReadRequestIdRef.current = null;
+    remoteRequestIdRef.current = null;
+    activeScanIdRef.current = null;
     setError(message);
     setIsErrorExpanded(true);
     setIsScanning(false);
@@ -1801,10 +1637,12 @@ const ScanView = (): JSX.Element => {
     activeScanModeRef.current = null;
     clearScanRestartTimeout();
     clearScanCompleteTimeout();
-  };
+  }, [clearListeners, clearScanCompleteTimeout, clearScanRestartTimeout, setScanStatus]);
 
-  const cancelScanRun = (_message: string): void => {
+  const cancelScanRun = useCallback((): void => {
     remoteReadRequestIdRef.current = null;
+    remoteRequestIdRef.current = null;
+    activeScanIdRef.current = null;
     setIsScanning(false);
     setScanStatus("idle");
     clearListeners();
@@ -1812,7 +1650,19 @@ const ScanView = (): JSX.Element => {
     activeScanModeRef.current = null;
     clearScanRestartTimeout();
     clearScanCompleteTimeout();
-  };
+  }, [clearListeners, clearScanCompleteTimeout, clearScanRestartTimeout, setScanStatus]);
+
+  const prepareScanUpdates = useCallback((id: string): void => {
+    activeScanIdRef.current = id;
+    scanUpdatesRef.current = new ScanUpdateQueue(id, (result, kind) => {
+      if (activeScanIdRef.current !== id) return;
+      if (kind === "complete") finishScan(result);
+      else {
+        applySummary(result);
+        if (kind === "cancelled") cancelScanRun();
+      }
+    }, failScan);
+  }, [applySummary, cancelScanRun, failScan, finishScan]);
 
   const handleRemoteEvent = useCallback(
     (payload: RemoteEventPayload): void => {
@@ -1829,6 +1679,9 @@ const ScanView = (): JSX.Element => {
         return;
       }
       if (payload.event === "error" && payload.message === "unauthorized") {
+        if (payload.id && payload.id === remoteRequestIdRef.current) {
+          failScan("Remote scan failed. Check the connection token and scan again.");
+        }
         if (payload.id && pingRequestId && payload.id === pingRequestId) {
           clearRemotePingTimeout();
           remotePingRequestIdRef.current = null;
@@ -1838,7 +1691,7 @@ const ScanView = (): JSX.Element => {
           remotePingIntervalRef.current = null;
         }
 
-        const address = (payload as any)._address as string | undefined;
+        const address = payload._address;
         let targetId = activeRemoteServerId;
         if (address) {
           const servers = useUIStore.getState().remoteServers;
@@ -1903,7 +1756,6 @@ const ScanView = (): JSX.Element => {
               };
             }
             if (listPath) {
-              const existing = next[listPath];
               next[listPath] = {
                 path: listPath,
                 name: getRemoteNodeName(listPath),
@@ -1977,6 +1829,10 @@ const ScanView = (): JSX.Element => {
         return;
       }
       if (payload.event === "error") {
+        if (payload.id && payload.id === remoteRequestIdRef.current) {
+          failScan(payload.message ?? "Remote scan failed. Scan the folder again.");
+          return;
+        }
         const readId = remoteReadRequestIdRef.current;
         if (payload.id && readId && payload.id === readId) {
           remoteReadRequestIdRef.current = null;
@@ -2029,37 +1885,38 @@ const ScanView = (): JSX.Element => {
       }
       const activeId = remoteRequestIdRef.current;
       if (payload.event === "scan-progress") {
-        if (payload.id && activeId && payload.id !== activeId) return;
-        const summary = toScanSummary(payload.data);
-        if (summary) applySummary(summary);
+        if (!activeId || payload.id !== activeId) return;
+        const update = toScanUpdate(payload.data);
+        if (update) scanUpdatesRef.current?.push(update, "progress");
+        else failScan("Scan results could not be read. Scan the folder again.");
         return;
       }
       if (payload.event === "scan-complete") {
-        if (payload.id && activeId && payload.id !== activeId) return;
-        const summary = toScanSummary(payload.data);
-        if (summary) finishScan(summary);
+        if (!activeId || payload.id !== activeId) return;
+        const update = toScanUpdate(payload.data);
+        if (update) scanUpdatesRef.current?.push(update, "complete");
+        else failScan("Scan results could not be read. Scan the folder again.");
         remoteRequestIdRef.current = null;
         return;
       }
       if (payload.event === "scan-error") {
-        if (payload.id && activeId && payload.id !== activeId) return;
+        if (!activeId || payload.id !== activeId) return;
         failScan(payload.message ?? "Remote scan error");
         remoteRequestIdRef.current = null;
         return;
       }
       if (payload.event === "scan-cancelled") {
-        if (payload.id && activeId && payload.id !== activeId) return;
-        cancelScanRun(payload.message ?? "Remote scan cancelled");
+        if (!activeId || payload.id !== activeId) return;
+        const update = toScanUpdate(payload.data);
+        if (update) scanUpdatesRef.current?.push(update, "cancelled");
+        else failScan("Scan results could not be read. Scan the folder again.");
         remoteRequestIdRef.current = null;
       }
     },
     [
       activeRemoteServerId,
-      applySummary,
-      cancelScanRun,
       clearRemotePingTimeout,
       failScan,
-      finishScan,
       remoteSyncEnabled,
       updateRemoteServerStatus,
     ],
@@ -2098,12 +1955,11 @@ const ScanView = (): JSX.Element => {
     clearRemotePingTimeout,
     isRemoteConnected,
     remoteSyncEnabled,
-    requestRemotePing,
     resetRemotePingRequest,
     updateRemoteServerStatus,
   ]);
 
-  const startScanWithFolder = async (folder: string): Promise<void> => {
+  const startScanWithFolder = useCallback(async (folder: string): Promise<void> => {
     clearScanCompleteTimeout();
     activeScanPathRef.current = folder;
     activeScanModeRef.current = "local";
@@ -2114,26 +1970,33 @@ const ScanView = (): JSX.Element => {
     resetScanState();
 
     const scanId = createRemoteRequestId();
-    activeScanIdRef.current = scanId;
+    prepareScanUpdates(scanId);
 
     try {
-      unlistenRef.current = await startScan(
+      const unlisten = await startScan(
         folder,
-        scanOptions,
+        createScanOptions(),
         {
-          onProgress: applySummary,
-          onComplete: finishScan,
-          onError: failScan,
-          onCancel: cancelScanRun,
+          onProgress: (update) => scanUpdatesRef.current?.push(update, "progress"),
+          onComplete: (update) => scanUpdatesRef.current?.push(update, "complete"),
+          onError: (message) => {
+            if (activeScanIdRef.current === scanId) failScan(message);
+          },
+          onCancel: (update) => scanUpdatesRef.current?.push(update, "cancelled"),
         },
         scanId,
       );
+      if (activeScanIdRef.current === scanId && scanUpdatesRef.current) {
+        unlistenRef.current = unlisten;
+      } else {
+        unlisten();
+      }
     } catch (err) {
-      failScan(toErrorMessage(err));
+      if (activeScanIdRef.current === scanId) failScan(toErrorMessage(err));
     }
-  };
+  }, [clearListeners, clearScanCompleteTimeout, createScanOptions, failScan, resetScanState, scanRestartKey, prepareScanUpdates]);
 
-  const startRemoteScanWithPath = async (path: string): Promise<void> => {
+  const startRemoteScanWithPath = useCallback(async (path: string): Promise<void> => {
     clearScanCompleteTimeout();
     activeScanPathRef.current = path;
     activeScanModeRef.current = "remote";
@@ -2144,26 +2007,27 @@ const ScanView = (): JSX.Element => {
     resetScanState();
     const requestId = createRemoteRequestId();
     remoteRequestIdRef.current = requestId;
+    prepareScanUpdates(requestId);
     try {
       await sendRemote({
         action: "scan",
         id: requestId,
         path,
-        options: scanOptions,
+        options: createScanOptions(),
       });
     } catch (err) {
-      failScan(toErrorMessage(err));
+      if (activeScanIdRef.current === requestId) failScan(toErrorMessage(err));
     }
-  };
+  }, [clearListeners, clearScanCompleteTimeout, createScanOptions, failScan, resetScanState, scanRestartKey, prepareScanUpdates]);
 
-  const cancelRemoteScan = async (): Promise<void> => {
+  const cancelRemoteScan = useCallback(async (): Promise<void> => {
     const requestId = remoteRequestIdRef.current ?? undefined;
     try {
       await sendRemote({ action: "cancel", id: requestId });
     } catch (err) {
       failScan(toErrorMessage(err));
     }
-  };
+  }, [failScan]);
 
   const requestRemoteListing = useCallback(
     (path?: string | null): void => {
@@ -2283,13 +2147,10 @@ const ScanView = (): JSX.Element => {
       clearScanRestartTimeout();
     };
   }, [
-    cancelRemoteScan,
-    cancelScan,
     clearScanRestartTimeout,
     hasFilterError,
     isScanning,
     scanRestartKey,
-    startRemoteScanWithPath,
     startScanWithFolder,
   ]);
 
@@ -2317,7 +2178,7 @@ const ScanView = (): JSX.Element => {
     return (): void => {
       active = false;
     };
-  }, [getDiskUsage, isRemoteConnected, scanRootPath, requestRemoteDiskUsage]);
+  }, [isRemoteConnected, scanRootPath]);
 
   useEffect((): (() => void) | void => {
     if (!isRemoteConnected) return undefined;
@@ -2343,6 +2204,7 @@ const ScanView = (): JSX.Element => {
     cancelRemoteScan,
     clearScanRestartTimeout,
     hasFilterError,
+    isRemoteConnected,
     isScanning,
     scanRestartKey,
     startRemoteScanWithPath,
@@ -2755,7 +2617,7 @@ const ScanView = (): JSX.Element => {
   );
 
   const renderRemoteTreeNode = useCallback(
-    (path: string, depth: number): JSX.Element | null => {
+    function renderNode(path: string, depth: number): JSX.Element | null {
       const node = remoteTree[path];
       if (!node) return null;
       const isExpanded = remoteTreeExpanded.has(path);
@@ -2809,7 +2671,7 @@ const ScanView = (): JSX.Element => {
           {isExpanded && hasChildren ? (
             <ul>
               {node.children?.map((childPath) =>
-                renderRemoteTreeNode(childPath, depth + 1),
+                renderNode(childPath, depth + 1),
               )}
             </ul>
           ) : null}
@@ -2854,49 +2716,11 @@ const ScanView = (): JSX.Element => {
     setContextMenu(null);
   }, []);
 
-  const renderChildRow = (child: ScanNode): JSX.Element => {
-    const isSelected = selectedPath === child.path;
-    const sizeValue = child.sizeBytes ?? 0;
-    const fillPercent = getUsageFillPercent(sizeValue, maxChildSize);
-    const rowStyle = getUsageFillStyle(fillPercent);
-    const sizeBarStyle: CSSProperties = { width: `${fillPercent}%` };
-    const FolderIcon = getFolderIcon(false);
-    return (
-      <tr
-        key={child.path}
-        onClick={(): void => selectFolder(child.path)}
-        onContextMenu={(event): void => openFolderContextMenu(event, child)}
-        style={rowStyle}
-        className={`cursor-pointer border-t border-slate-800 text-slate-200 transition hover:bg-slate-800/60 ${isSelected ? "bg-blue-500/10" : ""}`}
-      >
-        <td className="px-4 py-2">
-          <div className="flex items-center gap-2">
-            <FolderIcon className="h-4 w-4 text-amber-300" />
-            <span>{child.name}</span>
-          </div>
-        </td>
-        <td className="px-4 py-2">
-          <div className="flex flex-col gap-1">
-            <span>{formatBytes(sizeValue)}</span>
-            <div className="h-1 w-full rounded bg-slate-800/70">
-              <div
-                className="h-1 rounded bg-blue-400/70"
-                style={sizeBarStyle}
-              />
-            </div>
-          </div>
-        </td>
-        <td className="px-4 py-2">{child.fileCount}</td>
-        <td className="px-4 py-2">{child.dirCount}</td>
-      </tr>
-    );
-  };
-
   useEffect((): (() => void) => {
     return (): void => {
       clearListeners();
     };
-  }, []);
+  }, [clearListeners]);
   useEffect((): (() => void) => {
     let active = true;
     requestRemoteStatus()
@@ -2941,6 +2765,7 @@ const ScanView = (): JSX.Element => {
   ]);
   useEffect((): (() => void) => {
     let cleanup: (() => void) | null = null;
+    let active = true;
     listenRemoteStatus((payload) => {
       // Prevent reconnect loop if unauthorized
       if (isRemoteUnauthorized && payload.status === "connected") {
@@ -2949,6 +2774,10 @@ const ScanView = (): JSX.Element => {
       const matched = resolveRemoteServerByAddress(payload.address ?? null);
       const targetId = matched?.id ?? activeRemoteServerId;
       if (!targetId) return;
+      if (targetId === activeRemoteServerId && activeScanModeRef.current === "remote" &&
+          activeScanIdRef.current && (payload.status === "disconnected" || payload.status === "error")) {
+        failScan(payload.message ?? "Remote connection lost. Reconnect and scan again.");
+      }
       updateRemoteServerStatus(
         targetId,
         payload.status,
@@ -2959,14 +2788,17 @@ const ScanView = (): JSX.Element => {
       }
     })
       .then((unlisten) => {
-        cleanup = unlisten;
+        if (active) cleanup = unlisten;
+        else unlisten();
       })
       .catch(() => undefined);
     return (): void => {
+      active = false;
       cleanup?.();
     };
   }, [
     activeRemoteServerId,
+    failScan,
     isRemoteUnauthorized,
     resolveRemoteServerByAddress,
     setActiveRemoteServerId,
@@ -3003,12 +2835,15 @@ const ScanView = (): JSX.Element => {
     startRemotePing,
   ]);
   useEffect((): (() => void) => {
+    let active = true;
     listenRemoteEvent(handleRemoteEvent)
       .then((unlisten) => {
-        remoteUnlistenRef.current = unlisten;
+        if (active) remoteUnlistenRef.current = unlisten;
+        else unlisten();
       })
       .catch(() => undefined);
     return (): void => {
+      active = false;
       remoteUnlistenRef.current?.();
       remoteUnlistenRef.current = null;
     };
@@ -3022,6 +2857,10 @@ const ScanView = (): JSX.Element => {
   }, []);
   useEffect(() => {
     checkContextMenu().then(setContextMenuEnabled).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (hasAutoScanRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const queryPath = params.get("scanPath");
     if (queryPath && !hasAutoScanRef.current) {
@@ -3038,7 +2877,7 @@ const ScanView = (): JSX.Element => {
         }
       })
       .catch(console.error);
-  }, []);
+  }, [startScanWithFolder]);
 
   useEffect((): (() => void) | void => {
     if (!contextMenu) {
@@ -3097,7 +2936,7 @@ const ScanView = (): JSX.Element => {
   return (
     <div className="flex flex-col h-full gap-4">
       <DetailsModal
-        node={detailsNode}
+        node={detailsNode ? nodeMap?.get(detailsNode.path) ?? null : null}
         isOpen={!!detailsNode}
         onClose={() => setDetailsNode(null)}
       />
@@ -3152,7 +2991,7 @@ const ScanView = (): JSX.Element => {
         onClose={() => setAlertState(null)}
       />
       {isRemoteModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs">
           <div className="flex w-full max-w-5xl max-h-[85vh] flex-col rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-xl">
             <div className="flex items-center justify-between gap-3 border-b border-slate-800/70 pb-3">
               <div>
@@ -3177,7 +3016,7 @@ const ScanView = (): JSX.Element => {
         </div>
       ) : null}
       {isSettingsModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs">
           <div className="w-full max-w-3xl rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-xl">
             <div className="flex items-center justify-between gap-3 border-b border-slate-800/70 pb-3">
               <div>
@@ -3203,7 +3042,7 @@ const ScanView = (): JSX.Element => {
         </div>
       ) : null}
       {isRemoteScanOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs">
           <div className="w-full max-w-4xl rounded-2xl border border-slate-800/70 bg-slate-900/95 p-5 shadow-xl">
             <div className="flex items-center justify-between gap-3 border-b border-slate-800/70 pb-3">
               <div>
@@ -3330,7 +3169,7 @@ const ScanView = (): JSX.Element => {
       ) : null}
       {contextMenu ? (
         <div
-          className="fixed z-50 min-w-[220px] rounded-lg border border-slate-800/80 bg-slate-950/95 shadow-xl shadow-black/40 backdrop-blur ring-1 ring-slate-800/60"
+          className="fixed z-50 min-w-[220px] rounded-lg border border-slate-800/80 bg-slate-950/95 shadow-xl shadow-black/40 backdrop-blur-sm ring-1 ring-slate-800/60"
           style={{
             top: contextMenu.vertical === "top" ? contextMenu.y : undefined,
             bottom:
@@ -3575,7 +3414,7 @@ const ScanView = (): JSX.Element => {
         </div>
       ) : null}
 
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800/80 bg-slate-900/50 px-4 py-3 shadow-sm backdrop-blur">
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800/80 bg-slate-900/50 px-4 py-3 shadow-xs backdrop-blur-sm">
         <div className="flex flex-1 items-center gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -3663,13 +3502,13 @@ const ScanView = (): JSX.Element => {
               value={searchQuery}
               onChange={(event): void => setSearchQuery(event.target.value)}
               placeholder="Search... (name:, path:, ext:, size>)"
-              className="h-8 w-40 lg:w-48 rounded-md border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 transition-all focus:w-64 shadow-inner"
+              className="h-8 w-40 lg:w-48 rounded-md border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500/50 focus:outline-hidden focus:ring-1 focus:ring-blue-500/50 transition-all focus:w-64 shadow-inner"
             />
             {searchQuery ? (
               <button
                 type="button"
                 onClick={(): void => setSearchQuery("")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-0.5 rounded hover:bg-slate-800"
+                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-0.5 rounded-sm hover:bg-slate-800"
               >
                 <svg
                   viewBox="0 0 20 20"
@@ -3685,7 +3524,7 @@ const ScanView = (): JSX.Element => {
             <button
               type="button"
               onClick={handleToggleContextMenu}
-              className="mr-2 rounded-md border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600"
+              className="mr-2 rounded-md border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600"
             >
               Add to Explorer
             </button>
@@ -3694,7 +3533,7 @@ const ScanView = (): JSX.Element => {
             type="button"
             onClick={handleScan}
             disabled={isScanning}
-            className="rounded-md bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-400 hover:to-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-300"
+            className="rounded-md bg-linear-to-r from-blue-500 to-blue-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-400 hover:to-blue-300 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-400/60 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-300"
           >
             {isScanning ? "Scanning..." : "Scan Folder"}
           </button>
@@ -3702,7 +3541,7 @@ const ScanView = (): JSX.Element => {
             <button
               type="button"
               onClick={handleCancelScan}
-              className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60"
+              className="rounded-md border border-red-500/60 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-red-400/60"
             >
               Cancel
             </button>
@@ -3711,14 +3550,14 @@ const ScanView = (): JSX.Element => {
             type="button"
             onClick={() => setIsExportModalOpen(true)}
             disabled={!summary || isScanning}
-            className="rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm font-semibold text-slate-300 shadow-sm transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm font-semibold text-slate-300 shadow-xs transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export
           </button>
         </div>
       </div>
 
-      <div className="shrink-0 rounded-xl border border-slate-800/70 bg-slate-900/50 px-4 py-3 shadow-sm">
+      <div className="shrink-0 rounded-xl border border-slate-800/70 bg-slate-900/50 px-4 py-3 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-slate-500">
@@ -4069,7 +3908,7 @@ const ScanView = (): JSX.Element => {
       </div>
 
       {isNavigationBarVisible && scanHistory.length > 0 ? (
-        <div className="shrink-0 rounded-xl border border-slate-800/70 bg-slate-900/50 px-3 py-2 shadow-sm">
+        <div className="shrink-0 rounded-xl border border-slate-800/70 bg-slate-900/50 px-3 py-2 shadow-xs">
           <div className="flex items-center justify-between pb-2">
             <span className="text-[10px] uppercase tracking-widest text-slate-500">
               History
@@ -4083,7 +3922,7 @@ const ScanView = (): JSX.Element => {
               <button
                 key={path}
                 onClick={() => startScanWithFolder(path)}
-                className="flex-shrink-0 max-w-[220px] truncate px-3 py-1.5 text-xs bg-slate-950/70 border border-slate-800 rounded-md hover:bg-slate-800/80 text-slate-400 hover:text-slate-200 transition"
+                className="shrink-0 max-w-[220px] truncate px-3 py-1.5 text-xs bg-slate-950/70 border border-slate-800 rounded-md hover:bg-slate-800/80 text-slate-400 hover:text-slate-200 transition"
                 title={path}
               >
                 {truncateMiddle(path, 36)}
@@ -4095,7 +3934,7 @@ const ScanView = (): JSX.Element => {
 
       {error ? (
         <div
-          className={`shrink-0 rounded-xl border p-4 text-sm shadow-sm ${
+          className={`shrink-0 rounded-xl border p-4 text-sm shadow-xs ${
             error.startsWith("Downloading")
               ? "border-blue-500/40 bg-blue-500/10 text-blue-100"
               : "border-red-500/40 bg-red-500/10 text-red-100"
@@ -4204,15 +4043,15 @@ const ScanView = (): JSX.Element => {
 
       {summary ? (
         <div className="flex-1 min-h-0 grid gap-5 lg:grid-cols-[minmax(400px,_40%)_1fr]">
-          <div className="flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden h-full shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-2 text-sm font-semibold shrink-0 bg-slate-900/80 backdrop-blur">
+          <div className="flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden h-full shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-2 text-sm font-semibold shrink-0 bg-slate-900/80 backdrop-blur-sm">
               <div className="flex items-center gap-2">
                 <span className="mr-2 text-slate-100">Explorer</span>
                 <div className="flex items-center rounded-lg border border-slate-800/50 bg-slate-950/50 p-0.5">
                   <button
                     type="button"
                     onClick={(): void => setViewMode("tree")}
-                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded-sm transition ${
                       viewMode === "tree"
                         ? "bg-slate-800 text-slate-100"
                         : "text-slate-400 hover:text-slate-200"
@@ -4223,7 +4062,7 @@ const ScanView = (): JSX.Element => {
                   <button
                     type="button"
                     onClick={(): void => setViewMode("treemap")}
-                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded-sm transition ${
                       viewMode === "treemap"
                         ? "bg-slate-800 text-slate-100"
                         : "text-slate-400 hover:text-slate-200"
@@ -4238,7 +4077,7 @@ const ScanView = (): JSX.Element => {
                     onClick={(): void =>
                       setShowExplorerFiles(!showExplorerFiles)
                     }
-                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded-sm transition ${
                       showExplorerFiles
                         ? "bg-slate-800 text-slate-100"
                         : "text-slate-400 hover:text-slate-200"
@@ -4252,7 +4091,7 @@ const ScanView = (): JSX.Element => {
                     onClick={(): void =>
                       setHideEmptyExplorerFolders(!hideEmptyExplorerFolders)
                     }
-                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded transition ${
+                    className={`px-2.5 py-0.5 text-[10px] font-medium rounded-sm transition ${
                       hideEmptyExplorerFolders
                         ? "bg-slate-800 text-slate-100"
                         : "text-slate-400 hover:text-slate-200"
@@ -4269,7 +4108,7 @@ const ScanView = (): JSX.Element => {
                     <button
                       key={depth}
                       onClick={() => setExpandedToDepth(summary.root, depth)}
-                      className="px-2.5 py-0.5 text-[10px] font-medium hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition"
+                      className="px-2.5 py-0.5 text-[10px] font-medium hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-sm transition"
                       title={`Expand to level ${depth}`}
                     >
                       {depth}
@@ -4292,7 +4131,7 @@ const ScanView = (): JSX.Element => {
             >
               {searchQuery && searchResults ? (
                 <div className="flex flex-col">
-                  <div className="sticky top-0 z-10 bg-slate-950/90 backdrop-blur border-b border-slate-800 px-3 py-2 text-xs font-semibold text-slate-400">
+                  <div className="sticky top-0 z-10 bg-slate-950/90 backdrop-blur-sm border-b border-slate-800 px-3 py-2 text-xs font-semibold text-slate-400">
                     Found {searchResults.length} results
                     {searchResults.length >= 1000 ? " (Limited to 1000)" : ""}
                   </div>
@@ -4328,7 +4167,7 @@ const ScanView = (): JSX.Element => {
                             </div>
                           </td>
                           <td className="px-3 py-2 text-right whitespace-nowrap text-xs text-slate-400 align-middle">
-                            {formatBytes(node.sizeBytes)}
+                            {node.state !== "complete" ? "≥ " : ""}{formatBytes(node.sizeBytes)}
                           </td>
                         </tr>
                       ))}
@@ -4348,7 +4187,8 @@ const ScanView = (): JSX.Element => {
               ) : viewMode === "tree" ? (
                 <ScanTree
                   treeItems={treeItems}
-                  calculatingFolderPaths={calculatingFolderPaths}
+                  isScanning={isScanning}
+                  scrollElement={containerRef}
                   expandedPaths={expandedPaths}
                   selectedPath={selectedPath}
                   selectedFilePath={selectedFilePath}
@@ -4374,7 +4214,7 @@ const ScanView = (): JSX.Element => {
 
           <div className="flex flex-col gap-4 overflow-auto h-full pr-1">
             <div className="shrink-0 grid gap-4 lg:grid-cols-2">
-              <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
+              <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-xs">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase font-bold tracking-wider text-blue-400/80 mb-1">
@@ -4396,7 +4236,7 @@ const ScanView = (): JSX.Element => {
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500">Size</span>
                       <span className="font-mono text-slate-200">
-                        {formatBytes(activeNode?.sizeBytes ?? 0)}
+                        {activeNode?.state !== "complete" ? "≥ " : ""}{formatBytes(activeNode?.sizeBytes ?? 0)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -4415,17 +4255,17 @@ const ScanView = (): JSX.Element => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
+              <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-xs">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80 mb-1">
-                      Total Summary
+                      {!isScanning && summary.root.state !== "complete" ? "Partial results" : "Summary"}
                     </p>
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium text-slate-200">
                         Size:{" "}
                         <span className="text-slate-100">
-                          {formatBytes(summary.totalBytes)}
+                          {summary.root.state !== "complete" ? "≥ " : ""}{formatBytes(summary.totalBytes)}
                         </span>
                       </p>
                       <p className="text-xs text-slate-400">
@@ -4448,6 +4288,11 @@ const ScanView = (): JSX.Element => {
               </div>
             </div>
 
+            {summary.skippedEntries > 0 ? (
+              <p className="text-xs text-amber-200" role="status">
+                Could not read {summary.skippedEntries.toLocaleString()} items. Check access and scan again.
+              </p>
+            ) : null}
             <UsageCharts node={activeNode} diskUsage={diskUsage} />
             {diskUsageError ? (
               <p className="mt-2 text-[11px] text-amber-200">
@@ -4455,7 +4300,7 @@ const ScanView = (): JSX.Element => {
               </p>
             ) : null}
 
-            <div className="shrink-0 rounded-xl border border-slate-800/80 bg-slate-900/55 shadow-sm overflow-hidden flex flex-col max-h-[260px]">
+            <div className="shrink-0 rounded-xl border border-slate-800/80 bg-slate-900/55 shadow-xs overflow-hidden flex flex-col max-h-[260px]">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
                 <span className="text-slate-400">Largest files</span>
                 <span className="text-[10px] text-slate-500">Top 100</span>
@@ -4516,41 +4361,20 @@ const ScanView = (): JSX.Element => {
                 })}
                 {largestFiles.length === 0 ? (
                   <div className="px-4 py-6 text-xs text-slate-500">
-                    Run a scan to see largest files.
+                    {isScanning ? "Scanning…" : "No matching files"}
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="flex-1 min-h-[220px] flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden shadow-sm">
+            <div className="flex-1 min-h-[220px] flex flex-col rounded-xl border border-slate-800/80 bg-slate-900/55 overflow-hidden shadow-xs">
               <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3 text-xs font-bold uppercase tracking-wide bg-slate-900/40">
                 <span className="text-slate-400">Subfolders</span>
                 <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/50">
                   {activeChildren.length} items
                 </span>
               </div>
-              <div className="flex-1 overflow-auto">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-slate-950/90 backdrop-blur text-left text-[10px] font-bold uppercase text-slate-500 tracking-wider shadow-sm z-10">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Name</th>
-                      <th className="px-4 py-3 font-semibold">Size</th>
-                      <th className="px-4 py-3 font-semibold">Files</th>
-                      <th className="px-4 py-3 font-semibold">Folders</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/50">
-                    {orderedChildren.map(renderChildRow)}
-                    {orderedChildren.length === 0 ? (
-                      <tr className="text-slate-500">
-                        <td className="px-4 py-8 text-center" colSpan={4}>
-                          No subfolders found in this directory.
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
+              <SubfolderTable folders={activeChildren} selectedPath={selectedPath} scanning={isScanning} onSelect={selectFolder} onContextMenu={openFolderContextMenu} />
             </div>
           </div>
         </div>

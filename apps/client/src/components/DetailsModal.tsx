@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import type { ScanNode } from "../features/scan/types";
 import { formatBytes, truncateMiddle } from "../lib/utils";
 
@@ -15,16 +16,13 @@ export const DetailsModal = ({
   if (!isOpen || !node) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
       <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl ring-1 ring-slate-800/60">
         <div className="flex items-center justify-between border-b border-slate-800 p-4 bg-slate-900/80">
           <div>
             <h3 className="text-lg font-semibold text-slate-100">
               Item Details
             </h3>
-            <p className="text-xs text-slate-500">
-              File and folder metadata snapshot.
-            </p>
           </div>
           <button
             onClick={onClose}
@@ -45,7 +43,7 @@ export const DetailsModal = ({
               Path
             </label>
             <p
-              className="text-sm font-mono text-slate-400 bg-slate-950/70 p-2 rounded mt-1 border border-slate-800/60 whitespace-nowrap truncate"
+              className="text-sm font-mono text-slate-400 bg-slate-950/70 p-2 rounded-sm mt-1 border border-slate-800/60 whitespace-nowrap truncate"
               title={node.path}
             >
               {truncateMiddle(node.path, 72)}
@@ -57,7 +55,7 @@ export const DetailsModal = ({
                 Size
               </label>
               <p className="text-sm text-slate-200">
-                {formatBytes(node.sizeBytes)}
+                {node.state !== "complete" ? "≥ " : ""}{formatBytes(node.sizeBytes)}
               </p>
             </div>
             <div>

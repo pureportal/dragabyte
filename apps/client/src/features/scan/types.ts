@@ -1,9 +1,12 @@
 export interface ScanNode {
+  id: number;
+  parentId: number | null;
   path: string;
   name: string;
   sizeBytes: number;
   fileCount: number;
   dirCount: number;
+  state: "scanning" | "complete" | "incomplete";
   files: ScanFile[];
   children: ScanNode[];
 }
@@ -23,6 +26,25 @@ export interface ScanSummary {
   dirCount: number;
   largestFiles: ScanFile[];
   durationMs: number;
+  skippedEntries: number;
+}
+
+export interface ScanUpdate {
+  id: string;
+  sequence: number;
+  folders: Omit<ScanNode, "children" | "files">[];
+  files: { parentId: number; file: ScanFile }[];
+  totalBytes: number;
+  fileCount: number;
+  dirCount: number;
+  skippedEntries: number;
+  largestFiles: ScanFile[];
+  durationMs: number;
+}
+
+export interface ScanFailure {
+  id: string;
+  message: string;
 }
 
 export interface DiskUsage {

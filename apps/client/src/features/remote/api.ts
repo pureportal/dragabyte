@@ -24,7 +24,6 @@ const listenToRemoteEvent = async <T>(
   handler: (payload: T) => void,
 ): Promise<() => void> => {
   const unlisten = await listen<T>(eventName, (event) => {
-    console.debug(`[remote] ${eventName} event`, event.payload);
     handler(event.payload);
   });
   return (): void => {

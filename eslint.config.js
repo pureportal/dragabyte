@@ -1,16 +1,17 @@
 import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default defineConfig(
   {
-    ignores: ["dist", "node_modules", "apps/client/src-tauri/gen", "apps/client/src-tauri/target", "target", "**/*.d.ts"],
+    ignores: ["**/dist", "**/node_modules", "**/src-tauri/gen", "**/target", "**/*.d.ts"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["apps/client/src/**/*.{ts,tsx}", "apps/client/vite.config.ts", "apps/client/tailwind.config.ts"],
+    files: ["apps/client/src/**/*.{ts,tsx}", "apps/*/vite.config.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -32,7 +33,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["apps/client/vite.config.ts", "apps/client/tailwind.config.ts"],
+    files: ["apps/*/vite.config.ts"],
     languageOptions: {
       globals: {
         ...globals.node,

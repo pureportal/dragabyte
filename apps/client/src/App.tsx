@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type JSX, useCallback, useEffect, useRef } from "react";
 import dragabyteLogoUrl from "../../../assets/icon.png";
 import { UpdateModal } from "./components/UpdateModal";
 import {
@@ -35,7 +35,6 @@ const serializePaths = (paths: string[]): string => {
 };
 
 const App = (): JSX.Element => {
-  const [isMaximized, setIsMaximized] = useState(false);
   const scanStatus = useUIStore((state) => state.scanStatus);
   const navigate = useNavigate();
   const hasCheckedLaunchContext = useRef(false);
@@ -109,7 +108,6 @@ const App = (): JSX.Element => {
     } else {
       await win.unmaximize();
     }
-    setIsMaximized(shouldMaximize);
   };
 
   const handleClose = async (): Promise<void> => {
@@ -147,7 +145,7 @@ const App = (): JSX.Element => {
       </div>
 
       <div
-        className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur select-none z-50"
+        className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur-sm select-none z-50"
         data-tauri-drag-region
       >
         <div
@@ -157,14 +155,14 @@ const App = (): JSX.Element => {
           <img
             src={dragabyteLogoUrl}
             alt="Dragabyte logo"
-            className="h-5 w-5 shrink-0 rounded-sm"
+            className="h-5 w-5 shrink-0 rounded-xs"
             data-tauri-drag-region
             draggable={false}
           />
           <span className="text-xs font-semibold tracking-wide text-slate-300">
             DRAGABYTE
           </span>
-          <span className="rounded border border-amber-400/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300/90">
+          <span className="rounded-sm border border-amber-400/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300/90">
             Alpha
           </span>
         </div>
@@ -191,7 +189,7 @@ const App = (): JSX.Element => {
         <div className="relative flex items-center gap-2">
           <button
             onClick={minimize}
-            className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             data-tauri-no-drag
           >
             <svg viewBox="0 0 10 10" className="h-2.5 w-2.5 fill-current">
@@ -200,7 +198,7 @@ const App = (): JSX.Element => {
           </button>
           <button
             onClick={toggleMaximize}
-            className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             data-tauri-no-drag
           >
             <svg
@@ -216,7 +214,7 @@ const App = (): JSX.Element => {
           </button>
           <button
             onClick={close}
-            className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-red-500/10 hover:text-red-400"
+            className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400"
             data-tauri-no-drag
           >
             <svg viewBox="0 0 10 10" className="h-3 w-3 fill-current">

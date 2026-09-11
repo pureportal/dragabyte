@@ -39,6 +39,7 @@ export interface RemoteReadPayload {
 
 export interface RemoteEventPayload {
   event: string;
+  _address?: string;
   id?: string | null;
   data?: unknown;
   message?: string | null;

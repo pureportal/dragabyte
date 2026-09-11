@@ -25,7 +25,7 @@ export const ExportModal = ({ isOpen, onClose, summary }: ExportModalProps) => {
       if (result) {
         onClose();
       }
-    } catch (err) {
+    } catch {
       setError('Failed to export report');
     } finally {
       setIsExporting(false);
@@ -33,7 +33,7 @@ export const ExportModal = ({ isOpen, onClose, summary }: ExportModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 shadow-2xl ring-1 ring-slate-800/60 overflow-hidden">
         <div className="border-b border-slate-800 p-4 bg-slate-900/80">
           <h3 className="text-lg font-semibold text-slate-100">

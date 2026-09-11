@@ -1,12 +1,12 @@
 import { listen } from "@tauri-apps/api/event";
 import { invokeCommand } from "../../lib/tauriInvoke";
-import type { DiskUsage, ScanOptions, ScanSummary } from "./types";
+import type { DiskUsage, ScanFailure, ScanOptions, ScanUpdate } from "./types";
 
 interface ScanHandlers {
-  onProgress: (summary: ScanSummary) => void;
-  onComplete: (summary: ScanSummary) => void;
+  onProgress: (update: ScanUpdate) => void;
+  onComplete: (update: ScanUpdate) => void;
   onError: (message: string) => void;
-  onCancel: (message: string) => void;
+  onCancel: (update: ScanUpdate) => void;
 }
 
 const listenToScanEvent = async <T>(
@@ -27,22 +27,40 @@ export const startScan = async (
   handlers: ScanHandlers,
   scanId: string,
 ): Promise<() => void> => {
-  const [unlistenProgress, unlistenComplete, unlistenError, unlistenCancelled] =
-    await Promise.all([
-      listenToScanEvent<ScanSummary>("scan-progress", handlers.onProgress),
-      listenToScanEvent<ScanSummary>("scan-complete", handlers.onComplete),
-      listenToScanEvent<string>("scan-error", handlers.onError),
-      listenToScanEvent<string>("scan-cancelled", handlers.onCancel),
-    ]);
-
-  await invokeCommand<void>("scan_path", { path, options, id: scanId });
-
-  return (): void => {
-    unlistenProgress();
-    unlistenComplete();
-    unlistenError();
-    unlistenCancelled();
+  const listeners: (() => void)[] = [];
+  let active = true;
+  const cleanup = (): void => {
+    active = false;
+    listeners.splice(0).forEach((unlisten) => unlisten());
   };
+  const subscribe = async <T extends { id: string }>(
+    name: string,
+    handler: (payload: T) => void,
+    terminal = false,
+  ): Promise<void> => {
+    const unlisten = await listenToScanEvent<T>(name, (payload) => {
+      if (!active || payload.id !== scanId) return;
+      if (terminal) cleanup();
+      handler(payload);
+    });
+    if (active) listeners.push(unlisten);
+    else unlisten();
+  };
+  try {
+    const subscriptions = await Promise.allSettled([
+      subscribe("scan-progress", handlers.onProgress),
+      subscribe("scan-complete", handlers.onComplete, true),
+      subscribe<ScanFailure>("scan-error", (failure) => handlers.onError(failure.message), true),
+      subscribe("scan-cancelled", handlers.onCancel, true),
+    ]);
+    const failed = subscriptions.find((result) => result.status === "rejected");
+    if (failed?.status === "rejected") throw failed.reason;
+    await invokeCommand<void>("scan_path", { path, options, id: scanId });
+    return cleanup;
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 };
 
 export const cancelScan = async (): Promise<void> => {

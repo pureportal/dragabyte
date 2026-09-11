@@ -1,0 +1,55 @@
+name: Terminal
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terminal:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/client/src-tauri
+      - name: Check formatting
+        run: cargo fmt --manifest-path apps/client/src-tauri/Cargo.toml --check
+      - name: Check core without desktop or terminal dependencies
+        run: cargo check --manifest-path apps/client/src-tauri/Cargo.toml --locked --no-default-features --lib
+      - name: Test terminal and management server
+        run: cargo test --manifest-path apps/client/src-tauri/Cargo.toml --locked --lib --bin dragabyte-cli --tests
+      - name: Lint terminal and core
+        run: cargo clippy --manifest-path apps/client/src-tauri/Cargo.toml --locked --lib --bin dragabyte-cli --tests -- -D warnings
+      - name: Build terminal executable
+        run: cargo build --manifest-path apps/client/src-tauri/Cargo.toml --locked --release --bin dragabyte-cli
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install terminal test tools
+        run: python -m pip install pyte "pywinpty; sys_platform == 'win32'"
+      - name: Exercise the terminal
+        shell: bash
+        run: python scripts/verify-terminal.py apps/client/src-tauri/target/release/dragabyte-cli${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Verify display-free Linux launch
+        if: runner.os == 'Linux'
+        run: env -u DISPLAY -u WAYLAND_DISPLAY apps/client/src-tauri/target/release/dragabyte-cli scan apps/client/src-tauri/src --json > scan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dragabyte-cli-${{ runner.os }}
+          path: |
+            apps/client/src-tauri/target/release/dragabyte-cli
+            apps/client/src-tauri/target/release/dragabyte-cli.exe
+          if-no-files-found: error

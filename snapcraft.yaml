@@ -24,7 +24,7 @@ parts:
     plugin: dump
     source: .
     build-snaps:
-      - node/20/stable
+      - node/24/stable
       - rustup/latest/stable
     build-packages:
       - libwebkit2gtk-4.1-dev

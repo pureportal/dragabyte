@@ -38,7 +38,7 @@ export function applyRules(originalName: string, rules: RenameRule[], index: num
               nameStem = nameStem.replace(find, replace);
             }
           }
-        } catch (e) {
+        } catch {
           // invalid regex
         }
         break;
@@ -73,7 +73,7 @@ export function applyRules(originalName: string, rules: RenameRule[], index: num
             try {
                 const regex = new RegExp(rule.find, rule.matchAll ? 'g' : '');
                 nameStem = nameStem.replace(regex, (match) => applyCase(match, rule.caseType));
-            } catch (e) {
+            } catch {
                 // ignore invalid regex
             }
         } else {

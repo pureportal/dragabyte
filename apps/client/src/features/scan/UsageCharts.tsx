@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { type JSX, useMemo } from "react";
 import { formatBytes } from "../../lib/utils";
 import type { DiskUsage, ScanNode } from "./types";
 
@@ -116,7 +116,7 @@ const UsageCharts = ({ node, diskUsage }: UsageChartsProps): JSX.Element => {
 
   return (
     <div className="shrink-0 grid gap-4 2xl:grid-cols-2">
-      <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
@@ -186,7 +186,7 @@ const UsageCharts = ({ node, diskUsage }: UsageChartsProps): JSX.Element => {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500">
