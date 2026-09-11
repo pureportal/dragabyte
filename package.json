@@ -4,13 +4,17 @@
   "version": "0.7.4",
   "type": "module",
   "workspaces": [
-    "apps/client"
+    "apps/client",
+    "apps/landing"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @dragabyte/client --",
-    "build": "npm run build:app",
+    "dev:landing": "npm run dev --workspace @dragabyte/landing --",
+    "build": "npm run build:app && npm run build:landing",
     "build:app": "npm run build --workspace @dragabyte/client --",
+    "build:landing": "npm run build --workspace @dragabyte/landing --",
     "preview": "npm run preview --workspace @dragabyte/client --",
+    "preview:landing": "npm run preview --workspace @dragabyte/landing --",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "test:scan": "npm run test:scan --workspace @dragabyte/client --",

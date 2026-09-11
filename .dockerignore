@@ -1,0 +1,14 @@
+*
+!package.json
+!package-lock.json
+!apps
+apps/*
+!apps/client
+apps/client/*
+!apps/client/package.json
+!apps/landing
+!assets
+apps/landing/node_modules
+apps/landing/dist
+apps/landing/.env*
+apps/landing/*.tsbuildinfo

@@ -40,3 +40,11 @@ jobs:
         run: npm run test:scan
       - name: Build app frontend
         run: npm run build:app
+      - name: Build landing page
+        run: npm run build:landing
+      - name: Upload landing page
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-page
+          path: apps/landing/dist
+          if-no-files-found: error

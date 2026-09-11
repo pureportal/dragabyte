@@ -1,0 +1,396 @@
+:root {
+  color-scheme: dark;
+  color: #f1f5f9;
+  background: #020617;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --muted: #94a3b8;
+  --line: #1e293b;
+  --accent: #38bdf8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 32px;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 55% 15%, rgb(59 130 246 / 12%), transparent 48%),
+    #020617;
+}
+
+::selection {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 3px;
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+h1, h2, p, figure, pre {
+  margin: 0;
+}
+
+svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.page-width {
+  width: min(1200px, calc(100% - 96px));
+  margin-inline: auto;
+}
+
+.skip-link {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  padding: 12px 18px;
+  transform: translateY(-200%);
+  color: #fff;
+  background: #1d4ed8;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.site-header, .site-footer, nav, .brand {
+  display: flex;
+  align-items: center;
+}
+
+.site-header {
+  min-height: 108px;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  gap: 12px;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.6px;
+}
+
+.brand img {
+  object-fit: contain;
+}
+
+nav {
+  gap: 32px;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.repository-link, .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hero {
+  padding-top: 88px;
+}
+
+.hero-intro {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  align-items: center;
+  gap: 64px;
+  margin-bottom: 64px;
+}
+
+h1 {
+  max-width: 700px;
+  font-size: clamp(54px, 6.1vw, 82px);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+h1 span {
+  display: block;
+  color: var(--accent);
+}
+
+.hero-copy > p:first-child {
+  max-width: 390px;
+  color: #cbd5e1;
+  font-size: 19px;
+  line-height: 1.65;
+}
+
+.button {
+  min-height: 50px;
+  margin-top: 26px;
+  padding: 12px 22px;
+  border: 1px solid #60a5fa;
+  border-radius: 8px;
+  color: #fff;
+  background: #2563eb;
+  box-shadow: 0 8px 32px rgb(37 99 235 / 18%);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 150ms ease;
+}
+
+.button:hover {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+.release-note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.release-note span {
+  padding-inline: 5px;
+}
+
+.product-preview {
+  padding: 10px;
+  border: 1px solid #25354e;
+  border-radius: 18px;
+  background: rgb(15 23 42 / 80%);
+  box-shadow: 0 24px 100px rgb(0 0 0 / 35%), 0 -8px 80px rgb(56 189 248 / 5%);
+}
+
+.product-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 9px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 64px;
+  padding-block: 88px 100px;
+}
+
+.feature-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 24px;
+  color: var(--accent);
+}
+
+.features h2 {
+  margin-bottom: 12px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+}
+
+.features p, .terminal-copy p {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.terminal-section {
+  border-block: 1px solid var(--line);
+  background: #080f20;
+}
+
+.terminal-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 96px;
+  padding-block: 88px;
+}
+
+.terminal-copy h2 {
+  margin-bottom: 24px;
+  font-size: clamp(34px, 3.4vw, 44px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+}
+
+.terminal-copy p {
+  max-width: 420px;
+}
+
+.terminal-example {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #2a3c52;
+  border-radius: 12px;
+  background: #020617;
+  box-shadow: 0 16px 60px rgb(0 0 0 / 20%);
+}
+
+.terminal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.terminal-example pre {
+  overflow-x: auto;
+  padding: 36px 24px;
+  color: #e2e8f0;
+  font-size: clamp(12px, 1.2vw, 15px);
+  line-height: 1.8;
+}
+
+.terminal-example code {
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+}
+
+.prompt {
+  color: #a3e635;
+}
+
+.site-footer {
+  min-height: 124px;
+  justify-content: space-between;
+}
+
+.site-footer .brand {
+  font-size: 16px;
+}
+
+@media (max-width: 900px) {
+  .page-width {
+    width: calc(100% - 64px);
+  }
+
+  .hero-intro {
+    gap: 36px;
+  }
+
+  .hero-copy > p:first-child {
+    font-size: 17px;
+  }
+
+  .features, .terminal-layout {
+    gap: 36px;
+  }
+}
+
+@media (max-width: 680px) {
+  .page-width {
+    width: calc(100% - 40px);
+  }
+
+  .site-header {
+    min-height: 88px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px 32px;
+    padding-block: 20px;
+  }
+
+  .site-header nav {
+    gap: 26px;
+  }
+
+  .hero {
+    padding-top: 48px;
+  }
+
+  .hero-intro {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  h1 {
+    max-width: 480px;
+    font-size: clamp(42px, 10.8vw, 66px);
+  }
+
+  .product-preview {
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .product-preview img {
+    border-radius: 5px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding-block: 48px;
+  }
+
+  .features article + article {
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+
+  .feature-icon {
+    margin-bottom: 16px;
+  }
+
+  .terminal-layout {
+    grid-template-columns: 1fr;
+    padding-block: 48px;
+  }
+
+  .terminal-example pre {
+    padding: 28px 18px;
+    font-size: 12px;
+  }
+
+  .site-footer {
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-block: 28px;
+  }
+
+  .site-footer nav {
+    gap: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .button {
+    transition: none;
+  }
+}
