@@ -1,6 +1,7 @@
 name: dragabyte
-base: core22
-version: "1.0.0"
+base: core24
+version: "1.0.1"
+icon: apps/client/src-tauri/icons/icon.png
 summary: Disk usage scanner and bulk rename utility
 description: |
   Dragabyte is a desktop utility for scanning folder usage,
@@ -10,13 +11,13 @@ grade: stable
 confinement: strict
 
 layout:
-  /usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1:
-    bind: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/webkit2gtk-4.1
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkit2gtk-4.1:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/webkit2gtk-4.1
 
 apps:
   dragabyte:
     command: usr/bin/dragabyte
-    desktop: usr/share/applications/dragabyte.desktop
+    desktop: usr/share/applications/Dragabyte.desktop
     extensions: [gnome]
 
 parts:
@@ -42,8 +43,9 @@ parts:
       - libayatana-appindicator3-1
     override-build: |
       set -eu
+      rustup default stable
       npm ci
-      npm run tauri:build:linux -- --bundles deb
-      dpkg -x apps/client/src-tauri/target/release/bundle/deb/*.deb $SNAPCRAFT_PART_INSTALL/
-      sed -i -e "s|Icon=dragabyte|Icon=/usr/share/icons/hicolor/32x32/apps/dragabyte.png|g" \
-        $SNAPCRAFT_PART_INSTALL/usr/share/applications/dragabyte.desktop
+      npm run tauri:build:linux -- --bundles deb --config '{"bundle":{"createUpdaterArtifacts":false}}'
+      dpkg -x apps/client/src-tauri/target/release/bundle/deb/*.deb "$CRAFT_PART_INSTALL/"
+      sed -i 's|^Icon=.*|Icon=${SNAP}/meta/gui/icon.png|' \
+        "$CRAFT_PART_INSTALL/usr/share/applications/Dragabyte.desktop"
