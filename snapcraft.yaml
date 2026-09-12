@@ -1,6 +1,6 @@
 name: dragabyte
 base: core24
-version: "1.0.1"
+version: "1.0.2"
 icon: apps/client/src-tauri/icons/icon.png
 summary: Disk usage scanner and bulk rename utility
 description: |
@@ -26,8 +26,8 @@ parts:
     source: .
     build-snaps:
       - node/24/stable
-      - rustup/latest/stable
     build-packages:
+      - rustup
       - libwebkit2gtk-4.1-dev
       - build-essential
       - curl
