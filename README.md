@@ -193,7 +193,7 @@ Install once at the repository root with `npm ci`. Run the commands below from t
 
 Use either `npm run dev` or `npm run tauri:dev` for the app frontend; both use port 5173. The landing page can run alongside either. Browser previews do not provide the native file operations of the desktop app.
 
-The landing build can be served from a static host at a domain root or subdirectory. CI builds both frontends and uploads `apps/landing/dist/` as the `landing-page` artifact. Desktop packaging includes only `apps/client/dist/`. No deployment domain is configured.
+The landing build can be served from a static host at a domain root or subdirectory. It includes the home page, `/imprint/`, and `/privacy/`. Direct installer links use the landing workspace's version at build time and point to that version's GitHub release assets; publish the matching release before deploying a version bump. CI builds both frontends and uploads `apps/landing/dist/` as the `landing-page` artifact. Desktop packaging includes only `apps/client/dist/`. No deployment domain is configured.
 
 ## Landing Page Hosting
 
@@ -217,7 +217,7 @@ docker build --platform linux/amd64 -f apps/landing/Dockerfile -t dragabyte-land
 node scripts/verify-landing.mjs dragabyte-landing:local
 ```
 
-The build context is the repository root so the image can use the workspace lockfile and shared assets. The smoke test starts a temporary container, checks health, page content, CSS, images, navigation anchors, and a missing-page response, then removes the container.
+The build context is the repository root so the image can use the workspace lockfile and shared assets. The smoke test starts a temporary container, checks health, all three pages, CSS, images, direct download URLs, navigation, and a missing-page response, then removes the container. It checks download URL structure without contacting GitHub.
 
 ## Tech Stack
 

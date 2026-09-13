@@ -1,0 +1,134 @@
+.legal-page {
+  padding-block: 76px 100px;
+}
+.legal-heading {
+  margin-bottom: 60px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--line);
+}
+.legal-heading h1 {
+  font-size: clamp(44px, 5vw, 68px);
+  letter-spacing: -0.055em;
+}
+.legal-heading > p {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.legal-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 740px);
+  gap: 72px;
+}
+.legal-navigation {
+  position: sticky;
+  top: 32px;
+  flex-direction: column;
+  align-items: start;
+  align-self: start;
+  gap: 3px;
+}
+.legal-navigation a {
+  font-size: 14px;
+}
+.legal-content {
+  color: var(--muted);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.legal-content section + section,
+.legal-content > p + section {
+  margin-top: 40px;
+}
+.legal-content h2 {
+  margin-bottom: 18px;
+  color: #172d2c;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+}
+.legal-content p + p,
+.legal-content p + address {
+  margin-top: 18px;
+}
+.legal-content address {
+  font-style: normal;
+  line-height: 1.9;
+}
+.legal-content address a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.legal-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.legal-content a:hover {
+  text-decoration-thickness: 2px;
+}
+.imprint-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  max-width: 1000px;
+}
+.imprint-layout section + section {
+  margin-top: 0;
+}
+[aria-current="page"] {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+@media (max-width: 1050px) {
+  .legal-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 40px;
+  }
+  .imprint-layout {
+    gap: 48px;
+  }
+}
+
+@media (max-width: 900px) {
+  .legal-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .legal-navigation {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-height: 480px) {
+  .legal-navigation {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .legal-page {
+    padding-block: 48px 64px;
+  }
+  .legal-heading {
+    margin-bottom: 32px;
+    padding-bottom: 28px;
+  }
+  .imprint-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .legal-navigation {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 24px;
+  }
+}

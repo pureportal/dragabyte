@@ -1,0 +1,115 @@
+.consent-settings {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+.consent-settings:hover {
+  color: var(--accent);
+}
+.legal-content .consent-settings {
+  margin-top: 16px;
+  padding-inline: 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+}
+.legal-content .consent-settings:hover {
+  background: var(--surface-tint);
+}
+.consent-dialog {
+  position: fixed;
+  inset: auto 24px 24px auto;
+  z-index: 20;
+  width: min(420px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #172d2c;
+  background: var(--surface);
+  box-shadow: 0 8px 40px #172d2c26;
+}
+.consent-dialog h2 {
+  margin: 0 32px 12px 0;
+  font-size: 22px;
+  letter-spacing: -0.025em;
+}
+.consent-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.consent-close svg {
+  display: block;
+}
+.consent-close:hover {
+  color: var(--accent);
+  background: var(--surface-tint);
+}
+.consent-dialog p {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.consent-policy {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.consent-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+.consent-actions button {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.consent-actions button:hover {
+  background: var(--surface-tint);
+}
+.consent-actions button:active {
+  background: #dfe9d8;
+}
+.consent-error {
+  margin-block: 8px;
+  color: #943828;
+}
+@media (max-width: 700px) {
+  .consent-dialog {
+    right: 16px;
+    bottom: 16px;
+    padding: 20px;
+  }
+}

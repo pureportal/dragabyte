@@ -3,37 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020617" />
+    <meta name="theme-color" content="#f6f7f2" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>Dragabyte — See where your space goes</title>
     <meta
       name="description"
-      content="Explore disk usage, find large files, rename in batches, and export reports. Dragabyte brings disk analysis to your desktop and terminal on Windows and Linux."
+      content="Find large files, explore disk usage, rename files in batches, and export reports. Download Dragabyte for Windows and Linux, with a CLI for your terminal."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Dragabyte — See where your space goes" />
     <meta
       property="og:description"
-      content="Disk analysis, bulk rename, and reports for Windows and Linux. On your desktop or in your terminal."
+      content="Disk analysis, batch renaming, and reports for Windows and Linux. Explore Dragabyte and download it for your system."
     />
-    <link rel="icon" type="image/png" href="../../assets/icon.png" />
+    <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="stylesheet" href="./src/styles.css" />
+    <link rel="stylesheet" href="./src/home.css" />
+    <script type="module" src="./src/consent.ts"></script>
   </head>
-  <body>
+  <body id="top">
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header page-width">
       <a class="brand" href="./" aria-label="Dragabyte home">
-        <img src="../../assets/icon.png" width="44" height="44" alt="" />
+        <img src="/icon.png" width="40" height="40" alt="" />
         <span>Dragabyte</span>
       </a>
       <nav aria-label="Main navigation">
         <a href="#features">Features</a>
         <a href="#terminal">Terminal</a>
-        <a class="repository-link" href="https://github.com/pureportal/dragabyte">
-          GitHub
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M7 17 17 7M7 7h10v10" />
-          </svg>
-        </a>
+        <a class="nav-download" href="#download"
+          >Download <span aria-hidden="true">↘</span></a
+        >
       </nav>
     </header>
 
@@ -42,81 +42,322 @@
         <div class="hero-intro">
           <h1 id="hero-title">See where your <span>space goes.</span></h1>
           <div class="hero-copy">
-            <p>Explore disk usage, find large files, and organize your folders with Dragabyte.</p>
-            <a class="button" href="https://github.com/pureportal/dragabyte/releases/latest">
-              View downloads
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M5 12h14m-6-6 6 6-6 6" />
-              </svg>
-            </a>
-            <p class="release-note">Windows &amp; Linux <span aria-hidden="true">·</span> Alpha</p>
+            <p>
+              Find what’s filling your disk. Organize files, rename in batches,
+              and turn a folder scan into a clear report.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="#download"
+                >Download Dragabyte
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+              ></a>
+              <a class="text-link" href="#features"
+                >Explore features <span aria-hidden="true">↗</span></a
+              >
+            </div>
+            <p class="platforms">For Windows and Linux</p>
           </div>
         </div>
         <figure class="product-preview">
-          <img
-            src="../../assets/image.png"
-            width="1212"
-            height="917"
-            alt="Dragabyte showing a folder scan with a size-sorted file tree, usage charts, and scan filters."
-            fetchpriority="high"
-          />
+          <a
+            data-screenshot
+            href="/image.png"
+            aria-label="View full-size Dragabyte screenshot"
+          >
+            <img
+              src="/image.png"
+              width="1212"
+              height="917"
+              alt="Dragabyte showing a folder scan with a size-sorted file tree, disk usage charts, and scan filters."
+              fetchpriority="high"
+            />
+          </a>
         </figure>
       </section>
 
-      <section class="features page-width" id="features" aria-label="Features">
-        <article>
-          <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="18" height="18" rx="3" />
-            <path d="M3 13h10M13 3v18m0-5h8" />
-          </svg>
-          <h2>Explore disk usage</h2>
-          <p>Browse the folder tree, compare usage charts, and find the largest files.</p>
-        </article>
-        <article>
-          <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M13 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M15 4l5 5M10 14l-1 4 4-1 9-9a2 2 0 0 0-5-5z" />
-          </svg>
-          <h2>Rename in batches</h2>
-          <p>Build rename rules and preview file and folder names before applying them.</p>
-        </article>
-        <article>
-          <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8m-8 4h5" />
-          </svg>
-          <h2>Export a report</h2>
-          <p>Save scan results as PDF, Excel, CSV, or HTML.</p>
-        </article>
+      <section
+        class="section page-width"
+        id="features"
+        aria-labelledby="features-title"
+      >
+        <div class="section-heading">
+          <h2 id="features-title">Explore your storage.</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 13h10M13 3v18m0-5h8" />
+            </svg>
+            <h3>See the breakdown</h3>
+            <p>
+              Expand the folder tree or switch to a treemap. Pie and bar charts
+              show how folders compare, while the largest-files list puts the
+              biggest items within reach.
+            </p>
+          </article>
+          <article>
+            <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 7h16M4 17h16" />
+              <circle cx="8" cy="7" r="3" />
+              <circle cx="16" cy="17" r="3" />
+            </svg>
+            <h3>Narrow your search</h3>
+            <p>
+              Filter by file type, size, age, name, or path. Use regular
+              expressions for precise matches, and adjust scan priority and
+              throttling while you work.
+            </p>
+          </article>
+          <article>
+            <svg class="feature-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                d="M21 10V7a2 2 0 0 0-2-2h-7l-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8M16 14l3 3-3 3m-4-3h9"
+              />
+            </svg>
+            <h3>Manage files in place</h3>
+            <p>
+              Inspect an item, then move, rename, duplicate, or delete it from
+              the explorer. Create folders to put things in order without
+              leaving the app.
+            </p>
+          </article>
+        </div>
       </section>
 
-      <section class="terminal-section" id="terminal" aria-labelledby="terminal-title">
-        <div class="terminal-layout page-width">
-          <div class="terminal-copy">
-            <h2 id="terminal-title">Disk usage.<br />In your terminal.</h2>
-            <p>Explore folders on Windows or Linux, including servers over SSH. Export text or JSON reports from the command line.</p>
+      <section
+        class="rename-section"
+        id="rename"
+        aria-labelledby="rename-title"
+      >
+        <div class="split-layout page-width">
+          <div class="section-copy">
+            <h2 id="rename-title">Rename a whole batch.</h2>
+            <p>
+              Turn a list of files and folders into a consistent set of names.
+              Preview every result before applying your changes.
+            </p>
+            <ul class="feature-list">
+              <li>
+                Combine replacements, prefixes, suffixes, numbering, case, and
+                extension rules.
+              </li>
+              <li>
+                Include or exclude names with text or regular expressions.
+              </li>
+              <li>Save rule and filter templates for the next batch.</li>
+            </ul>
           </div>
-          <div class="terminal-example" aria-label="CLI command examples">
-            <div class="terminal-title">
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="m4 5 6 7-6 7m9 0h7" />
-              </svg>
-              <span>dragabyte-cli</span>
-            </div>
-            <pre><code><span class="prompt" aria-hidden="true">$ </span>dragabyte-cli .
+          <figure class="rename-preview">
+            <a
+              data-screenshot
+              href="./src/images/rename.png"
+              aria-label="View full-size batch rename screenshot"
+            >
+              <img
+                src="./src/images/rename.png"
+                width="1200"
+                height="800"
+                alt="Dragabyte’s renamer previewing the prefix new- on alpha.txt and beta.txt, with the available rename rules beside the file list."
+                loading="lazy"
+              />
+            </a>
+          </figure>
+        </div>
+      </section>
 
-<span class="prompt" aria-hidden="true">$ </span>dragabyte-cli scan . --json</code></pre>
+      <section
+        class="section page-width report-layout"
+        aria-labelledby="reports-title"
+      >
+        <div class="section-copy">
+          <h2 id="reports-title">Export your scan.</h2>
+          <p>
+            Export a scan for a storage review, a cleanup plan, or your own
+            records. Choose a report to share or a spreadsheet to work with.
+          </p>
+        </div>
+        <dl class="report-formats">
+          <div>
+            <dt>PDF</dt>
+            <dd>A report to read and share</dd>
           </div>
+          <div>
+            <dt>Excel</dt>
+            <dd>A workbook for further analysis</dd>
+          </div>
+          <div>
+            <dt>CSV</dt>
+            <dd>Scan data for spreadsheets and tools</dd>
+          </div>
+          <div>
+            <dt>HTML</dt>
+            <dd>A summary to open in your browser</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section
+        class="terminal-section"
+        id="terminal"
+        aria-labelledby="terminal-title"
+      >
+        <div class="page-width">
+          <div class="split-layout">
+            <div class="section-copy">
+              <h2 id="terminal-title">Your disk.<br />Your terminal.</h2>
+              <p>
+                Explore folders with the standalone CLI on Windows and Linux,
+                including servers over SSH. Navigate by keyboard, sort by size,
+                and filter names as the scan runs.
+              </p>
+              <a
+                class="text-link"
+                href="https://github.com/pureportal/dragabyte/blob/main/docs/terminal.md"
+                >Build and use the CLI <span aria-hidden="true">↗</span></a
+              >
+            </div>
+            <div class="terminal-example" aria-label="CLI command examples">
+              <div class="terminal-title">
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="m4 5 6 7-6 7m9 0h7" /></svg
+                >dragabyte-cli
+              </div>
+              <div class="terminal-command">
+                <p>Explore the current folder</p>
+                <pre><code><span aria-hidden="true">$ </span>dragabyte-cli .</code></pre>
+              </div>
+              <div class="terminal-command">
+                <p>Write a JSON report</p>
+                <pre><code><span aria-hidden="true">$ </span>dragabyte-cli scan /data --json &gt; usage.json</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="terminal-features">
+            <article>
+              <h3>Use scans in your scripts</h3>
+              <p>
+                Export text or JSON with file sizes, folder totals, and
+                completion status. Use the results in your own tools and
+                workflows.
+              </p>
+            </article>
+            <article>
+              <h3>Explore a remote machine</h3>
+              <p>
+                Run the CLI’s management server and connect from the desktop
+                Remote Dashboard to browse folders and scan storage. Use an SSH
+                tunnel for encrypted access.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section page-width download-section"
+        id="download"
+        aria-labelledby="download-title"
+      >
+        <div class="section-heading">
+          <h2 id="download-title">Get Dragabyte.</h2>
+          <a
+            class="text-link release-link"
+            href="https://github.com/pureportal/dragabyte/releases/tag/v__DRAGABYTE_VERSION__"
+            >Version __DRAGABYTE_VERSION__ <span aria-hidden="true">↗</span></a
+          >
+        </div>
+        <div class="download-grid">
+          <div class="download-group">
+            <h3>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path
+                  d="M3 5 11 4v7H3zm10-1 8-1v8h-8zM3 13h8v7l-8-1zm10 0h8v8l-8-1z"
+                /></svg
+              >Windows
+            </h3>
+            <a
+              class="download-link"
+              href="https://github.com/pureportal/dragabyte/releases/download/v__DRAGABYTE_VERSION__/Dragabyte___DRAGABYTE_VERSION___x64-setup.exe"
+              ><span
+                ><strong>Windows installer</strong><span>x64 · EXE</span></span
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+            ></a>
+            <a
+              class="download-link"
+              href="https://github.com/pureportal/dragabyte/releases/download/v__DRAGABYTE_VERSION__/Dragabyte___DRAGABYTE_VERSION___x64_en-US.msi"
+              ><span><strong>Windows MSI</strong><span>x64 · MSI</span></span
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+            ></a>
+          </div>
+          <div class="download-group" id="linux-downloads">
+            <h3>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="14" rx="2" />
+                <path d="M8 22h8m-4-4v4m-6-12 3 3-3 3m6 0h4" /></svg
+              >Linux
+            </h3>
+            <a
+              class="download-link"
+              href="https://github.com/pureportal/dragabyte/releases/download/v__DRAGABYTE_VERSION__/Dragabyte___DRAGABYTE_VERSION___amd64.deb"
+              ><span
+                ><strong>Debian / Ubuntu</strong><span>amd64 · DEB</span></span
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+            ></a>
+            <a
+              class="download-link"
+              href="https://github.com/pureportal/dragabyte/releases/download/v__DRAGABYTE_VERSION__/Dragabyte-__DRAGABYTE_VERSION__-1.x86_64.rpm"
+              ><span
+                ><strong>Fedora / RHEL</strong><span>x86_64 · RPM</span></span
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+            ></a>
+            <a
+              class="download-link"
+              href="https://github.com/pureportal/dragabyte/releases/download/v__DRAGABYTE_VERSION__/Dragabyte___DRAGABYTE_VERSION___amd64.AppImage"
+              ><span
+                ><strong>Linux AppImage</strong
+                ><span>amd64 · AppImage</span></span
+              ><svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg
+            ></a>
+          </div>
+        </div>
+        <div class="download-notes">
+          <p>
+            Dragabyte is in alpha. Keep backups before renaming or deleting
+            files.
+          </p>
+          <a
+            class="text-link"
+            href="https://github.com/pureportal/dragabyte/releases/latest"
+            >All release files <span aria-hidden="true">↗</span></a
+          >
         </div>
       </section>
     </main>
 
     <footer class="site-footer page-width">
-      <a class="brand" href="./" aria-label="Dragabyte home">
-        <img src="../../assets/icon.png" width="32" height="32" alt="" loading="lazy" />
-        <span>Dragabyte</span>
-      </a>
+      <div class="footer-brand">
+        <a class="brand" href="./" aria-label="Dragabyte home"
+          ><img
+            src="/icon.png"
+            width="32"
+            height="32"
+            alt=""
+            loading="lazy"
+          /><span>Dragabyte</span></a
+        ><a class="studio-link" href="https://pureportal.io/">By PurePortal</a>
+      </div>
       <nav aria-label="Footer navigation">
-        <a href="https://github.com/pureportal/dragabyte/releases/latest">Downloads</a>
         <a href="https://github.com/pureportal/dragabyte">GitHub</a>
+        <a href="./imprint/">Imprint</a>
+        <a href="./privacy/">Privacy</a>
+        <a href="#top">Back to top <span aria-hidden="true">↑</span></a>
       </nav>
     </footer>
   </body>

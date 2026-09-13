@@ -1,6 +1,8 @@
 node_modules/
 dist/
 dist-ssr/
+apps/landing/test-results/
+apps/landing/playwright-report/
 .env
 .env.*
 .DS_Store

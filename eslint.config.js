@@ -11,7 +11,7 @@ export default defineConfig(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["apps/client/src/**/*.{ts,tsx}", "apps/*/vite.config.ts"],
+    files: ["apps/*/src/**/*.{ts,tsx}", "apps/*/vite.config.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
