@@ -1,0 +1,493 @@
+{
+  "collisionRetry": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (1)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nfixed-new-alpha.txt\nfixed-new-alpha.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 1 Item(s)",
+    "files": [
+      "alpha.txt",
+      "fixed-new-alpha.txt"
+    ],
+    "movedContents": "unselected existing destination"
+  },
+  "importError": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (0)\nAdd Files\nFolder\nImport\n\nDrag files here or use toolbar\n\nRules\nFilter\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename",
+    "calls": [
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "86c6a3ac-d6da-4a27-ab7b-226149967700"
+        },
+        "startedAt": 103335.80000000447,
+        "result": null,
+        "endedAt": 103358.89999999851
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-alpha.txt"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\beta.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-beta.txt"
+            }
+          ]
+        },
+        "startedAt": 106185.80000000447,
+        "result": {
+          "successCount": 2,
+          "errors": []
+        },
+        "endedAt": 106233.5
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "c5cfa1c6-a2bc-47a4-81f2-66d67d821a92"
+        },
+        "startedAt": 108614.39999999851,
+        "result": null,
+        "endedAt": 108670.70000000298
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-alpha.txt"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\beta.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-beta.txt"
+            }
+          ]
+        },
+        "startedAt": 111144.10000000149,
+        "result": {
+          "successCount": 1,
+          "errors": [
+            "Destination already exists: C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-alpha.txt"
+          ]
+        },
+        "endedAt": 111164.39999999851
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "835399c1-e800-414b-a3c3-5c4f28fa8829"
+        },
+        "startedAt": 112788.70000000298,
+        "result": null,
+        "endedAt": 112838.80000000447
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\invalid\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\invalid\\bad:alpha.txt"
+            }
+          ]
+        },
+        "startedAt": 116461.10000000149,
+        "result": {
+          "successCount": 0,
+          "errors": [
+            "Failed to rename C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\invalid\\alpha.txt: The filename, directory name, or volume label syntax is incorrect. (os error 123)"
+          ]
+        },
+        "endedAt": 116477.10000000149
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "6e279b76-67d0-4163-a114-3c6d1ff2e0d8"
+        },
+        "startedAt": 117780.80000000447,
+        "result": null,
+        "endedAt": 117847.39999999851
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\parent\\Folder",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\parent\\new-Folder"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\parent\\Folder\\inside.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\parent\\Folder\\new-inside.txt"
+            }
+          ]
+        },
+        "startedAt": 120059.5,
+        "result": {
+          "successCount": 1,
+          "errors": [
+            "Source does not exist: C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\parent\\Folder\\inside.txt"
+          ]
+        },
+        "endedAt": 120082.10000000149
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "d139cd77-03b7-42ac-bd07-41e142eb5567"
+        },
+        "startedAt": 121064.39999999851,
+        "result": null,
+        "endedAt": 121123.89999999851
+      },
+      {
+        "cmd": "collect_rename_items",
+        "args": {
+          "paths": [
+            "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\import"
+          ],
+          "recursive": true
+        },
+        "startedAt": 121844.80000000447,
+        "result": [
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\import\\long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt",
+            "name": "long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt",
+            "isDirectory": false
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\import\\report.txt",
+            "name": "report.txt",
+            "isDirectory": false
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\import\\sub\\report.txt",
+            "name": "report.txt",
+            "isDirectory": false
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\import\\日本語 Bericht.txt",
+            "name": "日本語 Bericht.txt",
+            "isDirectory": false
+          }
+        ],
+        "endedAt": 121854.30000000447
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "0241242c-853c-4010-933e-53ef0416a80d"
+        },
+        "startedAt": 160932.6000000015,
+        "result": null,
+        "endedAt": 161005.20000000298
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "high",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "b05c4598-be99-4911-8a6d-a3b6d2b3860a"
+        },
+        "startedAt": 261740.1000000015,
+        "result": null,
+        "endedAt": 261760.20000000298
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "high",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "3ade5816-0800-48b4-9e17-0186f2278e39"
+        },
+        "startedAt": 269486.1000000015,
+        "result": null,
+        "endedAt": 269504.80000000447
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision-retry\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision-retry\\new-alpha.txt"
+            }
+          ]
+        },
+        "startedAt": 343986.3999999985,
+        "result": {
+          "successCount": 0,
+          "errors": [
+            "Destination already exists: C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision-retry\\new-alpha.txt"
+          ]
+        },
+        "endedAt": 344006.80000000447
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision-retry\\new-alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision-retry\\fixed-new-alpha.txt"
+            }
+          ]
+        },
+        "startedAt": 344560.3999999985,
+        "result": {
+          "successCount": 1,
+          "errors": []
+        },
+        "endedAt": 344577.6000000015
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "high",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "42e64899-1441-4e6c-9030-1f5ce5cf1511"
+        },
+        "startedAt": 345296,
+        "result": null,
+        "endedAt": 345349.8999999985
+      },
+      {
+        "cmd": "collect_rename_items",
+        "args": {
+          "paths": [
+            "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\missing-import"
+          ],
+          "recursive": true
+        },
+        "startedAt": 345721.200000003,
+        "result": [],
+        "endedAt": 345728.30000000447
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "high",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "e6b54ac6-ccdf-4d5e-888e-54b891886b0a"
+        },
+        "startedAt": 447466.30000000447,
+        "result": null,
+        "endedAt": 447550.5
+      },
+      {
+        "cmd": "collect_rename_items",
+        "args": {
+          "paths": [
+            "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\missing-import"
+          ],
+          "recursive": true
+        },
+        "startedAt": 448014.200000003,
+        "result": [],
+        "endedAt": 448021.3999999985
+      }
+    ],
+    "alerts": 0
+  },
+  "chainPreview": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2 / 3)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nalpha.txt\nALPHA-review-1.txt\nbeta.txt\nBETA-review-2.txt\nphoto.JPG\nPHOTO-review-3.jpg\nRules\nFilter\n1\nEXCLUDE\nfiles matching:\nOn\nRegex\nMatch Case\n+ Include\n+ Exclude\nRename 2 Item(s)",
+  "chainResult": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2 / 3)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nALPHA-review-1.txt\nALPHA-review-1.txt\nbeta.txt\nBETA-review-2.txt\nPHOTO-review-3.jpg\nPHOTO-review-3.jpg\nRules\nFilter\n1\nEXCLUDE\nfiles matching:\nOn\nRegex\nMatch Case\n+ Include\n+ Exclude\nRename 2 Item(s)",
+    "files": [
+      "ALPHA-review-1.txt",
+      "beta.txt",
+      "PHOTO-review-3.jpg"
+    ],
+    "dialogs": []
+  },
+  "templateModal": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nSave Rules Template\nENTER A NAME FOR THIS TEMPLATE\nCancel\nSave\nFiles (2 / 3)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nALPHA-review-1.txt\nALPHA-review-1.txt\nbeta.txt\nBETA-review-2.txt\nPHOTO-review-3.jpg\nPHOTO-review-3.jpg\nRules\nFilter\n1\nSave Current Rules\nNo saved templates\nCase\nBoth\nOn\nUPPERCASE\nRegex Match Only\nSuffix\nBoth\nOn\nExtension\nBoth\nOn\nlowercase\nNumbering\nBoth\nOn\nStart\nStep\nAdd to\nSuffix\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+  "pathSeparator": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (1)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\n..\\moved-alpha.txt\n..\\moved-alpha.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 1 Item(s)",
+    "originalStillExists": false,
+    "movedFileExists": true,
+    "dialogs": []
+  },
+  "errors": []
+}

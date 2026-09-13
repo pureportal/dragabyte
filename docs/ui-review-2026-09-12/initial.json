@@ -1,0 +1,12 @@
+{
+  "details": {
+    "url": "http://localhost:5173/",
+    "width": 1922,
+    "height": 1201,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+    "native": true
+  },
+  "scanner": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSelect a folder to analyze.\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\n\nSomething went wrong\n\nSelect a folder that exists and can be read.\n\nCopy\nHide Details\nDismiss\n\nERROR DETAILS\n\nSelect a folder that exists and can be read.\nReady to Scan\n\nConnect to your local storage and visualize space usage with high-performance tree scanning.\n\nStart Scanning",
+  "renamer": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (0)\nAdd Files\nFolder\nImport\n\nDrag files here or use toolbar\n\nRules\nFilter\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename",
+  "errors": []
+}

@@ -1,0 +1,1409 @@
+{
+  "mode": "Browser with startup and picker calls mocked; no file changes",
+  "scanner": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSelect a folder to analyze.\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nReady to Scan\n\nConnect to your local storage and visualize space usage with high-performance tree scanning.\n\nStart Scanning",
+  "renamer": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (0)\nAdd Files\nFolder\nImport\n\nDrag files here or use toolbar\n\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename",
+  "viewports": {
+    "1200x800": {
+      "body": 1200,
+      "main": 1198,
+      "width": 1200,
+      "controls": [
+        {
+          "text": "",
+          "box": {
+            "x": 1095,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 1119,
+            "bottom": 36.5,
+            "left": 1095
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 1127,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 1151,
+            "bottom": 36.5,
+            "left": 1127
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 1159,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 1183,
+            "bottom": 36.5,
+            "left": 1159
+          }
+        },
+        {
+          "text": "Add Files",
+          "box": {
+            "x": 544.28125,
+            "y": 72.5,
+            "width": 93.671875,
+            "height": 24,
+            "top": 72.5,
+            "right": 637.953125,
+            "bottom": 96.5,
+            "left": 544.28125
+          }
+        },
+        {
+          "text": "Folder",
+          "box": {
+            "x": 642.953125,
+            "y": 72.5,
+            "width": 78.390625,
+            "height": 24,
+            "top": 72.5,
+            "right": 721.34375,
+            "bottom": 96.5,
+            "left": 642.953125
+          }
+        },
+        {
+          "text": "Import",
+          "box": {
+            "x": 726.34375,
+            "y": 72.5,
+            "width": 81.65625,
+            "height": 24,
+            "top": 72.5,
+            "right": 808,
+            "bottom": 96.5,
+            "left": 726.34375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 818,
+            "y": 70.5,
+            "width": 28,
+            "height": 28,
+            "top": 70.5,
+            "right": 846,
+            "bottom": 98.5,
+            "left": 818
+          }
+        },
+        {
+          "text": "Rules",
+          "box": {
+            "x": 882,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 1003.5,
+            "bottom": 96.5,
+            "left": 882
+          }
+        },
+        {
+          "text": "Filter",
+          "box": {
+            "x": 1003.5,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 1125,
+            "bottom": 96.5,
+            "left": 1003.5
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 1135,
+            "y": 68.5,
+            "width": 32,
+            "height": 32,
+            "top": 68.5,
+            "right": 1167,
+            "bottom": 100.5,
+            "left": 1135
+          }
+        },
+        {
+          "text": "Both",
+          "box": {
+            "x": 972.015625,
+            "y": 138.5,
+            "width": 70,
+            "height": 21,
+            "top": 138.5,
+            "right": 1042.015625,
+            "bottom": 159.5,
+            "left": 972.015625
+          }
+        },
+        {
+          "text": "On",
+          "box": {
+            "x": 1096.15625,
+            "y": 138,
+            "width": 33.84375,
+            "height": 22,
+            "top": 138,
+            "right": 1130,
+            "bottom": 160,
+            "left": 1096.15625
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 1138,
+            "y": 141,
+            "width": 16,
+            "height": 16,
+            "top": 141,
+            "right": 1154,
+            "bottom": 157,
+            "left": 1138
+          }
+        },
+        {
+          "text": "Replace",
+          "box": {
+            "x": 880,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 1019.5,
+            "bottom": 269,
+            "left": 880
+          }
+        },
+        {
+          "text": "Case",
+          "box": {
+            "x": 1027.5,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 1167,
+            "bottom": 269,
+            "left": 1027.5
+          }
+        },
+        {
+          "text": "Add Prefix",
+          "box": {
+            "x": 880,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 1019.5,
+            "bottom": 311,
+            "left": 880
+          }
+        },
+        {
+          "text": "Add Suffix",
+          "box": {
+            "x": 1027.5,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 1167,
+            "bottom": 311,
+            "left": 1027.5
+          }
+        },
+        {
+          "text": "Numbering",
+          "box": {
+            "x": 880,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 1019.5,
+            "bottom": 353,
+            "left": 880
+          }
+        },
+        {
+          "text": "Remove",
+          "box": {
+            "x": 1027.5,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 1167,
+            "bottom": 353,
+            "left": 1027.5
+          }
+        },
+        {
+          "text": "Extension",
+          "box": {
+            "x": 880,
+            "y": 361,
+            "width": 139.5,
+            "height": 34,
+            "top": 361,
+            "right": 1019.5,
+            "bottom": 395,
+            "left": 880
+          }
+        },
+        {
+          "text": "Rename 3 Item(s)",
+          "box": {
+            "x": 880,
+            "y": 727,
+            "width": 287,
+            "height": 40,
+            "top": 727,
+            "right": 1167,
+            "bottom": 767,
+            "left": 880
+          }
+        }
+      ]
+    },
+    "1024x768": {
+      "body": 1024,
+      "main": 1022,
+      "width": 1024,
+      "controls": [
+        {
+          "text": "",
+          "box": {
+            "x": 919,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 943,
+            "bottom": 36.5,
+            "left": 919
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 951,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 975,
+            "bottom": 36.5,
+            "left": 951
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 983,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 1007,
+            "bottom": 36.5,
+            "left": 983
+          }
+        },
+        {
+          "text": "Add Files",
+          "box": {
+            "x": 368.28125,
+            "y": 72.5,
+            "width": 93.671875,
+            "height": 24,
+            "top": 72.5,
+            "right": 461.953125,
+            "bottom": 96.5,
+            "left": 368.28125
+          }
+        },
+        {
+          "text": "Folder",
+          "box": {
+            "x": 466.953125,
+            "y": 72.5,
+            "width": 78.390625,
+            "height": 24,
+            "top": 72.5,
+            "right": 545.34375,
+            "bottom": 96.5,
+            "left": 466.953125
+          }
+        },
+        {
+          "text": "Import",
+          "box": {
+            "x": 550.34375,
+            "y": 72.5,
+            "width": 81.65625,
+            "height": 24,
+            "top": 72.5,
+            "right": 632,
+            "bottom": 96.5,
+            "left": 550.34375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 642,
+            "y": 70.5,
+            "width": 28,
+            "height": 28,
+            "top": 70.5,
+            "right": 670,
+            "bottom": 98.5,
+            "left": 642
+          }
+        },
+        {
+          "text": "Rules",
+          "box": {
+            "x": 706,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 827.5,
+            "bottom": 96.5,
+            "left": 706
+          }
+        },
+        {
+          "text": "Filter",
+          "box": {
+            "x": 827.5,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 949,
+            "bottom": 96.5,
+            "left": 827.5
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 959,
+            "y": 68.5,
+            "width": 32,
+            "height": 32,
+            "top": 68.5,
+            "right": 991,
+            "bottom": 100.5,
+            "left": 959
+          }
+        },
+        {
+          "text": "Both",
+          "box": {
+            "x": 796.015625,
+            "y": 138.5,
+            "width": 70,
+            "height": 21,
+            "top": 138.5,
+            "right": 866.015625,
+            "bottom": 159.5,
+            "left": 796.015625
+          }
+        },
+        {
+          "text": "On",
+          "box": {
+            "x": 920.15625,
+            "y": 138,
+            "width": 33.84375,
+            "height": 22,
+            "top": 138,
+            "right": 954,
+            "bottom": 160,
+            "left": 920.15625
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 962,
+            "y": 141,
+            "width": 16,
+            "height": 16,
+            "top": 141,
+            "right": 978,
+            "bottom": 157,
+            "left": 962
+          }
+        },
+        {
+          "text": "Replace",
+          "box": {
+            "x": 704,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 843.5,
+            "bottom": 269,
+            "left": 704
+          }
+        },
+        {
+          "text": "Case",
+          "box": {
+            "x": 851.5,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 991,
+            "bottom": 269,
+            "left": 851.5
+          }
+        },
+        {
+          "text": "Add Prefix",
+          "box": {
+            "x": 704,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 843.5,
+            "bottom": 311,
+            "left": 704
+          }
+        },
+        {
+          "text": "Add Suffix",
+          "box": {
+            "x": 851.5,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 991,
+            "bottom": 311,
+            "left": 851.5
+          }
+        },
+        {
+          "text": "Numbering",
+          "box": {
+            "x": 704,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 843.5,
+            "bottom": 353,
+            "left": 704
+          }
+        },
+        {
+          "text": "Remove",
+          "box": {
+            "x": 851.5,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 991,
+            "bottom": 353,
+            "left": 851.5
+          }
+        },
+        {
+          "text": "Extension",
+          "box": {
+            "x": 704,
+            "y": 361,
+            "width": 139.5,
+            "height": 34,
+            "top": 361,
+            "right": 843.5,
+            "bottom": 395,
+            "left": 704
+          }
+        },
+        {
+          "text": "Rename 3 Item(s)",
+          "box": {
+            "x": 704,
+            "y": 695,
+            "width": 287,
+            "height": 40,
+            "top": 695,
+            "right": 991,
+            "bottom": 735,
+            "left": 704
+          }
+        }
+      ]
+    },
+    "800x600": {
+      "body": 800,
+      "main": 798,
+      "width": 800,
+      "controls": [
+        {
+          "text": "",
+          "box": {
+            "x": 695,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 719,
+            "bottom": 36.5,
+            "left": 695
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 727,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 751,
+            "bottom": 36.5,
+            "left": 727
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 759,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 783,
+            "bottom": 36.5,
+            "left": 759
+          }
+        },
+        {
+          "text": "Add Files",
+          "box": {
+            "x": 144.28125,
+            "y": 72.5,
+            "width": 93.671875,
+            "height": 24,
+            "top": 72.5,
+            "right": 237.953125,
+            "bottom": 96.5,
+            "left": 144.28125
+          }
+        },
+        {
+          "text": "Folder",
+          "box": {
+            "x": 242.953125,
+            "y": 72.5,
+            "width": 78.390625,
+            "height": 24,
+            "top": 72.5,
+            "right": 321.34375,
+            "bottom": 96.5,
+            "left": 242.953125
+          }
+        },
+        {
+          "text": "Import",
+          "box": {
+            "x": 326.34375,
+            "y": 72.5,
+            "width": 81.65625,
+            "height": 24,
+            "top": 72.5,
+            "right": 408,
+            "bottom": 96.5,
+            "left": 326.34375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 418,
+            "y": 70.5,
+            "width": 28,
+            "height": 28,
+            "top": 70.5,
+            "right": 446,
+            "bottom": 98.5,
+            "left": 418
+          }
+        },
+        {
+          "text": "Rules",
+          "box": {
+            "x": 482,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 603.5,
+            "bottom": 96.5,
+            "left": 482
+          }
+        },
+        {
+          "text": "Filter",
+          "box": {
+            "x": 603.5,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 725,
+            "bottom": 96.5,
+            "left": 603.5
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 735,
+            "y": 68.5,
+            "width": 32,
+            "height": 32,
+            "top": 68.5,
+            "right": 767,
+            "bottom": 100.5,
+            "left": 735
+          }
+        },
+        {
+          "text": "Both",
+          "box": {
+            "x": 572.015625,
+            "y": 138.5,
+            "width": 70,
+            "height": 21,
+            "top": 138.5,
+            "right": 642.015625,
+            "bottom": 159.5,
+            "left": 572.015625
+          }
+        },
+        {
+          "text": "On",
+          "box": {
+            "x": 696.15625,
+            "y": 138,
+            "width": 33.84375,
+            "height": 22,
+            "top": 138,
+            "right": 730,
+            "bottom": 160,
+            "left": 696.15625
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 738,
+            "y": 141,
+            "width": 16,
+            "height": 16,
+            "top": 141,
+            "right": 754,
+            "bottom": 157,
+            "left": 738
+          }
+        },
+        {
+          "text": "Replace",
+          "box": {
+            "x": 480,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 619.5,
+            "bottom": 269,
+            "left": 480
+          }
+        },
+        {
+          "text": "Case",
+          "box": {
+            "x": 627.5,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 767,
+            "bottom": 269,
+            "left": 627.5
+          }
+        },
+        {
+          "text": "Add Prefix",
+          "box": {
+            "x": 480,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 619.5,
+            "bottom": 311,
+            "left": 480
+          }
+        },
+        {
+          "text": "Add Suffix",
+          "box": {
+            "x": 627.5,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 767,
+            "bottom": 311,
+            "left": 627.5
+          }
+        },
+        {
+          "text": "Numbering",
+          "box": {
+            "x": 480,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 619.5,
+            "bottom": 353,
+            "left": 480
+          }
+        },
+        {
+          "text": "Remove",
+          "box": {
+            "x": 627.5,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 767,
+            "bottom": 353,
+            "left": 627.5
+          }
+        },
+        {
+          "text": "Extension",
+          "box": {
+            "x": 480,
+            "y": 361,
+            "width": 139.5,
+            "height": 34,
+            "top": 361,
+            "right": 619.5,
+            "bottom": 395,
+            "left": 480
+          }
+        },
+        {
+          "text": "Rename 3 Item(s)",
+          "box": {
+            "x": 480,
+            "y": 527,
+            "width": 287,
+            "height": 40,
+            "top": 527,
+            "right": 767,
+            "bottom": 567,
+            "left": 480
+          }
+        }
+      ]
+    },
+    "640x480": {
+      "body": 640,
+      "main": 638,
+      "width": 640,
+      "controls": [
+        {
+          "text": "",
+          "box": {
+            "x": 535,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 559,
+            "bottom": 36.5,
+            "left": 535
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 567,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 591,
+            "bottom": 36.5,
+            "left": 567
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 599,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 623,
+            "bottom": 36.5,
+            "left": 599
+          }
+        },
+        {
+          "text": "Add Files",
+          "box": {
+            "x": 43,
+            "y": 64.5,
+            "width": 68.5625,
+            "height": 40,
+            "top": 64.5,
+            "right": 111.5625,
+            "bottom": 104.5,
+            "left": 43
+          }
+        },
+        {
+          "text": "Folder",
+          "box": {
+            "x": 116.203125,
+            "y": 64.5,
+            "width": 78.390625,
+            "height": 40,
+            "top": 64.5,
+            "right": 194.59375,
+            "bottom": 104.5,
+            "left": 116.203125
+          }
+        },
+        {
+          "text": "Import",
+          "box": {
+            "x": 199.234375,
+            "y": 64.5,
+            "width": 81.65625,
+            "height": 40,
+            "top": 64.5,
+            "right": 280.890625,
+            "bottom": 104.5,
+            "left": 199.234375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 290.890625,
+            "y": 70.5,
+            "width": 28,
+            "height": 28,
+            "top": 70.5,
+            "right": 318.890625,
+            "bottom": 98.5,
+            "left": 290.890625
+          }
+        },
+        {
+          "text": "Rules",
+          "box": {
+            "x": 322,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 443.5,
+            "bottom": 96.5,
+            "left": 322
+          }
+        },
+        {
+          "text": "Filter",
+          "box": {
+            "x": 443.5,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 565,
+            "bottom": 96.5,
+            "left": 443.5
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 575,
+            "y": 68.5,
+            "width": 32,
+            "height": 32,
+            "top": 68.5,
+            "right": 607,
+            "bottom": 100.5,
+            "left": 575
+          }
+        },
+        {
+          "text": "Both",
+          "box": {
+            "x": 412.015625,
+            "y": 138.5,
+            "width": 70,
+            "height": 21,
+            "top": 138.5,
+            "right": 482.015625,
+            "bottom": 159.5,
+            "left": 412.015625
+          }
+        },
+        {
+          "text": "On",
+          "box": {
+            "x": 536.15625,
+            "y": 138,
+            "width": 33.84375,
+            "height": 22,
+            "top": 138,
+            "right": 570,
+            "bottom": 160,
+            "left": 536.15625
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 578,
+            "y": 141,
+            "width": 16,
+            "height": 16,
+            "top": 141,
+            "right": 594,
+            "bottom": 157,
+            "left": 578
+          }
+        },
+        {
+          "text": "Replace",
+          "box": {
+            "x": 320,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 459.5,
+            "bottom": 269,
+            "left": 320
+          }
+        },
+        {
+          "text": "Case",
+          "box": {
+            "x": 467.5,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 607,
+            "bottom": 269,
+            "left": 467.5
+          }
+        },
+        {
+          "text": "Add Prefix",
+          "box": {
+            "x": 320,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 459.5,
+            "bottom": 311,
+            "left": 320
+          }
+        },
+        {
+          "text": "Add Suffix",
+          "box": {
+            "x": 467.5,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 607,
+            "bottom": 311,
+            "left": 467.5
+          }
+        },
+        {
+          "text": "Numbering",
+          "box": {
+            "x": 320,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 459.5,
+            "bottom": 353,
+            "left": 320
+          }
+        },
+        {
+          "text": "Remove",
+          "box": {
+            "x": 467.5,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 607,
+            "bottom": 353,
+            "left": 467.5
+          }
+        },
+        {
+          "text": "Extension",
+          "box": {
+            "x": 320,
+            "y": 361,
+            "width": 139.5,
+            "height": 34,
+            "top": 361,
+            "right": 459.5,
+            "bottom": 395,
+            "left": 320
+          }
+        },
+        {
+          "text": "Rename 3 Item(s)",
+          "box": {
+            "x": 320,
+            "y": 407,
+            "width": 287,
+            "height": 40,
+            "top": 407,
+            "right": 607,
+            "bottom": 447,
+            "left": 320
+          }
+        }
+      ]
+    },
+    "390x844": {
+      "body": 390,
+      "main": 388,
+      "width": 390,
+      "controls": [
+        {
+          "text": "",
+          "box": {
+            "x": 339.609375,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 363.609375,
+            "bottom": 36.5,
+            "left": 339.609375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 371.609375,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 395.609375,
+            "bottom": 36.5,
+            "left": 371.609375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 403.609375,
+            "y": 12.5,
+            "width": 24,
+            "height": 24,
+            "top": 12.5,
+            "right": 427.609375,
+            "bottom": 36.5,
+            "left": 403.609375
+          }
+        },
+        {
+          "text": "Add Files",
+          "box": {
+            "x": 43,
+            "y": 64.5,
+            "width": 68.5625,
+            "height": 40,
+            "top": 64.5,
+            "right": 111.5625,
+            "bottom": 104.5,
+            "left": 43
+          }
+        },
+        {
+          "text": "Folder",
+          "box": {
+            "x": 116.203125,
+            "y": 64.5,
+            "width": 78.390625,
+            "height": 40,
+            "top": 64.5,
+            "right": 194.59375,
+            "bottom": 104.5,
+            "left": 116.203125
+          }
+        },
+        {
+          "text": "Import",
+          "box": {
+            "x": 199.234375,
+            "y": 64.5,
+            "width": 81.65625,
+            "height": 40,
+            "top": 64.5,
+            "right": 280.890625,
+            "bottom": 104.5,
+            "left": 199.234375
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 290.890625,
+            "y": 70.5,
+            "width": 28,
+            "height": 28,
+            "top": 70.5,
+            "right": 318.890625,
+            "bottom": 98.5,
+            "left": 290.890625
+          }
+        },
+        {
+          "text": "Rules",
+          "box": {
+            "x": 72,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 193.5,
+            "bottom": 96.5,
+            "left": 72
+          }
+        },
+        {
+          "text": "Filter",
+          "box": {
+            "x": 193.5,
+            "y": 72.5,
+            "width": 121.5,
+            "height": 24,
+            "top": 72.5,
+            "right": 315,
+            "bottom": 96.5,
+            "left": 193.5
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 325,
+            "y": 68.5,
+            "width": 32,
+            "height": 32,
+            "top": 68.5,
+            "right": 357,
+            "bottom": 100.5,
+            "left": 325
+          }
+        },
+        {
+          "text": "Both",
+          "box": {
+            "x": 162.015625,
+            "y": 138.5,
+            "width": 70,
+            "height": 21,
+            "top": 138.5,
+            "right": 232.015625,
+            "bottom": 159.5,
+            "left": 162.015625
+          }
+        },
+        {
+          "text": "On",
+          "box": {
+            "x": 286.15625,
+            "y": 138,
+            "width": 33.84375,
+            "height": 22,
+            "top": 138,
+            "right": 320,
+            "bottom": 160,
+            "left": 286.15625
+          }
+        },
+        {
+          "text": "",
+          "box": {
+            "x": 328,
+            "y": 141,
+            "width": 16,
+            "height": 16,
+            "top": 141,
+            "right": 344,
+            "bottom": 157,
+            "left": 328
+          }
+        },
+        {
+          "text": "Replace",
+          "box": {
+            "x": 70,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 209.5,
+            "bottom": 269,
+            "left": 70
+          }
+        },
+        {
+          "text": "Case",
+          "box": {
+            "x": 217.5,
+            "y": 235,
+            "width": 139.5,
+            "height": 34,
+            "top": 235,
+            "right": 357,
+            "bottom": 269,
+            "left": 217.5
+          }
+        },
+        {
+          "text": "Add Prefix",
+          "box": {
+            "x": 70,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 209.5,
+            "bottom": 311,
+            "left": 70
+          }
+        },
+        {
+          "text": "Add Suffix",
+          "box": {
+            "x": 217.5,
+            "y": 277,
+            "width": 139.5,
+            "height": 34,
+            "top": 277,
+            "right": 357,
+            "bottom": 311,
+            "left": 217.5
+          }
+        },
+        {
+          "text": "Numbering",
+          "box": {
+            "x": 70,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 209.5,
+            "bottom": 353,
+            "left": 70
+          }
+        },
+        {
+          "text": "Remove",
+          "box": {
+            "x": 217.5,
+            "y": 319,
+            "width": 139.5,
+            "height": 34,
+            "top": 319,
+            "right": 357,
+            "bottom": 353,
+            "left": 217.5
+          }
+        },
+        {
+          "text": "Extension",
+          "box": {
+            "x": 70,
+            "y": 361,
+            "width": 139.5,
+            "height": 34,
+            "top": 361,
+            "right": 209.5,
+            "bottom": 395,
+            "left": 70
+          }
+        },
+        {
+          "text": "Rename 3 Item(s)",
+          "box": {
+            "x": 70,
+            "y": 771,
+            "width": 287,
+            "height": 40,
+            "top": 771,
+            "right": 357,
+            "bottom": 811,
+            "left": 70
+          }
+        }
+      ]
+    }
+  },
+  "dropdownRemainsAfterEscape": true,
+  "errors": []
+}

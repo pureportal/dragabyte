@@ -1,0 +1,27 @@
+{
+  "hiddenSearch": {
+    "searchVisible": false,
+    "query": "nothing-matches-this-query",
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n5.0 MB\nFound 0 results\nNo items found for \"nothing-matches-this-query\"\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n5.0 MB\nFiles\n8195\nFolders\n92\n\nSUMMARY\n\nSize: 5.0 MB\n\n8,195 files\n\n92 folders\n\nDURATION\n\n0s\n\nUSAGE PIE\n\nTop folders by size\n\n5.0 MB\nUsage\nGroup-7\n21%\nGroup-6\n19%\nGroup-5\n16%\nGroup-4\n14%\nGroup-3\n11%\nGroup-2\n8.7%\nOther\n10%\n\nUSAGE BARS\n\nShare of total size\n\n7 items\nGroup-7\n21%\nGroup-6\n19%\nGroup-5\n16%\nGroup-4\n14%\nGroup-3\n11%\nGroup-2\n8.7%\nOther\n10%\nLARGEST FILES\nTOP 100\nNo matching files\nSUBFOLDERS\n10 ITEMS\nNAME\tSIZE\tFILES\tFOLDERS\n\nGroup-7\n\t\n1.1 MB\n\t1024\t8\n\nGroup-6\n\t\n960 KB\n\t1024\t8\n\nGroup-5\n\t\n832 KB\n\t1024\t8\n\nGroup-4\n\t\n704 KB\n\t1024\t8\n\nGroup-3\n\t\n576 KB\n\t1024\t8\n\nGroup-2\n\t\n448 KB\n\t1024\t8\n\nGroup-1\n\t\n320 KB\n\t1024\t8\n\nGroup-0\n\t\n192 KB\n\t1024\t8\n\nDeep\n\t\n12 KB\n\t1\t18\n\nEmpty\n\t\n0 B\n\t0\t0",
+    "queryAfterClearFilters": "nothing-matches-this-query"
+  },
+  "virtualization": {
+    "renderedRows": 19,
+    "focusedRow": "8270",
+    "focusedText": "▸zero.txt0 B0% occupied"
+  },
+  "duringRename": {
+    "buttonDisabled": true,
+    "ruleEditable": true,
+    "clearEnabled": true,
+    "files": [
+      "first-alpha.txt"
+    ]
+  },
+  "afterEditedRename": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (1)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nsecond-alpha.txt\nsecond-alpha.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 1 Item(s)",
+    "files": [
+      "first-alpha.txt"
+    ]
+  }
+}

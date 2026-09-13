@@ -1,0 +1,227 @@
+{
+  "noRules": {
+    "buttonEnabled": true
+  },
+  "success": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nnew-alpha.txt\nnew-alpha.txt\nnew-beta.txt\nnew-beta.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+    "files": [
+      "new-alpha.txt",
+      "new-beta.txt",
+      "photo.JPG"
+    ],
+    "calls": [
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "86c6a3ac-d6da-4a27-ab7b-226149967700"
+        },
+        "startedAt": 103335.80000000447,
+        "result": null,
+        "endedAt": 103358.89999999851
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-alpha.txt"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\beta.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-beta.txt"
+            }
+          ]
+        },
+        "startedAt": 106185.80000000447,
+        "result": {
+          "successCount": 2,
+          "errors": []
+        },
+        "endedAt": 106233.5
+      }
+    ],
+    "dialogs": []
+  },
+  "changedAfterSuccess": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nnew-alpha.txt\nagain-new-alpha.txt\nnew-beta.txt\nagain-new-beta.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+    "checks": 2,
+    "files": [
+      "new-alpha.txt",
+      "new-beta.txt",
+      "photo.JPG"
+    ]
+  },
+  "collisionPreview": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nalpha.txt\nnew-alpha.txt\nbeta.txt\nnew-beta.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+    "alerts": 0,
+    "enabled": true
+  },
+  "collisionResult": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nnew-alpha.txt\nnew-alpha.txt\nnew-beta.txt\nnew-beta.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+    "files": [
+      "alpha.txt",
+      "new-alpha.txt",
+      "new-beta.txt",
+      "photo.JPG"
+    ],
+    "destinationContents": "existing destination must survive",
+    "calls": [
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "86c6a3ac-d6da-4a27-ab7b-226149967700"
+        },
+        "startedAt": 103335.80000000447,
+        "result": null,
+        "endedAt": 103358.89999999851
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-alpha.txt"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\beta.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\success\\new-beta.txt"
+            }
+          ]
+        },
+        "startedAt": 106185.80000000447,
+        "result": {
+          "successCount": 2,
+          "errors": []
+        },
+        "endedAt": 106233.5
+      },
+      {
+        "cmd": "scan_path",
+        "args": {
+          "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\settings.json",
+          "options": {
+            "priorityMode": "balanced",
+            "throttleLevel": "off",
+            "filters": {
+              "includeExtensions": [],
+              "excludeExtensions": [],
+              "includeNames": [],
+              "excludeNames": [],
+              "minSizeBytes": null,
+              "maxSizeBytes": null,
+              "minModifiedTimestamp": null,
+              "maxModifiedTimestamp": null,
+              "includeRegex": null,
+              "excludeRegex": null,
+              "includePaths": [],
+              "excludePaths": []
+            }
+          },
+          "id": "c5cfa1c6-a2bc-47a4-81f2-66d67d821a92"
+        },
+        "startedAt": 108614.39999999851,
+        "result": null,
+        "endedAt": 108670.70000000298
+      },
+      {
+        "cmd": "batch_rename",
+        "args": {
+          "items": [
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\alpha.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-alpha.txt"
+            },
+            {
+              "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\beta.txt",
+              "new_path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-beta.txt"
+            }
+          ]
+        },
+        "startedAt": 111144.10000000149,
+        "result": {
+          "successCount": 1,
+          "errors": [
+            "Destination already exists: C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\collision\\new-alpha.txt"
+          ]
+        },
+        "endedAt": 111164.39999999851
+      }
+    ],
+    "dialogs": []
+  },
+  "invalid": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (1)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nbad:alpha.txt\nbad:alpha.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 1 Item(s)",
+    "files": [
+      "alpha.txt",
+      "beta.txt",
+      "photo.JPG"
+    ],
+    "dialogs": []
+  },
+  "parentChild": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (2)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nnew-Folder\nnew-Folder\nnew-inside.txt\nnew-inside.txt\nRules\nFilter\nPrefix\nBoth\nOn\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 2 Item(s)",
+    "folders": [
+      "alpha.txt",
+      "beta.txt",
+      "new-Folder",
+      "photo.JPG"
+    ],
+    "children": [
+      "inside.txt"
+    ],
+    "dialogs": []
+  },
+  "import": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (4)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nreport.txt\nreport.txt\nreport.txt\nreport.txt\n日本語 Bericht.txt\n日本語 Bericht.txt\nRules\nFilter\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 4 Item(s)"
+  },
+  "invalidRegex": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (4)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nreport.txt\nreport.txt\nreport.txt\nreport.txt\n日本語 Bericht.txt\n日本語 Bericht.txt\nRules\nFilter\nReplace\nBoth\nOn\nAll\nRegex\nReplace\nCase\nAdd Prefix\nAdd Suffix\nNumbering\nRemove\nExtension\nRename 4 Item(s)",
+    "alertCount": 0,
+    "inputsInvalid": 0
+  },
+  "filterEmpty": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nFiles (0 / 4)\nAdd Files\nFolder\nImport\nORIGINAL NAME\nNEW NAME\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nlong-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-long-file-name-.txt\nreport.txt\nreport.txt\nreport.txt\nreport.txt\n日本語 Bericht.txt\n日本語 Bericht.txt\nRules\nFilter\n1\nINCLUDE\nfiles matching:\nOn\nRegex\nMatch Case\n+ Include\n+ Exclude\nRename",
+    "renameDisabled": true
+  },
+  "errors": []
+}

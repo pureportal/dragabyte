@@ -1,0 +1,1329 @@
+{
+  "nativeCancellation": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n320 KB\n▾\nnested\n≥ 320 KB\n100% occupied\n▸\nGroup-1\n≥ 320 KB\n100% occupied\nreadme.txt\n27 B\n0% occupied\n▸\nDeep\n≥ 0 B\n0% occupied\nEmpty\n0 B\n0% occupied\n▸\nGroup-0\n≥ 0 B\n0% occupied\n▸\nGroup-2\n≥ 0 B\n0% occupied\n▸\nGroup-3\n≥ 0 B\n0% occupied\n▸\nGroup-4\n≥ 0 B\n0% occupied\n▸\nGroup-5\n≥ 0 B\n0% occupied\n▸\nGroup-6\n≥ 0 B\n0% occupied\n▸\nGroup-7\n≥ 0 B\n0% occupied\nzero.txt\n0 B\n0% occupied\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n≥ 320 KB\nFiles\n1026\nFolders\n75\n\nPARTIAL RESULTS\n\nSize: ≥ 320 KB\n\n1,026 files\n\n75 folders\n\nDURATION\n\n0s\n\nUSAGE PIE\n\nTop folders by size\n\n320 KB\nUsage\nGroup-1\n100%\nOther\n0.0%\n\nUSAGE BARS\n\nShare of total size\n\n2 items\nGroup-1\n100%\nOther\n0.0%\nLARGEST FILES\nTOP 100\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-127.dat\n383 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-127.dat\n383 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-126.dat\n382 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-126.dat\n382 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-125.dat\n381 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-125.dat\n381 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-124.dat\n380 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-124.dat\n380 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-123.dat\n379 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-123.dat\n379 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-122.dat\n378 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-122.dat\n378 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-121.dat\n377 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-121.dat\n377 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-120.dat\n376 B\nitem-120.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-120.dat\n376 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-119.dat\n375 B\nitem-119.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-119.dat\n375 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-118.dat\n374 B\nitem-118.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-118.dat\n374 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-117.dat\n373 B\nitem-117.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-117.dat\n373 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-5\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-4\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-7\\item-116.dat\n372 B\nitem-116.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-6\\item-116.dat\n372 B\nitem-115.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-0\\item-115.dat\n371 B\nitem-115.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-1\\item-115.dat\n371 B\nitem-115.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-2\\item-115.dat\n371 B\nitem-115.dat\nC:\\Users\\ehrha\\App...ested\\Group-1\\Branch-3\\item-115.dat\n371 B\nSUBFOLDERS\n10 ITEMS\nNAME\tSIZE\tFILES\tFOLDERS\n\nGroup-1\n\t\n≥ 320 KB\n\t1024\t8\n\nDeep\n\t\n≥ 0 B\n\t0\t1\n\nEmpty\n\t\n0 B\n\t0\t0\n\nGroup-0\n\t\n≥ 0 B\n\t0\t8\n\nGroup-2\n\t\n≥ 0 B\n\t0\t8\n\nGroup-3\n\t\n≥ 0 B\n\t0\t8\n\nGroup-4\n\t\n≥ 0 B\n\t0\t8\n\nGroup-5\n\t\n≥ 0 B\n\t0\t8\n\nGroup-6\n\t\n≥ 0 B\n\t0\t8\n\nGroup-7\n\t\n≥ 0 B\n\t0\t8",
+    "event": {
+      "type": "scan-cancelled",
+      "payload": {
+        "id": "b96939b0-69e8-4a81-a3ed-df7bcdcfcc3b",
+        "sequence": 3,
+        "folders": [
+          {
+            "id": 0,
+            "parentId": null,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested",
+            "name": "nested",
+            "sizeBytes": 327195,
+            "fileCount": 1026,
+            "dirCount": 75,
+            "state": "incomplete"
+          },
+          {
+            "id": 1,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Deep",
+            "name": "Deep",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 1,
+            "state": "incomplete"
+          },
+          {
+            "id": 3,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0",
+            "name": "Group-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 4,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1",
+            "name": "Group-1",
+            "sizeBytes": 327168,
+            "fileCount": 1024,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 5,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2",
+            "name": "Group-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 6,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3",
+            "name": "Group-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 7,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4",
+            "name": "Group-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 8,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5",
+            "name": "Group-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 9,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6",
+            "name": "Group-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 10,
+            "parentId": 0,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7",
+            "name": "Group-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 8,
+            "state": "incomplete"
+          },
+          {
+            "id": 17,
+            "parentId": 4,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 40896,
+            "fileCount": 128,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 19,
+            "parentId": 1,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Deep\\d0",
+            "name": "d0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 20,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 21,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 22,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 23,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 24,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 25,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 26,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 27,
+            "parentId": 5,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-2\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 28,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 29,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 30,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 31,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 32,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 33,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 34,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 35,
+            "parentId": 6,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-3\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 36,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 37,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 38,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 39,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 40,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 41,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 42,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 43,
+            "parentId": 7,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-4\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 44,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 45,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 46,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 47,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 48,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 49,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 50,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 51,
+            "parentId": 10,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-7\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 52,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 53,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 54,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 55,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 56,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 57,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 58,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 59,
+            "parentId": 9,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-6\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 60,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 61,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 62,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 63,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 64,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 65,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 66,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 67,
+            "parentId": 8,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-5\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 68,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-0",
+            "name": "Branch-0",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 69,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-1",
+            "name": "Branch-1",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 70,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-2",
+            "name": "Branch-2",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 71,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-3",
+            "name": "Branch-3",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 72,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-4",
+            "name": "Branch-4",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 73,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-5",
+            "name": "Branch-5",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 74,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-6",
+            "name": "Branch-6",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          },
+          {
+            "id": 75,
+            "parentId": 3,
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-0\\Branch-7",
+            "name": "Branch-7",
+            "sizeBytes": 0,
+            "fileCount": 0,
+            "dirCount": 0,
+            "state": "incomplete"
+          }
+        ],
+        "files": [],
+        "totalBytes": 327195,
+        "fileCount": 1026,
+        "dirCount": 75,
+        "skippedEntries": 0,
+        "largestFiles": [
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167270322
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167270567
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167270902
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167271250
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167272102
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167271578
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167272518
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-127.dat",
+            "name": "item-127.dat",
+            "sizeBytes": 383,
+            "modified": 1789167272320
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167270320
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167270565
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167270902
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167271250
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167272102
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167271577
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167272518
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-126.dat",
+            "name": "item-126.dat",
+            "sizeBytes": 382,
+            "modified": 1789167272320
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167270318
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167270561
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167270900
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167271247
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167272101
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167271572
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167272516
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-125.dat",
+            "name": "item-125.dat",
+            "sizeBytes": 381,
+            "modified": 1789167272320
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167270316
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167270497
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167270900
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167271236
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167272100
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167271566
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167272516
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-124.dat",
+            "name": "item-124.dat",
+            "sizeBytes": 380,
+            "modified": 1789167272319
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167270314
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167270497
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167270900
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167271230
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167272099
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167271564
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167272514
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-123.dat",
+            "name": "item-123.dat",
+            "sizeBytes": 379,
+            "modified": 1789167272317
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167270314
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167270496
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167270898
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167271225
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167272098
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167271564
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167272514
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-122.dat",
+            "name": "item-122.dat",
+            "sizeBytes": 378,
+            "modified": 1789167272317
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167270314
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167270496
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167270898
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167271225
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167272097
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167271562
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167272512
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-121.dat",
+            "name": "item-121.dat",
+            "sizeBytes": 377,
+            "modified": 1789167272317
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167270312
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167270495
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167270898
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167271220
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167272096
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167271562
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167272512
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-120.dat",
+            "name": "item-120.dat",
+            "sizeBytes": 376,
+            "modified": 1789167272315
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167270312
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167270492
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167270898
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167271220
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167272094
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167271560
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167272503
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-119.dat",
+            "name": "item-119.dat",
+            "sizeBytes": 375,
+            "modified": 1789167272315
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167270312
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167270492
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167270896
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167271218
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167272093
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167271560
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167272503
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-118.dat",
+            "name": "item-118.dat",
+            "sizeBytes": 374,
+            "modified": 1789167272315
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167270310
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167270492
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167270896
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167271218
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167272092
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167271559
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167272502
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-117.dat",
+            "name": "item-117.dat",
+            "sizeBytes": 373,
+            "modified": 1789167272314
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167270309
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167270492
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167270896
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167271218
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-5\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167272052
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-4\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167271556
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-7\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167272501
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-6\\item-116.dat",
+            "name": "item-116.dat",
+            "sizeBytes": 372,
+            "modified": 1789167272312
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-0\\item-115.dat",
+            "name": "item-115.dat",
+            "sizeBytes": 371,
+            "modified": 1789167270309
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-1\\item-115.dat",
+            "name": "item-115.dat",
+            "sizeBytes": 371,
+            "modified": 1789167270491
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-2\\item-115.dat",
+            "name": "item-115.dat",
+            "sizeBytes": 371,
+            "modified": 1789167270894
+          },
+          {
+            "path": "C:\\Users\\ehrha\\AppData\\Local\\Temp\\dragabyte-ui-review-20260912\\fixtures\\nested\\Group-1\\Branch-3\\item-115.dat",
+            "name": "item-115.dat",
+            "sizeBytes": 371,
+            "modified": 1789167271216
+          }
+        ],
+        "durationMs": 29
+      }
+    },
+    "busyRows": 0,
+    "method": "Visible Cancel button clicked from first native progress callback containing files"
+  },
+  "replayDiscovery": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScanning...\nCancel\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n27 B\n▾\nnested\n≥ 27 B\n100% occupied\nreadme.txt\n27 B\n100% occupied\n▸\nDeep\n≥ 0 B\n0% occupied\n▸\nEmpty\n≥ 0 B\n0% occupied\n▸\nGroup-0\n≥ 0 B\n0% occupied\n▸\nGroup-1\n≥ 0 B\n0% occupied\n▸\nGroup-2\n≥ 0 B\n0% occupied\n▸\nGroup-3\n≥ 0 B\n0% occupied\n▸\nGroup-4\n≥ 0 B\n0% occupied\n▸\nGroup-5\n≥ 0 B\n0% occupied\n▸\nGroup-6\n≥ 0 B\n0% occupied\n▸\nGroup-7\n≥ 0 B\n0% occupied\nzero.txt\n0 B\n0% occupied\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n≥ 27 B\nFiles\n2\nFolders\n10\n\nSUMMARY\n\nSize: ≥ 27 B\n\n2 files\n\n10 folders\n\nDURATION\n\n1s\n\nUSAGE PIE\n\nTop folders by size\n\n27 B\nUsage\nOther\n100%\n\nUSAGE BARS\n\nShare of total size\n\n1 items\nOther\n100%\nLARGEST FILES\nTOP 100\nreadme.txt\nC:\\Users\\ehrha\\App...20260912\\fixtures\\nested\\readme.txt\n27 B\nSUBFOLDERS\n10 ITEMS\nNAME\tSIZE\tFILES\tFOLDERS\n\nDeep\n\t\n≥ 0 B\n\t0\t0\n\nEmpty\n\t\n≥ 0 B\n\t0\t0\n\nGroup-0\n\t\n≥ 0 B\n\t0\t0\n\nGroup-1\n\t\n≥ 0 B\n\t0\t0\n\nGroup-2\n\t\n≥ 0 B\n\t0\t0\n\nGroup-3\n\t\n≥ 0 B\n\t0\t0\n\nGroup-4\n\t\n≥ 0 B\n\t0\t0\n\nGroup-5\n\t\n≥ 0 B\n\t0\t0\n\nGroup-6\n\t\n≥ 0 B\n\t0\t0\n\nGroup-7\n\t\n≥ 0 B\n\t0\t0",
+    "step": 1
+  },
+  "replayExpand": {
+    "elapsedMs": 209,
+    "whileActive": true
+  },
+  "replaySearch": {
+    "whileActive": true,
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScanning...\nCancel\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n27 B\nFound 0 results\nNo items found for \"Branch-\"\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n≥ 27 B\nFiles\n2\nFolders\n10\n\nSUMMARY\n\nSize: ≥ 27 B\n\n2 files\n\n10 folders\n\nDURATION\n\n1s\n\nUSAGE PIE\n\nTop folders by size\n\n27 B\nUsage\nOther\n100%\n\nUSAGE BARS\n\nShare of total size\n\n1 items\nOther\n100%\nLARGEST FILES\nTOP 100\nScanning…\nSUBFOLDERS\n10 ITEMS\nNAME\tSIZE\tFILES\tFOLDERS\n\nDeep\n\t\n≥ 0 B\n\t0\t0\n\nEmpty\n\t\n≥ 0 B\n\t0\t0\n\nGroup-0\n\t\n≥ 0 B\n\t0\t0\n\nGroup-1\n\t\n≥ 0 B\n\t0\t0\n\nGroup-2\n\t\n≥ 0 B\n\t0\t0\n\nGroup-3\n\t\n≥ 0 B\n\t0\t0\n\nGroup-4\n\t\n≥ 0 B\n\t0\t0\n\nGroup-5\n\t\n≥ 0 B\n\t0\t0\n\nGroup-6\n\t\n≥ 0 B\n\t0\t0\n\nGroup-7\n\t\n≥ 0 B\n\t0\t0"
+  },
+  "replayGrowing": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScanning...\nCancel\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n959 KB\n▾\nnested\n≥ 959 KB\n100% occupied\n▾\nGroup-2\n≥ 448 KB\n100% occupied\n▸\nBranch-0\n56 KB\n100% occupied\n▸\nBranch-1\n56 KB\n100% occupied\n▸\nBranch-2\n56 KB\n100% occupied\n▸\nBranch-3\n56 KB\n100% occupied\n▸\nBranch-4\n56 KB\n100% occupied\n▸\nBranch-5\n56 KB\n100% occupied\n▸\nBranch-6\n56 KB\n100% occupied\n▸\nBranch-7\n≥ 56 KB\n100% occupied\n▾\nGroup-1\n320 KB\n71% occupied\n▸\nBranch-0\n40 KB\n71% occupied\n▸\nBranch-1\n40 KB\n71% occupied\n▸\nBranch-2\n40 KB\n71% occupied\n▸\nBranch-3\n40 KB\n71% occupied\n▸\nBranch-4\n40 KB\n71% occupied\n▸\nBranch-5\n40 KB\n71% occupied\n▸\nBranch-6\n40 KB\n71% occupied\n▸\nBranch-7\n40 KB\n71% occupied\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n≥ 959 KB\nFiles\n3074\nFolders\n76\n\nSUMMARY\n\nSize: ≥ 959 KB\n\n3,074 files\n\n76 folders\n\nDURATION\n\n6s\n\nUSAGE PIE\n\nTop folders by size\n\n959 KB\nUsage\nGroup-2\n47%\nGroup-1\n33%\nGroup-0\n20%\nOther\n0.0%\n\nUSAGE BARS\n\nShare of total size\n\n4 items\nGroup-2\n47%\nGroup-1\n33%\nGroup-0\n20%\nOther\n0.0%\nLARGEST FILES\nTOP 100\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-127.dat\n511 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-126.dat\n510 B\nitem-126.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-126.dat\n510 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-125.dat\n509 B\nitem-125.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-125.dat\n509 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-124.dat\n508 B\nitem-124.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-124.dat\n508 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-123.dat\n507 B\nitem-123.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-123.dat\n507 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-122.dat\n506 B\nitem-122.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-7\\item-122.dat\n506 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-121.dat\n505 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-121.dat\n505 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-121.dat\n505 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-121.dat\n505 B\nitem-121.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-121.dat\n505 B\nitem-121.da",
+    "step": 4
+  },
+  "replayCancelled": {
+    "text": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...yte-ui-review-20260912\\fixtures\\nested\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n959 KB\n▾\nnested\n≥ 959 KB\n100% occupied\n▾\nGroup-2\n≥ 448 KB\n100% occupied\n▸\nBranch-0\n56 KB\n100% occupied\n▸\nBranch-1\n56 KB\n100% occupied\n▸\nBranch-2\n56 KB\n100% occupied\n▸\nBranch-3\n56 KB\n100% occupied\n▸\nBranch-4\n56 KB\n100% occupied\n▸\nBranch-5\n56 KB\n100% occupied\n▸\nBranch-6\n56 KB\n100% occupied\n▸\nBranch-7\n≥ 56 KB\n100% occupied\n▾\nGroup-1\n320 KB\n71% occupied\n▸\nBranch-0\n40 KB\n71% occupied\n▸\nBranch-1\n40 KB\n71% occupied\n▸\nBranch-2\n40 KB\n71% occupied\n▸\nBranch-3\n40 KB\n71% occupied\n▸\nBranch-4\n40 KB\n71% occupied\n▸\nBranch-5\n40 KB\n71% occupied\n▸\nBranch-6\n40 KB\n71% occupied\n▸\nBranch-7\n40 KB\n71% occupied\n\nSELECTED\n\nnested\n\nC:\\Users\\ehrha\\AppDat...abyte-ui-review-20260912\\fixtures\\nested\n\nSize\n≥ 959 KB\nFiles\n3074\nFolders\n76\n\nPARTIAL RESULTS\n\nSize: ≥ 959 KB\n\n3,074 files\n\n76 folders\n\nDURATION\n\n6s\n\nUSAGE PIE\n\nTop folders by size\n\n959 KB\nUsage\nGroup-2\n47%\nGroup-1\n33%\nGroup-0\n20%\nOther\n0.0%\n\nUSAGE BARS\n\nShare of total size\n\n4 items\nGroup-2\n47%\nGroup-1\n33%\nGroup-0\n20%\nOther\n0.0%\nLARGEST FILES\nTOP 100\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-2\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-0\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-1\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-3\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-4\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-5\\item-127.dat\n511 B\nitem-127.dat\nC:\\Users\\ehrha\\App...ested\\Group-2\\Branch-6\\item-127.dat\n511 B\nitem-1",
+    "busyRows": 0
+  },
+  "empty": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...byte-ui-review-20260912\\fixtures\\empty\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\nExplorer\nTree\nTreemap\nFiles: On\nEmpty: Shown\n1\n2\n3\n0 B\nempty\n0 B\n0% occupied\n\nSELECTED\n\nempty\n\nC:\\Users\\ehrha\\AppDat...gabyte-ui-review-20260912\\fixtures\\empty\n\nSize\n0 B\nFiles\n0\nFolders\n0\n\nSUMMARY\n\nSize: 0 B\n\n0 files\n\n0 folders\n\nDURATION\n\n0s\n\nUSAGE PIE\n\nTop folders by size\n\n0 B\nNo data\n\nRun a scan to see usage.\n\nDISK USAGE\n\n837 GB used\n115 GB free\n952 GB total\n\nUSAGE BARS\n\nShare of total size\n\n0 items\n\nNo data to display.\n\nLARGEST FILES\nTOP 100\nNo matching files\nSUBFOLDERS\n0 ITEMS\nNAME\tSIZE\tFILES\tFOLDERS\nNo subfolders",
+  "missing": "DRAGABYTE\nALPHA\nSCANNER\nRENAMER\nStorage Scan\n\nSearch scope: C:\\Users\\ehrha\\AppD...eview-20260912\\fixtures\\missing-folder\n\nShow History\nRemote\nScan Folder\nExport\n\nSCAN CONTROLS\n\nAdjust priority, throttling, and filters before scanning.\n\nSimple Filters\nAdvanced Filters\nClear Filters\n\nPERFORMANCE\n\nPriority Mode\nPerformance\nBalanced\nLow Impact\nScan Throttling\nOff\nLow\nMedium\nHigh\n\nFILTERS\n\nImages\nVideos\nAudio\nDocs\nArchives\n\nSomething went wrong\n\nSelect a folder that exists and can be read.\n\nCopy\nHide Details\nDismiss\n\nERROR DETAILS\n\nSelect a folder that exists and can be read.\nReady to Scan\n\nConnect to your local storage and visualize space usage with high-performance tree scanning.\n\nStart Scanning",
+  "recovery": {
+    "alertCount": 0
+  }
+}

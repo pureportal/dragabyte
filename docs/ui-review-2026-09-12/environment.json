@@ -1,0 +1,10 @@
+{
+  "url": "http://localhost:5173/bulk-rename",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+  "devicePixelRatio": 1.5,
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "native": true
+}
