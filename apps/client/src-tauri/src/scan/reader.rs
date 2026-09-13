@@ -100,29 +100,47 @@ fn read_entry(
     root: &Path,
     config: &ScanConfig,
 ) -> std::io::Result<Option<Entry>> {
-    let file_type = entry.file_type()?;
     let path = entry.path();
+    let file_type = entry.file_type()?;
     if file_type.is_dir() {
         return Ok((!should_skip_dir(root, &path, &config.filters)).then_some(Entry::Folder(path)));
     }
     if !file_type.is_file() {
         return Ok(None);
     }
-    let metadata = entry.metadata()?;
+    Ok(read_file(&path, entry.metadata()?, config))
+}
+
+pub(super) fn read_path(
+    path: &Path,
+    root: &Path,
+    config: &ScanConfig,
+) -> std::io::Result<Option<Entry>> {
+    let metadata = fs::symlink_metadata(path)?;
+    let file_type = metadata.file_type();
+    if file_type.is_dir() {
+        return Ok((!should_skip_dir(root, path, &config.filters))
+            .then(|| Entry::Folder(path.to_path_buf())));
+    }
+    if !file_type.is_file() {
+        return Ok(None);
+    }
+    Ok(read_file(path, metadata, config))
+}
+
+fn read_file(path: &Path, metadata: fs::Metadata, config: &ScanConfig) -> Option<Entry> {
     let size_bytes = metadata.len();
     let modified = metadata
         .modified()
         .ok()
         .and_then(|time| time.duration_since(SystemTime::UNIX_EPOCH).ok())
         .map(|duration| duration.as_millis() as u64);
-    Ok(
-        should_include_file(&path, size_bytes, modified, &config.filters).then(|| {
-            Entry::File(ScanFile {
-                path: path.to_string_lossy().into_owned(),
-                name: get_entry_name_string(&path),
-                size_bytes,
-                modified,
-            })
-        }),
-    )
+    should_include_file(path, size_bytes, modified, &config.filters).then(|| {
+        Entry::File(ScanFile {
+            path: path.to_string_lossy().into_owned(),
+            name: get_entry_name_string(path),
+            size_bytes,
+            modified,
+        })
+    })
 }

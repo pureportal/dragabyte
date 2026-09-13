@@ -35,9 +35,15 @@ pub struct ScanConfig {
     emit_interval: Duration,
     throttle: Option<ThrottleConfig>,
     workers: usize,
+    entry_path: Option<PathBuf>,
 }
 
 impl ScanConfig {
+    pub fn for_entry(mut self, path: PathBuf) -> Self {
+        self.entry_path = Some(path);
+        self
+    }
+
     pub fn with_workers(mut self, workers: usize) -> Result<Self, String> {
         if !(1..=64).contains(&workers) {
             return Err("Worker count must be between 1 and 64.".into());
@@ -75,6 +81,7 @@ pub fn build_scan_config(options: &ScanOptions) -> Result<ScanConfig, String> {
         emit_interval,
         throttle,
         workers,
+        entry_path: None,
     })
 }
 
@@ -85,10 +92,49 @@ pub fn run_scan(
     emit: ScanEmitter,
     id: Option<String>,
 ) -> Result<(), String> {
-    if !root.is_dir() {
+    if config.entry_path.is_none() && !root.is_dir() {
         return Err("Select a folder that exists and can be read.".into());
     }
-    let mut progress = ScanProgress::new(&root, id);
+    let mut pending = VecDeque::new();
+    let mut progress = if let Some(path) = &config.entry_path {
+        let parent = path
+            .parent()
+            .ok_or("The scan entry must have a parent folder.")?;
+        let mut progress = ScanProgress::new(parent, id);
+        let excluded = path
+            .ancestors()
+            .take_while(|ancestor| *ancestor != root)
+            .any(|ancestor| {
+                ancestor.is_dir() && filters::should_skip_dir(&root, ancestor, &config.filters)
+            });
+        if !excluded {
+            let entry = match reader::read_path(path, &root, &config) {
+                Ok(entry) => entry,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+                Err(error) => return Err(error.to_string()),
+            };
+            match entry {
+                Some(Entry::Folder(path)) => {
+                    let id = progress.add_folder(Some(0), &path);
+                    progress.add_totals(0, 0, 0, 1, 0);
+                    pending.push_back(DirectoryJob { id, path });
+                }
+                Some(Entry::File(file)) => {
+                    progress.add_totals(0, file.size_bytes, 1, 0, 0);
+                    progress.add_file(0, file);
+                }
+                None => {}
+            }
+        }
+        progress.finish_folder(0);
+        progress
+    } else {
+        pending.push_back(DirectoryJob {
+            id: 0,
+            path: root.clone(),
+        });
+        ScanProgress::new(&root, id)
+    };
     emit(ScanEvent::Progress(progress.take_update()));
     let (job_sender, job_receiver) = mpsc::channel::<DirectoryJob>();
     let jobs = Mutex::new(job_receiver);
@@ -115,10 +161,6 @@ pub fn run_scan(
             });
         }
         drop(result_sender);
-        let mut pending = VecDeque::from([DirectoryJob {
-            id: 0,
-            path: root.clone(),
-        }]);
         let mut active = 0;
         let mut last_emit = Instant::now();
         let mut first_entries = true;
@@ -199,5 +241,7 @@ fn get_entry_name_string(path: &Path) -> String {
         .unwrap_or_else(|| path.to_string_lossy().into_owned())
 }
 
+#[cfg(test)]
+mod change_tests;
 #[cfg(test)]
 mod tests;

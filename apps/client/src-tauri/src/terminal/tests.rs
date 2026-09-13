@@ -191,6 +191,8 @@ fn navigation_benchmark() {
             file_count: id as u64,
             dir_count: 0,
             state: ScanState::Complete,
+            read_state: ScanState::Complete,
+            skipped_entries: 0,
         })
         .collect();
     app.index.apply(ScanUpdate {

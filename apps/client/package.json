@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src vite.config.ts --max-warnings 0",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "test:scan": "node --experimental-transform-types --test tests/scan-results.test.ts",
+    "test:scan": "node --experimental-transform-types --test tests/*.test.ts",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",

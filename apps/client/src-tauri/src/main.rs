@@ -39,7 +39,31 @@ use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 struct StartupPath(Mutex<Option<String>>);
 struct LaunchContextState(Mutex<LaunchContext>);
-struct ScanCancellation(Mutex<HashMap<String, Arc<AtomicBool>>>);
+struct ScanCancellation(Mutex<HashMap<(String, String), Arc<AtomicBool>>>);
+
+impl ScanCancellation {
+    fn start(&self, window: &str, id: &str, scoped: bool) -> Result<Arc<AtomicBool>, String> {
+        let flag = Arc::new(AtomicBool::new(false));
+        let mut cancellations = self.0.lock().map_err(|_| "Failed to lock scan state")?;
+        for ((owner, scan_id), existing) in cancellations.iter() {
+            if owner == window && (!scoped || scan_id == id) {
+                existing.store(true, Ordering::SeqCst);
+            }
+        }
+        cancellations.insert((window.to_string(), id.to_string()), Arc::clone(&flag));
+        Ok(flag)
+    }
+
+    fn cancel(&self, window: &str, id: Option<&str>) -> Result<(), String> {
+        let cancellations = self.0.lock().map_err(|_| "Failed to lock scan state")?;
+        for ((owner, scan_id), flag) in cancellations.iter() {
+            if owner == window && id.is_none_or(|id| id == scan_id) {
+                flag.store(true, Ordering::SeqCst);
+            }
+        }
+        Ok(())
+    }
+}
 struct RemoteClientState(Mutex<Option<RemoteClientHandle>>);
 struct SettingsState {
     path: PathBuf,
@@ -143,8 +167,90 @@ struct BatchRenameResult {
     errors: Vec<String>,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+enum FilesystemChange {
+    Delete { path: String },
+    Relocate { path: String, new_path: String },
+    Create { path: String },
+    Copy { path: String, new_path: String },
+    Refresh { path: String },
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FilesystemChangeEvent {
+    source_window: String,
+    change: FilesystemChange,
+}
+
+fn emit_filesystem_change(window: &tauri::Window, change: FilesystemChange) {
+    if let Err(error) = window.app_handle().emit(
+        "filesystem-changed",
+        FilesystemChangeEvent {
+            source_window: window.label().to_string(),
+            change,
+        },
+    ) {
+        eprintln!("Failed to update other windows after a filesystem change: {error}");
+    }
+}
+
+#[cfg(test)]
+mod scan_change_tests {
+    use super::*;
+
+    #[test]
+    fn scoped_scans_and_cancellation_preserve_other_tasks() {
+        let scans = ScanCancellation(Mutex::new(HashMap::new()));
+        let original = scans.start("scan-window", "original", false).unwrap();
+        let other_window = scans.start("other-window", "original", false).unwrap();
+        let first_scope = scans.start("scan-window", "first-scope", true).unwrap();
+        let second_scope = scans.start("scan-window", "second-scope", true).unwrap();
+        assert!(!original.load(Ordering::Relaxed));
+        scans.cancel("scan-window", Some("first-scope")).unwrap();
+        assert!(first_scope.load(Ordering::Relaxed));
+        assert!(!original.load(Ordering::Relaxed));
+        assert!(!second_scope.load(Ordering::Relaxed));
+        assert!(!other_window.load(Ordering::Relaxed));
+        let replacement = scans.start("scan-window", "replacement", false).unwrap();
+        assert!(original.load(Ordering::Relaxed));
+        assert!(second_scope.load(Ordering::Relaxed));
+        assert!(!replacement.load(Ordering::Relaxed));
+        assert!(!other_window.load(Ordering::Relaxed));
+        scans.cancel("scan-window", None).unwrap();
+        assert!(replacement.load(Ordering::Relaxed));
+        assert!(!other_window.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn filesystem_events_identify_successful_changes_and_the_origin_window() {
+        let event = FilesystemChangeEvent {
+            source_window: "rename-window".into(),
+            change: FilesystemChange::Relocate {
+                path: "/root/source".into(),
+                new_path: "/root/destination".into(),
+            },
+        };
+        assert_eq!(
+            serde_json::to_value(event).unwrap(),
+            serde_json::json!({
+                "sourceWindow": "rename-window",
+                "change": { "kind": "relocate", "path": "/root/source", "newPath": "/root/destination" }
+            })
+        );
+    }
+}
+
 #[tauri::command]
-fn batch_rename(items: Vec<BatchRenameItem>) -> Result<BatchRenameResult, String> {
+fn batch_rename(
+    window: tauri::Window,
+    items: Vec<BatchRenameItem>,
+) -> Result<BatchRenameResult, String> {
     let mut success_count = 0;
     let mut errors = Vec::new();
 
@@ -175,7 +281,16 @@ fn batch_rename(items: Vec<BatchRenameItem>) -> Result<BatchRenameResult, String
         }
 
         match fs::rename(&source, &dest) {
-            Ok(_) => success_count += 1,
+            Ok(_) => {
+                success_count += 1;
+                emit_filesystem_change(
+                    &window,
+                    FilesystemChange::Relocate {
+                        path: item.path,
+                        new_path: item.new_path,
+                    },
+                );
+            }
             Err(e) => errors.push(format!("Failed to rename {}: {}", item.path, e)),
         }
     }
@@ -226,26 +341,20 @@ fn scan_path(
     window: tauri::Window,
     path: String,
     options: ScanOptions,
-    id: Option<String>,
+    id: String,
+    scope: Option<String>,
     state: tauri::State<ScanCancellation>,
 ) -> Result<(), String> {
     let root = PathBuf::from(&path);
-    let config = build_scan_config(&options)?;
-    let label = window.label().to_string();
-    let cancel_flag = Arc::new(AtomicBool::new(false));
-    {
-        let mut cancellations = state
-            .0
-            .lock()
-            .map_err(|_| "Failed to lock scan state".to_string())?;
-        if let Some(existing) = cancellations.get(&label) {
-            existing.store(true, Ordering::SeqCst);
-        }
-        cancellations.insert(label.clone(), Arc::clone(&cancel_flag));
+    let mut config = build_scan_config(&options)?;
+    if let Some(path) = &scope {
+        config = config.for_entry(PathBuf::from(path));
     }
+    let label = window.label().to_string();
+    let key = (label.clone(), id.clone());
+    let cancel_flag = state.start(&label, &id, scope.is_some())?;
     let window_for_task = window.clone();
-    let label_for_task = label.clone();
-    let task_id = id.clone();
+    let task_id = Some(id);
 
     tauri::async_runtime::spawn_blocking(move || {
         let app_handle = window_for_task.app_handle();
@@ -269,10 +378,10 @@ fn scan_path(
         let cancellations = app_handle.state::<ScanCancellation>();
         if let Ok(mut map) = cancellations.0.lock() {
             if map
-                .get(&label_for_task)
+                .get(&key)
                 .is_some_and(|flag| Arc::ptr_eq(flag, &cancel_flag))
             {
-                map.remove(&label_for_task);
+                map.remove(&key);
             }
         };
     });
@@ -281,16 +390,12 @@ fn scan_path(
 }
 
 #[tauri::command]
-fn cancel_scan(window: tauri::Window, state: tauri::State<ScanCancellation>) -> Result<(), String> {
-    let label = window.label().to_string();
-    let cancellations = state
-        .0
-        .lock()
-        .map_err(|_| "Failed to lock scan state".to_string())?;
-    if let Some(flag) = cancellations.get(&label) {
-        flag.store(true, Ordering::SeqCst);
-    }
-    Ok(())
+fn cancel_scan(
+    window: tauri::Window,
+    id: Option<String>,
+    state: tauri::State<ScanCancellation>,
+) -> Result<(), String> {
+    state.cancel(window.label(), id.as_deref())
 }
 
 #[tauri::command]
@@ -300,21 +405,26 @@ fn get_disk_usage(path: String) -> Result<DiskUsageSnapshot, String> {
 }
 
 #[tauri::command]
-fn delete_item(path: String) -> Result<(), String> {
+fn delete_item(window: tauri::Window, path: String) -> Result<(), String> {
     let target = PathBuf::from(&path);
     if !target.exists() {
         return Err("Path does not exist".to_string());
     }
-    if target.is_file() {
-        fs::remove_file(target).map_err(|e| e.to_string())?;
+    let result = if target.is_file() {
+        fs::remove_file(target)
     } else {
-        fs::remove_dir_all(target).map_err(|e| e.to_string())?;
+        fs::remove_dir_all(target)
+    };
+    if let Err(error) = result {
+        emit_filesystem_change(&window, FilesystemChange::Refresh { path });
+        return Err(error.to_string());
     }
+    emit_filesystem_change(&window, FilesystemChange::Delete { path });
     Ok(())
 }
 
 #[tauri::command]
-fn rename_item(path: String, new_path: String) -> Result<(), String> {
+fn rename_item(window: tauri::Window, path: String, new_path: String) -> Result<(), String> {
     let target = PathBuf::from(&path);
     let dest = PathBuf::from(&new_path);
     if !target.exists() {
@@ -324,21 +434,23 @@ fn rename_item(path: String, new_path: String) -> Result<(), String> {
         return Err("Destination already exists".to_string());
     }
     fs::rename(target, dest).map_err(|e| e.to_string())?;
+    emit_filesystem_change(&window, FilesystemChange::Relocate { path, new_path });
     Ok(())
 }
 
 #[tauri::command]
-fn create_folder(path: String) -> Result<(), String> {
+fn create_folder(window: tauri::Window, path: String) -> Result<(), String> {
     let target = PathBuf::from(&path);
     if target.exists() {
         return Err("Path already exists".to_string());
     }
     fs::create_dir_all(target).map_err(|e| e.to_string())?;
+    emit_filesystem_change(&window, FilesystemChange::Create { path });
     Ok(())
 }
 
 #[tauri::command]
-fn copy_item(path: String, new_path: String) -> Result<(), String> {
+fn copy_item(window: tauri::Window, path: String, new_path: String) -> Result<(), String> {
     let source = PathBuf::from(&path);
     let dest = PathBuf::from(&new_path);
     if !source.exists() {
@@ -347,11 +459,18 @@ fn copy_item(path: String, new_path: String) -> Result<(), String> {
     if dest.exists() {
         return Err("Destination exists".to_string());
     }
-    if source.is_file() {
-        fs::copy(source, dest).map_err(|e| e.to_string())?;
+    let result = if source.is_file() {
+        fs::copy(source, dest)
+            .map(|_| ())
+            .map_err(|error| error.to_string())
     } else {
-        copy_dir_recursive(&source, &dest)?;
+        copy_dir_recursive(&source, &dest)
+    };
+    if let Err(error) = result {
+        emit_filesystem_change(&window, FilesystemChange::Refresh { path: new_path });
+        return Err(error);
     }
+    emit_filesystem_change(&window, FilesystemChange::Copy { path, new_path });
     Ok(())
 }
 

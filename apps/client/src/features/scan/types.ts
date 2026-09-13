@@ -7,6 +7,8 @@ export interface ScanNode {
   fileCount: number;
   dirCount: number;
   state: "scanning" | "complete" | "incomplete";
+  readState: "scanning" | "complete" | "incomplete";
+  skippedEntries: number;
   files: ScanFile[];
   children: ScanNode[];
 }
@@ -45,6 +47,18 @@ export interface ScanUpdate {
 export interface ScanFailure {
   id: string;
   message: string;
+}
+
+export type FilesystemChange =
+  | { kind: "delete"; path: string }
+  | { kind: "relocate" | "copy"; path: string; newPath: string }
+  | { kind: "create" | "refresh"; path: string };
+
+export interface ScanHandlers {
+  onProgress: (update: ScanUpdate) => void;
+  onComplete: (update: ScanUpdate) => void;
+  onError: (message: string) => void;
+  onCancel: (update: ScanUpdate) => void;
 }
 
 export interface DiskUsage {

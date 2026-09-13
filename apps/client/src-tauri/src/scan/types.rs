@@ -36,6 +36,8 @@ pub struct ScanFolder {
     pub file_count: u64,
     pub dir_count: u64,
     pub state: ScanState,
+    pub read_state: ScanState,
+    pub skipped_entries: u64,
 }
 
 #[derive(Clone, Debug, Serialize)]

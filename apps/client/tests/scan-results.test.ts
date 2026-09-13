@@ -5,7 +5,7 @@ import { buildTreeItems, isEmptyFolder } from "../src/features/scan/treeData.ts"
 import type { ScanNode, ScanUpdate } from "../src/features/scan/types.ts";
 
 const folder = (id: number, parentId: number | null, state: ScanNode["state"] = "scanning"): ScanUpdate["folders"][number] => ({
-  id, parentId, path: `/folder${id}`, name: `folder${id}`, sizeBytes: 0, fileCount: 0, dirCount: 0, state,
+  id, parentId, path: `/folder${id}`, name: `folder${id}`, sizeBytes: 0, fileCount: 0, dirCount: 0, state, readState: state, skippedEntries: 0,
 });
 const update = (sequence: number, folders: ScanUpdate["folders"] = [], files: ScanUpdate["files"] = []): ScanUpdate => ({
   id: "test", sequence, folders, files, totalBytes: 0, fileCount: 0, dirCount: 0, skippedEntries: 0, largestFiles: [], durationMs: sequence * 100,

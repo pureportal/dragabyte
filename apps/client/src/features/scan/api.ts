@@ -1,13 +1,14 @@
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invokeCommand } from "../../lib/tauriInvoke";
-import type { DiskUsage, ScanFailure, ScanOptions, ScanUpdate } from "./types";
+import type { DiskUsage, FilesystemChange, ScanFailure, ScanHandlers, ScanOptions } from "./types";
 
-interface ScanHandlers {
-  onProgress: (update: ScanUpdate) => void;
-  onComplete: (update: ScanUpdate) => void;
-  onError: (message: string) => void;
-  onCancel: (update: ScanUpdate) => void;
-}
+export const listenFilesystemChanges = async (handler: (change: FilesystemChange) => void): Promise<() => void> => {
+  const label = getCurrentWindow().label;
+  return listen<{ sourceWindow: string; change: FilesystemChange }>("filesystem-changed", ({ payload }) => {
+    if (payload.sourceWindow !== label) handler(payload.change);
+  });
+};
 
 const listenToScanEvent = async <T>(
   eventName: string,
@@ -26,13 +27,18 @@ export const startScan = async (
   options: ScanOptions,
   handlers: ScanHandlers,
   scanId: string,
+  scope?: string,
+  signal?: AbortSignal,
 ): Promise<() => void> => {
   const listeners: (() => void)[] = [];
   let active = true;
   const cleanup = (): void => {
     active = false;
+    signal?.removeEventListener("abort", cleanup);
     listeners.splice(0).forEach((unlisten) => unlisten());
   };
+  signal?.addEventListener("abort", cleanup, { once: true });
+  if (signal?.aborted) cleanup();
   const subscribe = async <T extends { id: string }>(
     name: string,
     handler: (payload: T) => void,
@@ -55,7 +61,9 @@ export const startScan = async (
     ]);
     const failed = subscriptions.find((result) => result.status === "rejected");
     if (failed?.status === "rejected") throw failed.reason;
-    await invokeCommand<void>("scan_path", { path, options, id: scanId });
+    if (!active) return cleanup;
+    await invokeCommand<void>("scan_path", { path, options, id: scanId, scope });
+    if (signal?.aborted) await cancelScan(scanId);
     return cleanup;
   } catch (error) {
     cleanup();
@@ -63,8 +71,8 @@ export const startScan = async (
   }
 };
 
-export const cancelScan = async (): Promise<void> => {
-  return invokeCommand<void>("cancel_scan");
+export const cancelScan = async (id?: string): Promise<void> => {
+  return invokeCommand<void>("cancel_scan", { id });
 };
 
 export const checkContextMenu = async (): Promise<boolean> => {

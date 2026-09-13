@@ -42,6 +42,7 @@ import {
   deleteItem,
   getDiskUsage,
   getLaunchContext,
+  listenFilesystemChanges,
   openPath,
   renameItem,
   showInExplorer,
@@ -52,10 +53,13 @@ import { ExportModal } from "./ExportModal";
 import ScanTree from "./ScanTree";
 import SubfolderTable from "./SubfolderTable";
 import { ScanUpdateQueue } from "./scanResults";
+import { LocalScan } from "./localScan";
+import { containsPath, parentPath, relocatePath } from "./scanPaths";
 import { buildNodeMap, buildTreeItems } from "./treeData";
 import Treemap from "./Treemap";
 import type {
   DiskUsage,
+  FilesystemChange,
   FlatNode,
   ScanFile,
   ScanFilters,
@@ -992,7 +996,6 @@ const ScanView = (): JSX.Element => {
     updateRemoteServerStatus,
     setActiveRemoteServerId,
   } = useUIStore();
-  const unlistenRef = useRef<(() => void) | null>(null);
   const remoteUnlistenRef = useRef<(() => void) | null>(null);
   const hasInitializedExpansionRef = useRef(false);
   const hasAutoScanRef = useRef(false);
@@ -1005,6 +1008,7 @@ const ScanView = (): JSX.Element => {
   const activeScanModeRef = useRef<"local" | "remote" | null>(null);
   const scanRestartTimeoutRef = useRef<number | null>(null);
   const scanUpdatesRef = useRef<ScanUpdateQueue | null>(null);
+  const localScanRef = useRef<LocalScan | null>(null);
   const activeScanIdRef = useRef<string | null>(null);
   const scanCompleteTimeoutRef = useRef<number | null>(null);
   const lastScanPathRef = useRef<string | null>(null);
@@ -1513,10 +1517,10 @@ const ScanView = (): JSX.Element => {
   }, [addSelectionHistory, selectedPath, selectionHistory.length, summary]);
 
   const clearListeners = useCallback((): void => {
+    localScanRef.current?.dispose();
+    localScanRef.current = null;
     scanUpdatesRef.current?.dispose();
     scanUpdatesRef.current = null;
-    unlistenRef.current?.();
-    unlistenRef.current = null;
   }, []);
 
   const resetScanState = useCallback((): void => {
@@ -1970,31 +1974,36 @@ const ScanView = (): JSX.Element => {
     resetScanState();
 
     const scanId = createRemoteRequestId();
-    prepareScanUpdates(scanId);
-
-    try {
-      const unlisten = await startScan(
-        folder,
-        createScanOptions(),
-        {
-          onProgress: (update) => scanUpdatesRef.current?.push(update, "progress"),
-          onComplete: (update) => scanUpdatesRef.current?.push(update, "complete"),
-          onError: (message) => {
-            if (activeScanIdRef.current === scanId) failScan(message);
-          },
-          onCancel: (update) => scanUpdatesRef.current?.push(update, "cancelled"),
-        },
-        scanId,
-      );
-      if (activeScanIdRef.current === scanId && scanUpdatesRef.current) {
-        unlistenRef.current = unlisten;
-      } else {
-        unlisten();
-      }
-    } catch (err) {
-      if (activeScanIdRef.current === scanId) failScan(toErrorMessage(err));
-    }
-  }, [clearListeners, clearScanCompleteTimeout, createScanOptions, failScan, resetScanState, scanRestartKey, prepareScanUpdates]);
+    activeScanIdRef.current = scanId;
+    const session = new LocalScan(scanId, folder, createScanOptions(), { start: startScan, cancel: cancelScan },
+      (result, scanning) => {
+        if (localScanRef.current !== session) return;
+        if (result) {
+          applySummary(result);
+          activeScanPathRef.current = result.root.path;
+          lastScanPathRef.current = result.root.path;
+          if (!scanning) addScanHistory(result.root.path);
+        } else {
+          setSummary(null);
+          if (!scanning) {
+            activeScanPathRef.current = null;
+            lastScanPathRef.current = null;
+            setDiskUsage(null);
+          }
+        }
+        setIsScanning(scanning);
+        setScanStatus(scanning ? "scanning" : result?.root.state === "complete" ? "complete" : "idle");
+        clearScanCompleteTimeout();
+        if (!scanning) scanCompleteTimeoutRef.current = window.setTimeout(() => setScanStatus("idle"), 1500);
+      },
+      (message) => {
+        if (localScanRef.current !== session) return;
+        setError(message);
+        setIsErrorExpanded(true);
+      });
+    localScanRef.current = session;
+    await session.start();
+  }, [addScanHistory, applySummary, clearListeners, clearScanCompleteTimeout, createScanOptions, resetScanState, scanRestartKey, setScanStatus]);
 
   const startRemoteScanWithPath = useCallback(async (path: string): Promise<void> => {
     clearScanCompleteTimeout();
@@ -2312,11 +2321,85 @@ const ScanView = (): JSX.Element => {
     [setError],
   );
 
+  const mutateFilesystem = useCallback(async (change: FilesystemChange, operation: () => Promise<void>): Promise<void> => {
+    const originalSession = localScanRef.current;
+    if (!originalSession) return;
+    await originalSession.mutate(change, operation);
+    const session = localScanRef.current;
+    if (!session) return;
+    if (session !== originalSession) {
+      const root = activeScanPathRef.current;
+      const paths = "newPath" in change ? [change.path, change.newPath] : [change.path];
+      if (!root || !paths.some((path) => containsPath(root, path) || containsPath(path, root))) return;
+      await session.mutate(change, async () => {});
+      if (localScanRef.current !== session) return;
+    }
+    if (change.kind === "relocate" || change.kind === "delete") {
+      const root = activeScanPathRef.current;
+      const relocatedInsideRoot = change.kind === "relocate" && root &&
+        (containsPath(root, change.newPath) || containsPath(change.newPath, root));
+      const destination = root ? parentPath(change.path) : null;
+      const updatePath = (path: string | null): string | null => {
+        if (!path || !containsPath(change.path, path)) return path;
+        return change.kind === "relocate" && relocatedInsideRoot ? relocatePath(path, change.path, change.newPath) : destination;
+      };
+      setSelectedPath(updatePath);
+      setSelectedFilePath((path) => !relocatedInsideRoot && path && containsPath(change.path, path) ? null : updatePath(path));
+      setDetailsNode((node) => {
+        if (!node || !containsPath(change.path, node.path)) return node;
+        const path = updatePath(node.path);
+        return relocatedInsideRoot && path ? { ...node, path } : null;
+      });
+      setExpandedPaths((previous) => new Set([...previous].flatMap((path) => {
+        if (!relocatedInsideRoot && containsPath(change.path, path)) return [];
+        const next = updatePath(path);
+        return next ? [next] : [];
+      })));
+      setSelectionHistory((previous) => previous.map((entry) => {
+        const path = updatePath(entry.path);
+        return path && path !== entry.path ? { kind: !relocatedInsideRoot ? "folder" : entry.kind, path } : entry;
+      }));
+      if (!root) {
+        setSelectionHistory([]);
+        setSelectionHistoryIndex(-1);
+        historyIndexRef.current = -1;
+      }
+    }
+    const root = activeScanPathRef.current;
+    if (root) void getDiskUsage(root).then((usage) => {
+      if (localScanRef.current === session) setDiskUsage(usage);
+    }).catch((error: unknown) => {
+      if (localScanRef.current === session) setDiskUsageError(toErrorMessage(error));
+    });
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    let unlisten: (() => void) | undefined;
+    void listenFilesystemChanges((change) => {
+      const root = activeScanPathRef.current;
+      if (!root || activeScanModeRef.current !== "local") return;
+      const paths = "newPath" in change ? [change.path, change.newPath] : [change.path];
+      if (!paths.some((path) => containsPath(root, path) || containsPath(path, root))) return;
+      void mutateFilesystem(change, async () => {}).catch((error: unknown) => setError(toErrorMessage(error)));
+    }).then((cleanup) => {
+      if (active) unlisten = cleanup;
+      else cleanup();
+    }).catch((error: unknown) => {
+      if (active) setError(toErrorMessage(error));
+    });
+    return () => { active = false; unlisten?.(); };
+  }, [mutateFilesystem]);
+
   const executeRename = useCallback(
     async (newName: string) => {
       const candidate = renameCandidate;
       setRenameCandidate(null);
       if (!candidate || !newName || newName === candidate.name) return;
+      if (/[/\\]/.test(newName) || newName === "." || newName === "..") {
+        setError("Enter a name without path separators.");
+        return;
+      }
 
       const path = candidate.path;
       const lastSlash = path.lastIndexOf("/");
@@ -2330,17 +2413,12 @@ const ScanView = (): JSX.Element => {
       }
 
       try {
-        await renameItem(path, newPath);
-        const nextPath =
-          activeScanPathRef.current ?? summary?.root.path ?? null;
-        if (nextPath) {
-          void startScanWithFolder(nextPath);
-        }
+        await mutateFilesystem({ kind: "relocate", path, newPath }, () => renameItem(path, newPath));
       } catch (err) {
         setError(toErrorMessage(err));
       }
     },
-    [renameCandidate, startScanWithFolder, summary],
+    [renameCandidate, mutateFilesystem],
   );
 
   const handleRename = useCallback((path: string, name: string): void => {
@@ -2360,15 +2438,11 @@ const ScanView = (): JSX.Element => {
     if (!path) return;
 
     try {
-      await deleteItem(path);
-      const nextPath = activeScanPathRef.current ?? summary?.root.path ?? null;
-      if (nextPath) {
-        void startScanWithFolder(nextPath);
-      }
+      await mutateFilesystem({ kind: "delete", path }, () => deleteItem(path));
     } catch (err) {
       setError(toErrorMessage(err));
     }
-  }, [deleteCandidate, startScanWithFolder, summary]);
+  }, [deleteCandidate, mutateFilesystem]);
 
   const handleDelete = useCallback((path: string): void => {
     if (activeScanModeRef.current === "remote") {
@@ -2386,6 +2460,10 @@ const ScanView = (): JSX.Element => {
       const parentPath = createFolderCandidate;
       setCreateFolderCandidate(null);
       if (!parentPath || !name) return;
+      if (/[/\\]/.test(name) || name === "." || name === "..") {
+        setError("Enter a name without path separators.");
+        return;
+      }
 
       const separator = parentPath.indexOf("\\") !== -1 ? "\\" : "/";
       const prefix = parentPath.endsWith(separator)
@@ -2394,17 +2472,12 @@ const ScanView = (): JSX.Element => {
       const newPath = `${prefix}${name}`;
 
       try {
-        await createFolder(newPath);
-        const nextPath =
-          activeScanPathRef.current ?? summary?.root.path ?? null;
-        if (nextPath) {
-          void startScanWithFolder(nextPath);
-        }
+        await mutateFilesystem({ kind: "create", path: newPath }, () => createFolder(newPath));
       } catch (err) {
         setError(toErrorMessage(err));
       }
     },
-    [createFolderCandidate, startScanWithFolder, summary],
+    [createFolderCandidate, mutateFilesystem],
   );
 
   const handleCreateFolder = useCallback((parentPath: string): void => {
@@ -2423,6 +2496,10 @@ const ScanView = (): JSX.Element => {
       const candidate = duplicateCandidate;
       setDuplicateCandidate(null);
       if (!candidate || !newName || newName === candidate.name) return;
+      if (/[/\\]/.test(newName) || newName === "." || newName === "..") {
+        setError("Enter a name without path separators.");
+        return;
+      }
 
       const path = candidate.path;
       const lastSlash = path.lastIndexOf("/");
@@ -2436,17 +2513,12 @@ const ScanView = (): JSX.Element => {
       }
 
       try {
-        await copyItem(path, newPath);
-        const nextPath =
-          activeScanPathRef.current ?? summary?.root.path ?? null;
-        if (nextPath) {
-          void startScanWithFolder(nextPath);
-        }
+        await mutateFilesystem({ kind: "copy", path, newPath }, () => copyItem(path, newPath));
       } catch (err) {
         setError(toErrorMessage(err));
       }
     },
-    [duplicateCandidate, startScanWithFolder, summary],
+    [duplicateCandidate, mutateFilesystem],
   );
 
   const handleDuplicate = useCallback((path: string, name: string): void => {
@@ -2479,9 +2551,7 @@ const ScanView = (): JSX.Element => {
         const destDir = Array.isArray(result) ? result[0] : (result as string);
         if (!destDir) return;
 
-        // Prevent moving into itself
-        if (path === destDir || destDir.startsWith(path)) {
-          // Simple string check, strict check would be realpath
+        if (containsPath(path, destDir)) {
           setError("Cannot move a folder into itself.");
           return;
         }
@@ -2494,17 +2564,12 @@ const ScanView = (): JSX.Element => {
 
         if (newPath === path) return;
 
-        await renameItem(path, newPath);
-        const nextPath =
-          activeScanPathRef.current ?? summary?.root.path ?? null;
-        if (nextPath) {
-          void startScanWithFolder(nextPath);
-        }
+        await mutateFilesystem({ kind: "relocate", path, newPath }, () => renameItem(path, newPath));
       } catch (err) {
         setError(toErrorMessage(err));
       }
     },
-    [startScanWithFolder, summary],
+    [mutateFilesystem],
   );
 
   const clearError = (): void => {

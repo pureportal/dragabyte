@@ -48,6 +48,8 @@ impl ScanProgress {
                 file_count: 0,
                 dir_count: 0,
                 state: ScanState::Scanning,
+                read_state: ScanState::Scanning,
+                skipped_entries: 0,
             },
             read_finished: false,
             pending_children: 0,
@@ -81,6 +83,7 @@ impl ScanProgress {
         skipped: u64,
     ) {
         self.skipped_entries += skipped;
+        self.folders[id].folder.skipped_entries += skipped;
         let mut current = Some(id);
         while let Some(index) = current {
             let progress = &mut self.folders[index];
@@ -95,6 +98,12 @@ impl ScanProgress {
 
     pub(super) fn finish_folder(&mut self, id: usize) {
         self.folders[id].read_finished = true;
+        self.folders[id].folder.read_state = if self.folders[id].folder.skipped_entries > 0 {
+            ScanState::Incomplete
+        } else {
+            ScanState::Complete
+        };
+        self.changed.insert(id);
         let mut current = Some(id);
         while let Some(index) = current {
             let progress = &mut self.folders[index];
@@ -118,6 +127,9 @@ impl ScanProgress {
         for (index, progress) in self.folders.iter_mut().enumerate() {
             if progress.folder.state == ScanState::Scanning {
                 progress.folder.state = ScanState::Incomplete;
+                if progress.folder.read_state == ScanState::Scanning {
+                    progress.folder.read_state = ScanState::Incomplete;
+                }
                 self.changed.insert(index);
             }
         }
