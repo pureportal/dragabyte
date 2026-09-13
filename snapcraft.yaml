@@ -1,6 +1,6 @@
 name: dragabyte
 base: core24
-version: "1.0.2"
+version: "1.1.0"
 icon: apps/client/src-tauri/icons/icon.png
 summary: Disk usage scanner and bulk rename utility
 description: |
