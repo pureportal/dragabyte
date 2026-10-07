@@ -220,7 +220,7 @@ export default function BulkRenameView() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col lg:flex-row text-slate-200 [color-scheme:dark]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-slate-800 md:flex-row text-slate-200 [color-scheme:dark]">
       {showImport && (
         <ImportDialog
           existingPaths={existingPaths}
@@ -229,7 +229,7 @@ export default function BulkRenameView() {
         />
       )}
 
-      <div className="min-h-48 flex-1 flex flex-col border-r border-slate-800 min-w-0">
+      <div className="min-h-48 min-w-0 flex-1 flex flex-col md:min-h-0">
         <div className="min-h-12 shrink-0 border-b border-slate-800 flex flex-wrap items-center px-3 py-2 gap-2 bg-slate-900/50">
           <span className="font-semibold text-slate-100 hidden md:inline">
             Items ({files.length})

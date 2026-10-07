@@ -201,12 +201,13 @@ export function RenameSidebar({
       />
       <div
         inert={isApplying}
-        className="w-full lg:w-80 max-h-[45%] lg:max-h-none shrink-0 flex flex-col bg-slate-950 border-l border-slate-800/50"
+        className="w-full min-h-0 md:w-72 lg:w-80 max-h-[45%] md:max-h-none shrink-0 flex flex-col bg-slate-950 border-t md:border-t-0 md:border-l border-slate-800/50"
       >
-        <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-900/50 gap-2">
+        <div className="h-12 shrink-0 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-900/50 gap-2">
           <div className="flex bg-slate-800 p-0.5 rounded-lg flex-1">
             <button
               onClick={() => setActiveTab("rename")}
+              aria-pressed={activeTab === "rename"}
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded-sm transition-all",
                 activeTab === "rename"
@@ -219,6 +220,7 @@ export function RenameSidebar({
             </button>
             <button
               onClick={() => setActiveTab("filter")}
+              aria-pressed={activeTab === "filter"}
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 text-xs font-semibold py-1 rounded-sm transition-all",
                 activeTab === "filter"
@@ -307,7 +309,8 @@ export function RenameSidebar({
                           </button>
                           <button
                             onClick={(e) => deleteTemplate(t.id, e)}
-                            className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                            aria-label={`Delete template ${t.name}`}
+                            className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -321,7 +324,7 @@ export function RenameSidebar({
         </div>
 
         {activeTab === "rename" && (
-          <div className="flex-1 overflow-auto p-4 space-y-4">
+          <div className="min-h-0 flex-1 overflow-auto p-4 space-y-4">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -390,7 +393,7 @@ export function RenameSidebar({
         )}
 
         {activeTab === "filter" && (
-          <div className="flex-1 overflow-auto p-4 space-y-4">
+          <div className="min-h-0 flex-1 overflow-auto p-4 space-y-4">
             {filterRules.length === 0 && (
               <div className="text-center py-6 text-slate-500 text-xs px-4">
                 <Filter className="w-8 h-8 mx-auto mb-2 opacity-20" />
@@ -425,7 +428,7 @@ export function RenameSidebar({
           </div>
         )}
 
-        <div className="p-4 border-t border-slate-800 bg-slate-900/30">
+        <div className="shrink-0 p-4 border-t border-slate-800 bg-slate-900/30">
           <button
             onClick={onApply}
             disabled={changeCount === 0 || isApplying || isLoading}

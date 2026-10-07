@@ -3480,10 +3480,10 @@ const ScanView = (): JSX.Element => {
       ) : null}
 
       <div className="shrink-0 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-800/80 bg-slate-900/50 px-4 py-3 shadow-xs backdrop-blur-sm">
-        <div className="flex flex-1 items-center gap-4">
-          <div>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-xl font-semibold">Storage Scan</h2>
+              <h2 className="whitespace-nowrap text-xl font-semibold">Storage Scan</h2>
               {activeRemoteServer ? (
                 <div className="flex flex-wrap items-center gap-2 rounded-full border border-slate-800/70 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-300">
                   <span
@@ -3507,19 +3507,14 @@ const ScanView = (): JSX.Element => {
                 </div>
               ) : null}
             </div>
-            {!scanRootPath ? (
-              <p className="text-xs text-slate-400">
-                Select a folder to analyze.
-              </p>
-            ) : null}
             {searchScopeLabel ? (
               <p className="text-[11px] text-slate-500">
                 Search scope: {truncateMiddle(searchScopeLabel, 60)}
               </p>
             ) : null}
           </div>
-          <div className="h-8 w-px bg-slate-800/50" />
-          <div className="flex items-center gap-2">
+          <div className="hidden h-8 w-px bg-slate-800/50 sm:block" />
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={toggleNavigationBar}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
@@ -3560,18 +3555,20 @@ const ScanView = (): JSX.Element => {
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative hidden lg:block">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto">
+          <div className="relative min-w-0 basis-full sm:basis-auto">
             <input
               type="text"
+              aria-label="Search scan results"
               value={searchQuery}
               onChange={(event): void => setSearchQuery(event.target.value)}
               placeholder="Search... (name:, path:, ext:, size>)"
-              className="h-8 w-40 lg:w-48 rounded-md border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500/50 focus:outline-hidden focus:ring-1 focus:ring-blue-500/50 transition-all focus:w-64 shadow-inner"
+              className="h-8 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-1 pr-7 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500/50 focus:outline-hidden focus:ring-1 focus:ring-blue-500/50 transition-all sm:w-48 shadow-inner"
             />
             {searchQuery ? (
               <button
                 type="button"
+                aria-label="Clear scan search"
                 onClick={(): void => setSearchQuery("")}
                 className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-0.5 rounded-sm hover:bg-slate-800"
               >
@@ -3628,13 +3625,11 @@ const ScanView = (): JSX.Element => {
             <p className="text-[10px] uppercase tracking-widest text-slate-500">
               Scan Controls
             </p>
-            <p className="text-xs text-slate-400">
-              Adjust priority, throttling, and filters before scanning.
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
+              aria-pressed={filterMode === "simple"}
               onClick={(): void => setFilterMode("simple")}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition border ${
                 hasSimpleFiltersActive
@@ -3663,6 +3658,7 @@ const ScanView = (): JSX.Element => {
             </button>
             <button
               type="button"
+              aria-pressed={filterMode === "advanced"}
               onClick={(): void => setFilterMode("advanced")}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition border ${
                 hasAdvancedFiltersActive
@@ -3715,12 +3711,12 @@ const ScanView = (): JSX.Element => {
             </button>
           </div>
         </div>
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(260px,_1fr)_minmax(320px,_1.3fr)]">
+        <div className="mt-3 grid gap-4 md:grid-cols-[minmax(220px,_1fr)_minmax(280px,_1.3fr)]">
           <div className="rounded-lg border border-slate-800/60 bg-slate-950/50 p-3">
             <p className="text-[11px] uppercase tracking-widest text-slate-500 mb-2">
               Performance
             </p>
-            <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-1">
               <label className="text-xs text-slate-400">
                 Priority Mode
                 <select
@@ -4490,19 +4486,9 @@ const ScanView = (): JSX.Element => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-slate-200 mb-2">
-            Ready to Scan
-          </h3>
-          <p className="text-slate-400 max-w-sm mx-auto mb-6">
-            Connect to your local storage and visualize space usage with
-            high-performance tree scanning.
+          <p className="text-sm text-slate-400">
+            Choose a folder to scan
           </p>
-          <button
-            onClick={handleScan}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition shadow-lg shadow-blue-500/20"
-          >
-            Start Scanning
-          </button>
         </div>
       )}
       <ExportModal
