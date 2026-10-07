@@ -1,5 +1,6 @@
 pub mod disk;
 pub mod remote;
+pub mod rename;
 pub mod scan;
 
 #[cfg(feature = "terminal")]

@@ -2,11 +2,12 @@
 
 use dragabyte::disk::{compute_disk_usage, DiskUsageSnapshot};
 use dragabyte::remote::{start_remote_server, wire::LineReader, TcpConfig};
+use dragabyte::rename::{BatchRenameItem, ImportItem, ImportOptions, RenameOutcome};
 use dragabyte::scan::{
     build_scan_config, run_scan, ScanEmitter, ScanEvent, ScanFailure, ScanOptions,
 };
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 use std::io::{BufReader, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -146,27 +147,6 @@ fn emit_to_window(window: &tauri::Window, event: ScanEvent) {
     }
 }
 
-#[derive(Deserialize)]
-struct BatchRenameItem {
-    path: String,
-    new_path: String,
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct RenameContextItem {
-    path: String,
-    name: String,
-    is_directory: bool,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BatchRenameResult {
-    success_count: u32,
-    errors: Vec<String>,
-}
-
 #[derive(Clone, Serialize)]
 #[serde(
     tag = "kind",
@@ -247,58 +227,29 @@ mod scan_change_tests {
 }
 
 #[tauri::command]
-fn batch_rename(
+async fn batch_rename(
     window: tauri::Window,
     items: Vec<BatchRenameItem>,
-) -> Result<BatchRenameResult, String> {
-    let mut success_count = 0;
-    let mut errors = Vec::new();
-
-    for item in items {
-        let source = PathBuf::from(&item.path);
-        let dest = PathBuf::from(&item.new_path);
-
-        if !source.exists() {
-            errors.push(format!("Source does not exist: {}", item.path));
-            continue;
-        }
-
-        // Safety check to prevent accidental overwrites
-        if dest.exists() {
-            // Check if it's a case-only rename (e.g. "a.txt" -> "A.TXT")
-            let source_str = source.to_string_lossy().to_string();
-            let dest_str = dest.to_string_lossy().to_string();
-
-            // If paths are different but look the same in lowercase, it's likely a case rename.
-            // On case-insensitive filesystems (Windows/macOS default), dest.exists() is true for case rename.
-            // On case-sensitive (Linux), it is false unless a file named "A.TXT" actually exists.
-
-            // If it is NOT a case-only rename, fail.
-            if source_str != dest_str && source_str.to_lowercase() != dest_str.to_lowercase() {
-                errors.push(format!("Destination already exists: {}", item.new_path));
-                continue;
-            }
-        }
-
-        match fs::rename(&source, &dest) {
-            Ok(_) => {
-                success_count += 1;
+) -> Result<Vec<RenameOutcome>, String> {
+    let original = items.clone();
+    let outcomes =
+        tauri::async_runtime::spawn_blocking(move || dragabyte::rename::rename_batch(items))
+            .await
+            .map_err(|error| error.to_string())?;
+    for outcome in &outcomes {
+        if outcome.error.is_none() {
+            if let Some(item) = original.iter().find(|item| item.path == outcome.path) {
                 emit_filesystem_change(
                     &window,
                     FilesystemChange::Relocate {
-                        path: item.path,
-                        new_path: item.new_path,
+                        path: item.path.clone(),
+                        new_path: item.new_path.clone(),
                     },
                 );
             }
-            Err(e) => errors.push(format!("Failed to rename {}: {}", item.path, e)),
         }
     }
-
-    Ok(BatchRenameResult {
-        success_count,
-        errors,
-    })
+    Ok(outcomes)
 }
 
 #[tauri::command]
@@ -312,28 +263,13 @@ fn get_launch_context(state: tauri::State<LaunchContextState>) -> LaunchContext 
 }
 
 #[tauri::command]
-fn collect_rename_items(
+async fn collect_rename_items(
     paths: Vec<String>,
-    recursive: bool,
-) -> Result<Vec<RenameContextItem>, String> {
-    let mut items = Vec::new();
-    let mut seen = HashSet::new();
-
-    for raw_path in paths {
-        let Some(path) = normalize_context_path(&raw_path) else {
-            continue;
-        };
-        collect_rename_items_from_path(Path::new(&path), recursive, &mut items, &mut seen)?;
-    }
-
-    items.sort_by(|left, right| {
-        left.path
-            .to_lowercase()
-            .cmp(&right.path.to_lowercase())
-            .then_with(|| left.name.to_lowercase().cmp(&right.name.to_lowercase()))
-    });
-
-    Ok(items)
+    options: ImportOptions,
+) -> Result<Vec<ImportItem>, String> {
+    tauri::async_runtime::spawn_blocking(move || dragabyte::rename::collect_items(paths, options))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -489,10 +425,6 @@ fn copy_dir_recursive(source: &Path, dest: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn get_path_string(path: &Path) -> String {
-    path.to_string_lossy().to_string()
-}
-
 #[cfg(target_os = "windows")]
 fn normalize_context_path(value: &str) -> Option<String> {
     let mut candidate = value.trim().trim_matches('"').replace('/', "\\");
@@ -525,92 +457,6 @@ fn normalize_context_path(value: &str) -> Option<String> {
         return None;
     }
     Some(candidate.to_string())
-}
-
-fn push_rename_context_item(
-    path: &Path,
-    is_directory: bool,
-    items: &mut Vec<RenameContextItem>,
-    seen: &mut HashSet<String>,
-) {
-    let item_path = get_path_string(path);
-    if !seen.insert(item_path.clone()) {
-        return;
-    }
-    items.push(RenameContextItem {
-        path: item_path,
-        name: get_entry_name_string(path),
-        is_directory,
-    });
-}
-
-fn collect_rename_files_recursive(
-    dir: &Path,
-    items: &mut Vec<RenameContextItem>,
-    seen: &mut HashSet<String>,
-) -> Result<(), String> {
-    let read_dir =
-        fs::read_dir(dir).map_err(|e| format!("Failed to read {}: {}", get_path_string(dir), e))?;
-
-    for entry in read_dir {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let entry_path = entry.path();
-        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-        if file_type.is_dir() {
-            collect_rename_files_recursive(&entry_path, items, seen)?;
-            continue;
-        }
-        if file_type.is_file() {
-            push_rename_context_item(&entry_path, false, items, seen);
-        }
-    }
-
-    Ok(())
-}
-
-fn collect_rename_items_from_path(
-    path: &Path,
-    recursive: bool,
-    items: &mut Vec<RenameContextItem>,
-    seen: &mut HashSet<String>,
-) -> Result<(), String> {
-    if !path.exists() {
-        return Ok(());
-    }
-
-    if path.is_file() {
-        push_rename_context_item(path, false, items, seen);
-        return Ok(());
-    }
-
-    if !path.is_dir() {
-        return Ok(());
-    }
-
-    if recursive {
-        return collect_rename_files_recursive(path, items, seen);
-    }
-
-    let read_dir = fs::read_dir(path)
-        .map_err(|e| format!("Failed to read {}: {}", get_path_string(path), e))?;
-
-    for entry in read_dir {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let entry_path = entry.path();
-        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-        if !file_type.is_dir() && !file_type.is_file() {
-            continue;
-        }
-        push_rename_context_item(&entry_path, file_type.is_dir(), items, seen);
-    }
-
-    Ok(())
-}
-
-fn get_entry_name_string(path: &Path) -> String {
-    path.file_name()
-        .map(|value| value.to_string_lossy().to_string())
-        .unwrap_or_else(|| get_path_string(path))
 }
 
 fn parse_runtime_options(
