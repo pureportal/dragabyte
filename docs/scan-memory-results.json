@@ -1,0 +1,544 @@
+{
+  "date": "2026-10-07",
+  "repeated": [
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 14643,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 150.95,
+      "retainedHeapMiB": 68.61,
+      "expandedHeapMiB": 91.42,
+      "maxRssMiB": 315.69,
+      "variant": "before",
+      "run": 1
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 17032,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 102.6,
+      "retainedHeapMiB": 37.94,
+      "expandedHeapMiB": 55.25,
+      "maxRssMiB": 270.38,
+      "variant": "after",
+      "run": 1
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 15298,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 142.59,
+      "retainedHeapMiB": 69.05,
+      "expandedHeapMiB": 91.86,
+      "maxRssMiB": 306.93,
+      "variant": "before",
+      "run": 2
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 11523,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 133.37,
+      "retainedHeapMiB": 37.21,
+      "expandedHeapMiB": 54.53,
+      "maxRssMiB": 299.25,
+      "variant": "after",
+      "run": 2
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 14444,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 134.01,
+      "retainedHeapMiB": 68.64,
+      "expandedHeapMiB": 91.67,
+      "maxRssMiB": 297.75,
+      "variant": "before",
+      "run": 3
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 5000,
+      "shape": "nested",
+      "scanMs": 14948,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 99.34,
+      "retainedHeapMiB": 33.89,
+      "expandedHeapMiB": 50.98,
+      "maxRssMiB": 263.22,
+      "variant": "after",
+      "run": 3
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 3291,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 295.15,
+      "retainedHeapMiB": 57.27,
+      "expandedHeapMiB": 80.24,
+      "maxRssMiB": 427,
+      "variant": "before",
+      "run": 1
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 4126,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 175.77,
+      "retainedHeapMiB": 26.92,
+      "expandedHeapMiB": 44.16,
+      "maxRssMiB": 311.9,
+      "variant": "after",
+      "run": 1
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 3664,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 264.39,
+      "retainedHeapMiB": 57.44,
+      "expandedHeapMiB": 80.41,
+      "maxRssMiB": 393.5,
+      "variant": "before",
+      "run": 2
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 2557,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 174.2,
+      "retainedHeapMiB": 26.92,
+      "expandedHeapMiB": 44.16,
+      "maxRssMiB": 311.38,
+      "variant": "after",
+      "run": 2
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 2399,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 258.4,
+      "retainedHeapMiB": 57.47,
+      "expandedHeapMiB": 80.43,
+      "maxRssMiB": 389.61,
+      "variant": "before",
+      "run": 3
+    },
+    {
+      "fileCount": 250000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 2557,
+      "totalBytes": 4095877120,
+      "peakHeapMiB": 191.6,
+      "retainedHeapMiB": 26.92,
+      "expandedHeapMiB": 44.16,
+      "maxRssMiB": 326.22,
+      "variant": "after",
+      "run": 3
+    }
+  ],
+  "platform": "Windows",
+  "million": [
+    {
+      "fileCount": 1000000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 56209,
+      "totalBytes": 16383970304,
+      "peakHeapMiB": 917.73,
+      "retainedHeapMiB": 227.07,
+      "expandedHeapMiB": 320.95,
+      "maxRssMiB": 1077.21,
+      "variant": "before"
+    },
+    {
+      "fileCount": 1000000,
+      "folderCount": 1,
+      "shape": "wide",
+      "scanMs": 36658,
+      "totalBytes": 16383970304,
+      "peakHeapMiB": 481.87,
+      "retainedHeapMiB": 102.9,
+      "expandedHeapMiB": 173.9,
+      "maxRssMiB": 629,
+      "variant": "after"
+    }
+  ],
+  "node": "24.14.1",
+  "followUp": {
+    "date": "2026-10-07",
+    "baseline": "Previous memory optimization, captured from the working tree before the expanded-row index change",
+    "node": "24.14.1",
+    "platform": "win32",
+    "sourceHashes": {
+      "before": {
+        "scanResults.ts": "7ed3abfa301bc9dc74478c346b45ae4d227f5ed00d6ac5337c0bdc4f8b797cc5",
+        "scanChanges.ts": "4fef967e32203dedadeae0c22bbb6e276bddc8dd6117266558f7d5b7eb96277a",
+        "scanPaths.ts": "7d09f76d384614bb3ce5898149fa38afb7d00ffb3117fa49fe987c951beffd1e",
+        "scanFile.ts": "01167150c059086d1f583263f1ed91c633b05181ff9a7fb071fe7b9a29aa5796",
+        "treeData.ts": "b19f1956a5256bb10d1d19512429deda08e0a995d822aa73cbb90109ae4451b5",
+        "types.ts": "a565ab925151d0dce4fa8915fc152dc55e8916ad9484ab7c71b4e2da3666649d"
+      },
+      "after": {
+        "scanResults.ts": "7ed3abfa301bc9dc74478c346b45ae4d227f5ed00d6ac5337c0bdc4f8b797cc5",
+        "scanChanges.ts": "4fef967e32203dedadeae0c22bbb6e276bddc8dd6117266558f7d5b7eb96277a",
+        "scanPaths.ts": "7d09f76d384614bb3ce5898149fa38afb7d00ffb3117fa49fe987c951beffd1e",
+        "scanFile.ts": "01167150c059086d1f583263f1ed91c633b05181ff9a7fb071fe7b9a29aa5796",
+        "treeData.ts": "4a16ee2500a4f4de719478d345baba32225b165b5360769469846b0d74eabede",
+        "types.ts": "a565ab925151d0dce4fa8915fc152dc55e8916ad9484ab7c71b4e2da3666649d"
+      }
+    },
+    "nodeResults": [
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 13283,
+        "expansionMs": 36.49,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 112.45,
+        "retainedHeapMiB": 38.08,
+        "expandedHeapMiB": 54.14,
+        "maxRssMiB": 273.16,
+        "variant": "before",
+        "run": 1
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 13467,
+        "expansionMs": 13.38,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 129.63,
+        "retainedHeapMiB": 38.11,
+        "expandedHeapMiB": 37.6,
+        "maxRssMiB": 285.41,
+        "variant": "after",
+        "run": 1
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 15696,
+        "expansionMs": 77.36,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 120.71,
+        "retainedHeapMiB": 37.83,
+        "expandedHeapMiB": 53.89,
+        "maxRssMiB": 279.91,
+        "variant": "before",
+        "run": 2
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 19292,
+        "expansionMs": 22.61,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 88.25,
+        "retainedHeapMiB": 33.66,
+        "expandedHeapMiB": 33.16,
+        "maxRssMiB": 244.94,
+        "variant": "after",
+        "run": 2
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 16204,
+        "expansionMs": 40.36,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 116.11,
+        "retainedHeapMiB": 38.07,
+        "expandedHeapMiB": 54.13,
+        "maxRssMiB": 275.87,
+        "variant": "before",
+        "run": 3
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 5000,
+        "shape": "nested",
+        "scanMs": 19996,
+        "expansionMs": 56.9,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 121.89,
+        "retainedHeapMiB": 38.08,
+        "expandedHeapMiB": 37.58,
+        "maxRssMiB": 281.17,
+        "variant": "after",
+        "run": 3
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 4623,
+        "expansionMs": 15.79,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 170.67,
+        "retainedHeapMiB": 26.87,
+        "expandedHeapMiB": 44.11,
+        "maxRssMiB": 307.93,
+        "variant": "before",
+        "run": 1
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 4110,
+        "expansionMs": 0.46,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 172.19,
+        "retainedHeapMiB": 26.88,
+        "expandedHeapMiB": 26.89,
+        "maxRssMiB": 308.68,
+        "variant": "after",
+        "run": 1
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 4643,
+        "expansionMs": 16.7,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 174.49,
+        "retainedHeapMiB": 26.95,
+        "expandedHeapMiB": 44.19,
+        "maxRssMiB": 311.04,
+        "variant": "before",
+        "run": 2
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 3720,
+        "expansionMs": 0.42,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 178.6,
+        "retainedHeapMiB": 26.92,
+        "expandedHeapMiB": 26.93,
+        "maxRssMiB": 314.6,
+        "variant": "after",
+        "run": 2
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 4077,
+        "expansionMs": 51.5,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 186.72,
+        "retainedHeapMiB": 26.87,
+        "expandedHeapMiB": 44.11,
+        "maxRssMiB": 324.79,
+        "variant": "before",
+        "run": 3
+      },
+      {
+        "fileCount": 250000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 4324,
+        "expansionMs": 0.39,
+        "totalBytes": 4095877120,
+        "peakHeapMiB": 191.28,
+        "retainedHeapMiB": 26.64,
+        "expandedHeapMiB": 26.65,
+        "maxRssMiB": 326.73,
+        "variant": "after",
+        "run": 3
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 51339,
+        "expansionMs": 79.31,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 514.49,
+        "retainedHeapMiB": 102.86,
+        "expandedHeapMiB": 173.85,
+        "maxRssMiB": 677.7,
+        "variant": "before",
+        "run": 1
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 45557,
+        "expansionMs": 0.48,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 512.84,
+        "retainedHeapMiB": 102.85,
+        "expandedHeapMiB": 102.85,
+        "maxRssMiB": 666.79,
+        "variant": "after",
+        "run": 1
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 49912,
+        "expansionMs": 62.6,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 516.07,
+        "retainedHeapMiB": 102.86,
+        "expandedHeapMiB": 173.85,
+        "maxRssMiB": 668.19,
+        "variant": "before",
+        "run": 2
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 47176,
+        "expansionMs": 0.4,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 503.87,
+        "retainedHeapMiB": 102.85,
+        "expandedHeapMiB": 102.85,
+        "maxRssMiB": 659.19,
+        "variant": "after",
+        "run": 2
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 47138,
+        "expansionMs": 73.72,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 493.91,
+        "retainedHeapMiB": 102.86,
+        "expandedHeapMiB": 173.85,
+        "maxRssMiB": 649.33,
+        "variant": "before",
+        "run": 3
+      },
+      {
+        "fileCount": 1000000,
+        "folderCount": 1,
+        "shape": "wide",
+        "scanMs": 40732,
+        "expansionMs": 0.41,
+        "totalBytes": 16383970304,
+        "peakHeapMiB": 473.01,
+        "retainedHeapMiB": 102.62,
+        "expandedHeapMiB": 102.62,
+        "maxRssMiB": 627.95,
+        "variant": "after",
+        "run": 3
+      }
+    ],
+    "nodeComparisons": [
+      {
+        "fileCount": 250000,
+        "shape": "nested",
+        "beforeExpandedHeapMiB": 54.13,
+        "afterExpandedHeapMiB": 37.58,
+        "reductionPercent": 30.57
+      },
+      {
+        "fileCount": 250000,
+        "shape": "wide",
+        "beforeExpandedHeapMiB": 44.11,
+        "afterExpandedHeapMiB": 26.89,
+        "reductionPercent": 39.04
+      },
+      {
+        "fileCount": 1000000,
+        "shape": "wide",
+        "beforeExpandedHeapMiB": 173.85,
+        "afterExpandedHeapMiB": 102.85,
+        "reductionPercent": 40.84
+      }
+    ],
+    "browser": {
+      "engine": "Headless Microsoft Edge",
+      "beforeBuild": "index-CgCiPYhw.js",
+      "afterBuild": "index-cG9saVjS.js",
+      "before": [
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 37.147705078125,
+          "expandedHeapMiB": 44.297462463378906
+        },
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 36.2003288269043,
+          "expandedHeapMiB": 44.29554748535156
+        },
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 36.20243453979492,
+          "expandedHeapMiB": 44.293582916259766
+        }
+      ],
+      "after": [
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 36.208187103271484,
+          "expandedHeapMiB": 35.68439865112305
+        },
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 36.20985412597656,
+          "expandedHeapMiB": 35.69071960449219
+        },
+        {
+          "fileCount": 250000,
+          "collapsedHeapMiB": 36.226341247558594,
+          "expandedHeapMiB": 35.69594955444336
+        }
+      ],
+      "beforeExpandedHeapMiB": 44.3,
+      "afterExpandedHeapMiB": 35.69,
+      "reductionPercent": 19.43
+    },
+    "validation": {
+      "frontendTestsPassed": 42,
+      "browserSuitePassed": 25,
+      "browserSuiteSkipped": 1,
+      "largeScanRunsPerVariant": 3,
+      "typecheck": "passed",
+      "lint": "passed",
+      "productionBuild": "passed",
+      "nativeEventReplay": "skipped: no recording supplied",
+      "packagedDesktopRam": "not measured",
+      "macosLinux": "not tested"
+    }
+  }
+}
