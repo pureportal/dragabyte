@@ -192,10 +192,12 @@ fn new_contents_and_deselected_children_block_deletion() {
     fs::write(root.path().join("leaf/new.txt"), "keep").unwrap();
     let result = remove_empty_folders(
         &found,
-        vec![
-            path_string(&root.path().join("chain")),
-            path_string(&root.path().join("leaf")),
-        ],
+        found
+            .folders
+            .iter()
+            .filter(|folder| matches!(folder.relative_path.as_str(), "chain" | "leaf"))
+            .map(|folder| folder.path.clone())
+            .collect(),
         &AtomicBool::new(false),
         |_, _, _| {},
     )
