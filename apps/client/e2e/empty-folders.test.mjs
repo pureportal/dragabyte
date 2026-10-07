@@ -193,7 +193,7 @@ test("removal cancellation retains unfinished folders for the next attempt", asy
 }) => {
   await previewEmptyFolders(page);
   await page.evaluate(() => {
-    window.__emptyFoldersTest.removeDelay = 200;
+    window.__emptyFoldersTest.pauseRemovalAfter = 1;
   });
   await page
     .getByRole("button", { name: "Remove selected (3)", exact: true })
@@ -215,7 +215,7 @@ test("removal cancellation retains unfinished folders for the next attempt", asy
     page.getByRole("button", { name: "Remove selected (2)", exact: true }),
   ).toBeEnabled();
   await page.evaluate(() => {
-    window.__emptyFoldersTest.removeDelay = 0;
+    window.__emptyFoldersTest.pauseRemovalAfter = null;
   });
   await page
     .getByRole("button", { name: "Remove selected (2)", exact: true })

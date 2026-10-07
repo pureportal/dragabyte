@@ -22,6 +22,7 @@ export async function openEmptyFolders(page) {
       const callbacks = new Map();
       const listeners = new Map();
       let next = 1;
+      let resumeRemoval;
       window.__emptyFoldersTest = {
         folders,
         picked: ["/fixture"],
@@ -29,7 +30,7 @@ export async function openEmptyFolders(page) {
         removals: [],
         cancellations: new Set(),
         findDelay: 0,
-        removeDelay: 0,
+        pauseRemovalAfter: null,
         failPath: "",
         error: "",
         searchErrors: [],
@@ -67,6 +68,8 @@ export async function openEmptyFolders(page) {
           if (command === "plugin:dialog|open") return state.picked;
           if (command === "cancel_empty_folders") {
             state.cancellations.add(args.id);
+            resumeRemoval?.();
+            resumeRemoval = undefined;
             return;
           }
           if (command === "preview_empty_folders") {
@@ -91,10 +94,10 @@ export async function openEmptyFolders(page) {
               (a, b) => b.split("/").length - a.split("/").length,
             );
             for (const path of paths) {
-              if (state.removeDelay)
-                await new Promise((resolve) =>
-                  setTimeout(resolve, state.removeDelay),
-                );
+              if (outcomes.length === state.pauseRemovalAfter)
+                await new Promise((resolve) => {
+                  resumeRemoval = resolve;
+                });
               if (state.cancellations.has(args.id)) break;
               outcomes.push({
                 path,
