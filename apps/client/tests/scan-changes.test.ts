@@ -112,7 +112,7 @@ test("deletion during discovery ignores late descendants while unrelated progres
   scan.send(0, [folder(1, 0, "/root/a", "incomplete"), folder(3, 1, "/root/a/late", "scanning"), folder(4, 2, "/root/b/new", "scanning")], [file(1, "/root/a/stale", 999), file(2, "/root/b/data", 20)]);
   assert.equal(scan.summary().totalBytes, 20);
   assert.equal(buildNodeMap(scan.summary().root).has("/root/a"), false);
-  assert.ok(buildTreeItems(scan.summary().root, new Set(["/root", "/root/b"]), true, true).some((row) => row.path === "/root/b/new"));
+  assert.ok(buildTreeItems(scan.summary().root, new Set(["/root", "/root/b"]), true, true).slice().some((row) => row.path === "/root/b/new"));
   scan.send(0, [folder(0, null, "/root"), folder(2, 0, "/root/b"), folder(4, 2, "/root/b/new")], [file(4, "/root/b/new/data", 30)], "Complete");
   assert.equal(scan.summary().totalBytes, 50);
   assert.equal(scan.summary().root.state, "complete");

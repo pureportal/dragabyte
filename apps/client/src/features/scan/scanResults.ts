@@ -1,18 +1,19 @@
 import type { ScanFile, ScanNode, ScanSummary, ScanUpdate } from "./types.ts";
+import { StoredScanFile } from "./scanFile.ts";
 
 const mergeFiles = (existing: ScanFile[], additions: ScanFile[]): ScanFile[] => {
   additions.sort((a, b) => b.sizeBytes - a.sizeBytes);
-  const merged: ScanFile[] = [];
+  const merged = new Array<ScanFile>(existing.length + additions.length);
   let current = 0;
   let added = 0;
   while (current < existing.length || added < additions.length) {
     const file = existing[current];
     const next = additions[added];
     if (file && (!next || file.sizeBytes >= next.sizeBytes)) {
-      merged.push(file);
+      merged[current + added] = file;
       current += 1;
     } else if (next) {
-      merged.push(next);
+      merged[current + added] = next;
       added += 1;
     }
   }
@@ -21,9 +22,15 @@ const mergeFiles = (existing: ScanFile[], additions: ScanFile[]): ScanFile[] => 
 
 export class ScanResults {
   private readonly nodes = new Map<number, ScanNode>();
+  private readonly directories = new Map<number, string>();
   private sequence = 0;
 
   constructor(private readonly id: string) {}
+
+  clear(): void {
+    this.nodes.clear();
+    this.directories.clear();
+  }
 
   apply(updates: ScanUpdate[]): ScanSummary {
     const changed = new Map<number, ScanNode>();
@@ -63,9 +70,15 @@ export class ScanResults {
         }
       }
       for (const entry of update.files) {
+        let directory = this.directories.get(entry.parentId);
+        if (directory === undefined) {
+          directory = entry.file.path.slice(0, entry.file.path.length - entry.file.name.length);
+          this.directories.set(entry.parentId, directory);
+        }
+        const file = new StoredScanFile(directory, entry.file);
         const pending = files.get(entry.parentId);
-        if (pending) pending.push(entry.file);
-        else files.set(entry.parentId, [entry.file]);
+        if (pending) pending.push(file);
+        else files.set(entry.parentId, [file]);
       }
     }
 
@@ -125,6 +138,7 @@ export class ScanUpdateQueue {
     this.pending.length = 0;
     this.latest = null;
     this.accepting = false;
+    this.results.clear();
   }
 
   private flush(): void {
@@ -140,6 +154,7 @@ export class ScanUpdateQueue {
         this.latest = null;
         this.lastPublished = Date.now();
         this.publish(summary, kind);
+        if (kind !== "progress") this.dispose();
       }
       if (this.pending.length > 0) this.timer = setTimeout(() => this.flush(), 16);
       else if (this.latest) this.timer = setTimeout(() => this.flush(), Math.max(1, 100 - (Date.now() - this.lastPublished)));

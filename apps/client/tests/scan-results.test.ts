@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { ScanResults, ScanUpdateQueue } from "../src/features/scan/scanResults.ts";
 import { buildTreeItems, isEmptyFolder } from "../src/features/scan/treeData.ts";
 import type { ScanNode, ScanUpdate } from "../src/features/scan/types.ts";
+import { relocateEntry } from "../src/features/scan/scanChanges.ts";
 
 const folder = (id: number, parentId: number | null, state: ScanNode["state"] = "scanning"): ScanUpdate["folders"][number] => ({
   id, parentId, path: `/folder${id}`, name: `folder${id}`, sizeBytes: 0, fileCount: 0, dirCount: 0, state, readState: state, skippedEntries: 0,
@@ -44,8 +45,8 @@ test("pending and incomplete folders remain visible when empty folders are hidde
   const results = new ScanResults("test");
   const summary = results.apply([update(0, [folder(0, null), folder(1, 0), folder(2, 0, "complete"), folder(3, 0, "incomplete")])]);
   assert.equal(isEmptyFolder(summary.root.children[0]!), false);
-  assert.deepEqual(buildTreeItems(summary.root, new Set(["/folder0"]), true, true).map((node) => node.path), ["/folder0", "/folder1", "/folder3"]);
-  assert.equal(buildTreeItems(summary.root, new Set(["/folder0"]), true, true)[1]!.hasChildren, true);
+  assert.deepEqual(buildTreeItems(summary.root, new Set(["/folder0"]), true, true).slice().map((node) => node.path), ["/folder0", "/folder1", "/folder3"]);
+  assert.equal(buildTreeItems(summary.root, new Set(["/folder0"]), true, true).at(1)!.hasChildren, true);
 });
 
 test("deep updates and expansion do not require recursion", () => {
@@ -87,4 +88,54 @@ test("disposing a scan discards pending callbacks during restart", (context) => 
   queue.push(update(0, [folder(0, null)]), "progress");
   queue.dispose();
   context.mock.timers.tick(100);
+});
+
+test("stored file paths preserve roots, separators, Unicode, metadata, and JSON exports", () => {
+  for (const path of ["/", "/archive/资料", "C:\\", "C:\\Archive", "c:/archive", "\\\\server\\share\\archive", "\\\\?\\C:\\archive"]) {
+    const separator = path.includes("\\") ? "\\" : "/";
+    const directory = path.endsWith(separator) ? path : path + separator;
+    const files = [
+      { name: "résumé-资料.txt", path: directory + "résumé-资料.txt", sizeBytes: 42, modified: 123456789 },
+      { name: "empty.txt", path: directory + "empty.txt", sizeBytes: 0 },
+    ];
+    const results = new ScanResults("test");
+    const summary = results.apply([update(0, [{ ...folder(0, null), path }], files.map((file) => ({ parentId: 0, file })))]);
+    assert.deepEqual(summary.root.files.map((file) => JSON.parse(JSON.stringify(file))), files);
+    const rows = buildTreeItems(summary.root, new Set([path]), true, false);
+    assert.deepEqual(rows.slice(1).map((row) => ({ path: row.path, name: row.name, sizeBytes: row.sizeBytes, parentPath: row.parentPath })),
+      files.map((file) => ({ path: file.path, name: file.name, sizeBytes: file.sizeBytes, parentPath: path })));
+    results.clear();
+    assert.equal(summary.root.files[0]!.path, files[0]!.path);
+  }
+});
+
+test("relocated stored files retain export paths without changing earlier snapshots", () => {
+  const results = new ScanResults("test");
+  const summary = results.apply([update(0, [{ ...folder(0, null), path: "/source" }], [
+    { parentId: 0, file: { name: "data.txt", path: "/source/data.txt", sizeBytes: 42, modified: 1000 } },
+  ])]);
+  const relocated = relocateEntry(summary.root, "/destination") as ScanNode;
+  assert.equal(summary.root.files[0]!.path, "/source/data.txt");
+  assert.equal(relocated.files[0]!.path, "/destination/data.txt");
+  assert.deepEqual(JSON.parse(JSON.stringify(relocated.files[0])), { name: "data.txt", path: "/destination/data.txt", sizeBytes: 42, modified: 1000 });
+  const renamed = relocateEntry(relocated.files[0]!, "/destination/renamed.txt");
+  assert.equal(renamed.path, "/destination/renamed.txt");
+  assert.equal(renamed.name, "renamed.txt");
+});
+
+test("completion releases the scan index while published files remain usable", (context) => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const cleared = context.mock.method(ScanResults.prototype, "clear");
+  const summaries: ScanNode[] = [];
+  const queue = new ScanUpdateQueue("test", (summary) => summaries.push(summary.root), assert.fail);
+  queue.push(update(0, [folder(0, null)]), "progress");
+  queue.push(update(1, [folder(0, null, "complete")], [{ parentId: 0, file: { path: "/folder0/file", name: "file", sizeBytes: 42 } }]), "complete");
+  context.mock.timers.tick(16);
+  assert.equal(cleared.mock.callCount(), 1);
+  queue.dispose();
+  queue.push(update(2), "progress");
+  context.mock.timers.tick(100);
+  assert.equal(summaries.length, 1);
+  assert.equal(summaries[0]!.files[0]!.path, "/folder0/file");
+  assert.equal(summaries[0]!.state, "complete");
 });

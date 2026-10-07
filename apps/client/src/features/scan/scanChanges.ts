@@ -1,4 +1,5 @@
 import { containsPath, parentPath, pathKey, pathName, relocatePath } from "./scanPaths.ts";
+import { StoredScanFile } from "./scanFile.ts";
 import type { ScanFile, ScanNode, ScanSummary } from "./types.ts";
 
 export type ScanEntry = ScanNode | ScanFile;
@@ -6,17 +7,21 @@ export type ScanEntry = ScanNode | ScanFile;
 export const isFolder = (entry: ScanEntry): entry is ScanNode => "children" in entry;
 
 export const relocateEntry = (entry: ScanEntry, destination: string): ScanEntry => {
-  const relocateFile = (file: ScanFile): ScanFile => {
-    const path = relocatePath(file.path, entry.path, destination);
-    return { ...file, path, name: pathName(path) };
-  };
-  if (!isFolder(entry)) return relocateFile(entry);
+  if (!isFolder(entry)) {
+    const name = pathName(destination);
+    return new StoredScanFile(destination.slice(0, destination.length - name.length), { ...entry, name });
+  }
   const copies = new Map<ScanNode, ScanNode>();
   const pending = [entry];
   while (pending.length) {
     const node = pending.pop()!;
     const path = relocatePath(node.path, entry.path, destination);
-    copies.set(node, { ...node, path, name: pathName(path), files: node.files.map(relocateFile), children: [] });
+    const first = node.files[0];
+    const directory = first ? relocatePath(first.path.slice(0, first.path.length - first.name.length), entry.path, destination) : "";
+    copies.set(node, {
+      ...node, path, name: pathName(path),
+      files: node.files.map((file) => new StoredScanFile(directory, file)), children: [],
+    });
     for (const child of node.children) pending.push(child);
   }
   for (const [node, copy] of copies) copy.children = node.children.map((child) => copies.get(child)!);

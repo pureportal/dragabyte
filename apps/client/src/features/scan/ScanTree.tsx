@@ -1,8 +1,9 @@
 import type { JSX, CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { memo, useMemo, useRef } from "react";
+import { memo, useRef } from "react";
 import { getFileIcon, getFolderIcon } from "../../lib/fileIcons";
 import { formatBytes, truncateMiddle } from "../../lib/utils";
 import type { FlatNode, ScanFile, ScanNode } from "./types";
+import type { TreeItems } from "./treeData";
 import { useVirtualRows } from "../../hooks/useVirtualRows";
 
 const ROW_HEIGHT = 64;
@@ -21,20 +22,6 @@ const getTreeRowClassName = (isActive: boolean, depthTone: string): string => {
 const getExpandButtonClassName = (hasChildren: boolean): string => {
   const visibility = hasChildren ? "visible" : "invisible";
   return `flex h-5 w-5 flex-none items-center justify-center rounded-sm text-xs text-slate-300 transition hover:bg-slate-800/80 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600 ${visibility}`;
-};
-
-const getMaxSizeByDepth = (items: FlatNode[]): Map<number, number> => {
-  const map = new Map<number, number>();
-  for (let i = 0; i < items.length; i += 1) {
-    const item = items[i];
-    if (!item) continue;
-    const size = item.sizeBytes ?? 0;
-    const current = map.get(item.depth) ?? 0;
-    if (size > current) {
-      map.set(item.depth, size);
-    }
-  }
-  return map;
 };
 
 const getRowFillPercent = (
@@ -80,7 +67,7 @@ const FolderProgressSpinner = (): JSX.Element => {
 };
 
 interface ScanTreeProps {
-  treeItems: FlatNode[];
+  treeItems: TreeItems;
   isScanning: boolean;
   scrollElement: HTMLDivElement | null;
   expandedPaths: Set<string>;
@@ -116,9 +103,7 @@ const ScanTree = memo(
   }: ScanTreeProps) => {
     const rowsRef = useRef<HTMLDivElement>(null);
     const { start, end, totalHeight } = useVirtualRows(treeItems.length, ROW_HEIGHT, scrollElement);
-    const maxSizeByDepth = useMemo(() => {
-      return getMaxSizeByDepth(treeItems);
-    }, [treeItems]);
+    const maxSizeByDepth = treeItems.maxSizeByDepth;
 
     const handleSelect = (item: FlatNode): void => {
       if (item.kind === "folder") {
@@ -167,7 +152,7 @@ const ScanTree = memo(
         event.preventDefault();
         const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? treeItems.length - 1 :
           Math.max(0, Math.min(treeItems.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
-        const next = treeItems[nextIndex];
+        const next = treeItems.at(nextIndex);
         if (!next) return;
         handleSelect(next);
         if (scrollElement) {

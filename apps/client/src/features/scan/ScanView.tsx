@@ -60,7 +60,6 @@ import Treemap from "./Treemap";
 import type {
   DiskUsage,
   FilesystemChange,
-  FlatNode,
   ScanFile,
   ScanFilters,
   ScanNode,
@@ -1108,15 +1107,13 @@ const ScanView = (): JSX.Element => {
     return nodeMap.get(selectedPath) ?? null;
   }, [nodeMap, selectedPath]);
 
-  const treeItems = useMemo<FlatNode[]>(() => {
-    return scanRoot
-      ? buildTreeItems(
-          scanRoot,
-          expandedPaths,
-          showExplorerFiles,
-          hideEmptyExplorerFolders,
-        )
-      : [];
+  const treeItems = useMemo(() => {
+    return buildTreeItems(
+      scanRoot,
+      expandedPaths,
+      showExplorerFiles,
+      hideEmptyExplorerFolders,
+    );
   }, [expandedPaths, hideEmptyExplorerFolders, showExplorerFiles, scanRoot]);
 
   const addSelectionHistory = useCallback((entry: SelectionEntry): void => {
