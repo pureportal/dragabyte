@@ -3,6 +3,8 @@ dist/
 dist-ssr/
 apps/landing/test-results/
 apps/landing/playwright-report/
+apps/client/test-results/
+apps/client/playwright-report/
 .env
 .env.*
 .DS_Store

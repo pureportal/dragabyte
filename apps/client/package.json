@@ -14,7 +14,9 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:build:microsoft-store": "tauri build --no-bundle && tauri bundle --bundles msi,nsis --config src-tauri/tauri.microsoftstore.conf.json",
-    "tauri:build:linux": "tauri build --config src-tauri/tauri.linux.conf.json"
+    "tauri:build:linux": "tauri build --config src-tauri/tauri.linux.conf.json",
+    "test:rename": "node --experimental-transform-types --test tests/rename.test.ts",
+    "test:rename:ui": "npm run build && playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -47,6 +49,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "@playwright/test": "1.63.0"
   }
 }
