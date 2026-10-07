@@ -1,6 +1,10 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
 use dragabyte::disk::{compute_disk_usage, DiskUsageSnapshot};
+use dragabyte::empty_folders::commands::{self as empty_folder_commands, EmptyFolderState};
+#[cfg(test)]
+use dragabyte::filesystem::FilesystemChangeEvent;
+use dragabyte::filesystem::{emit_filesystem_change, FilesystemChange};
 use dragabyte::remote::{start_remote_server, wire::LineReader, TcpConfig};
 use dragabyte::rename::{BatchRenameItem, ImportItem, ImportOptions, RenameOutcome};
 use dragabyte::scan::{
@@ -144,39 +148,6 @@ fn emit_to_window(window: &tauri::Window, event: ScanEvent) {
         ScanEvent::Cancelled(update) => {
             let _ = window.emit("scan-cancelled", update);
         }
-    }
-}
-
-#[derive(Clone, Serialize)]
-#[serde(
-    tag = "kind",
-    rename_all = "camelCase",
-    rename_all_fields = "camelCase"
-)]
-enum FilesystemChange {
-    Delete { path: String },
-    Relocate { path: String, new_path: String },
-    Create { path: String },
-    Copy { path: String, new_path: String },
-    Refresh { path: String },
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct FilesystemChangeEvent {
-    source_window: String,
-    change: FilesystemChange,
-}
-
-fn emit_filesystem_change(window: &tauri::Window, change: FilesystemChange) {
-    if let Err(error) = window.app_handle().emit(
-        "filesystem-changed",
-        FilesystemChangeEvent {
-            source_window: window.label().to_string(),
-            change,
-        },
-    ) {
-        eprintln!("Failed to update other windows after a filesystem change: {error}");
     }
 }
 
@@ -1569,6 +1540,7 @@ fn main() {
             app.manage(StartupPath(Mutex::new(startup_path_state.clone())));
             app.manage(LaunchContextState(Mutex::new(launch_context_state.clone())));
             app.manage(ScanCancellation(Mutex::new(HashMap::new())));
+            app.manage(EmptyFolderState::default());
             app.manage(SettingsState {
                 path: settings_path.clone(),
                 value: Mutex::new(settings.clone()),
@@ -1604,6 +1576,9 @@ fn main() {
             get_startup_path,
             get_launch_context,
             collect_rename_items,
+            empty_folder_commands::preview_empty_folders,
+            empty_folder_commands::remove_empty_folders_preview,
+            empty_folder_commands::cancel_empty_folders,
             open_path,
             save_temp_and_open,
             show_in_explorer,

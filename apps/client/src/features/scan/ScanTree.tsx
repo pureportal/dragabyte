@@ -3,7 +3,7 @@ import { memo, useMemo, useRef } from "react";
 import { getFileIcon, getFolderIcon } from "../../lib/fileIcons";
 import { formatBytes, truncateMiddle } from "../../lib/utils";
 import type { FlatNode, ScanFile, ScanNode } from "./types";
-import { useVirtualRows } from "./useVirtualRows";
+import { useVirtualRows } from "../../hooks/useVirtualRows";
 
 const ROW_HEIGHT = 64;
 

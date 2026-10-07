@@ -2,7 +2,7 @@ import { useMemo, useState, type JSX, type MouseEvent } from "react";
 import { getFolderIcon } from "../../lib/fileIcons";
 import { formatBytes } from "../../lib/utils";
 import type { ScanNode } from "./types";
-import { useVirtualRows } from "./useVirtualRows";
+import { useVirtualRows } from "../../hooks/useVirtualRows";
 
 interface SubfolderTableProps {
   folders: ScanNode[];

@@ -2,6 +2,7 @@ import { RootRoute, Route, Router } from "@tanstack/react-router";
 import App from "./App";
 import ScanView from "./features/scan/ScanView";
 import BulkRenameView from "./features/bulk-rename/BulkRenameView";
+import EmptyFoldersView from "./features/empty-folders/EmptyFoldersView";
 
 const rootRoute = new RootRoute({
   component: App,
@@ -19,7 +20,13 @@ const renameRoute = new Route({
   component: BulkRenameView,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, renameRoute]);
+const emptyFoldersRoute = new Route({
+  getParentRoute: () => rootRoute,
+  path: "/empty-folders",
+  component: EmptyFoldersView,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute, renameRoute, emptyFoldersRoute]);
 
 export const router = new Router({
   routeTree,

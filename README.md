@@ -113,6 +113,7 @@ npm run tauri:build
 - Integrated file operations (move, rename, delete, duplicate, new folder).
 - Open scans in a dedicated window.
 - Advanced filters (extensions, name contains, size range, age range, path contains, regex).
+- Empty folder removal with filtered previews, depth limits, individual selection, and cancellation.
 - Advanced search tokens (name, path, extension, size, regex).
 - Remote Dashboard for managing headless instances over TCP.
 - Remote file preview (limit 5MB).

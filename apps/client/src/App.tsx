@@ -145,7 +145,7 @@ const App = (): JSX.Element => {
       </div>
 
       <div
-        className="relative flex h-10 w-full shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur-sm select-none z-50"
+        className="relative z-50 flex min-h-10 w-full shrink-0 flex-wrap items-center justify-between gap-y-2 border-b border-slate-800/80 bg-slate-950/80 px-4 py-2 backdrop-blur-sm select-none sm:h-10 sm:flex-nowrap sm:py-0"
         data-tauri-drag-region
       >
         <div
@@ -162,14 +162,12 @@ const App = (): JSX.Element => {
           <span className="text-xs font-semibold tracking-wide text-slate-300">
             DRAGABYTE
           </span>
-          <span className="rounded-sm border border-amber-400/40 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300/90">
-            Alpha
-          </span>
         </div>
 
-        <div
-          className="ml-8 flex items-center gap-4 text-xs font-semibold tracking-wide uppercase text-slate-400"
-          data-tauri-drag-region
+        <nav
+          aria-label="Tools"
+          className="order-last flex w-full items-center gap-4 overflow-x-auto whitespace-nowrap text-xs font-semibold tracking-wide uppercase text-slate-400 sm:order-none sm:ml-4 sm:w-auto"
+          data-tauri-no-drag
         >
           <Link
             to="/"
@@ -183,12 +181,19 @@ const App = (): JSX.Element => {
           >
             Renamer
           </Link>
-        </div>
+          <Link
+            to="/empty-folders"
+            className="hover:text-slate-100 transition-colors [&.active]:text-cyan-400"
+          >
+            Remove empty folders
+          </Link>
+        </nav>
 
         <div className="flex-1" data-tauri-drag-region />
         <div className="relative flex items-center gap-2">
           <button
             onClick={minimize}
+            aria-label="Minimize window"
             className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             data-tauri-no-drag
           >
@@ -198,6 +203,7 @@ const App = (): JSX.Element => {
           </button>
           <button
             onClick={toggleMaximize}
+            aria-label="Maximize or restore window"
             className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             data-tauri-no-drag
           >
@@ -214,6 +220,7 @@ const App = (): JSX.Element => {
           </button>
           <button
             onClick={close}
+            aria-label="Close window"
             className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400"
             data-tauri-no-drag
           >

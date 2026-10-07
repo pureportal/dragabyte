@@ -1,3 +1,4 @@
+use crate::filesystem::path_string;
 use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -26,14 +27,6 @@ pub struct ImportItem {
     pub size: u64,
     pub depth: usize,
     pub relative_path: String,
-}
-
-fn path_string(path: &Path) -> String {
-    let value = path.to_string_lossy();
-    if let Some(unc) = value.strip_prefix("\\\\?\\UNC\\") {
-        return format!("\\\\{unc}");
-    }
-    value.strip_prefix("\\\\?\\").unwrap_or(&value).to_string()
 }
 
 pub fn collect_items(

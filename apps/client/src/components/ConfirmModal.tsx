@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import { type JSX, useEffect, useId, useRef } from "react";
 interface ConfirmModalProps {
   isOpen: boolean;
   title: string;
@@ -20,17 +20,62 @@ export const ConfirmModal = ({
   onConfirm,
   onCancel,
 }: ConfirmModalProps): JSX.Element | null => {
+  const titleId = useId();
+  const messageId = useId();
+  const dialog = useRef<HTMLDivElement>(null);
+  const cancelButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    cancelButton.current?.focus();
+    return () => previous?.focus();
+  }, [isOpen]);
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 shadow-2xl ring-1 ring-slate-800/60 scale-in duration-200">
+      <div
+        ref={dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 shadow-2xl ring-1 ring-slate-800/60 scale-in duration-200"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.stopPropagation();
+            onCancel();
+          }
+          if (event.key === "Tab") {
+            const buttons = dialog.current?.querySelectorAll<HTMLButtonElement>(
+              "button:not(:disabled)",
+            );
+            const first = buttons?.[0];
+            const last = buttons?.[buttons.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first?.focus();
+            }
+          }
+        }}
+      >
         <div className="p-5">
-          <h3 className="text-lg font-semibold text-slate-100 mb-2">{title}</h3>
-          <p className="text-sm text-slate-400 leading-relaxed">{message}</p>
+          <h3
+            id={titleId}
+            className="text-lg font-semibold text-slate-100 mb-2"
+          >
+            {title}
+          </h3>
+          <p id={messageId} className="text-sm text-slate-400 leading-relaxed">
+            {message}
+          </p>
         </div>
         <div className="flex justify-end gap-3 p-4 border-t border-slate-800 bg-slate-900/50 rounded-b-xl">
           <button
+            ref={cancelButton}
             onClick={onCancel}
             className="px-3 py-1.5 rounded-md border border-slate-700 bg-slate-800/50 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-slate-100 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-slate-600"
           >
