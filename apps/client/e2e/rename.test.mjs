@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { readFile } from "node:fs/promises";
-import { resolve, extname, sep } from "node:path";
+import { serveBuiltApp } from "./helpers.mjs";
 
-const dist = resolve("dist");
 const catalog = [
   ["Photo10.jpg", false, 300],
   ["Photo2.jpg", false, 200],
@@ -25,24 +23,7 @@ const catalog = [
 }));
 
 async function openRenamer(page) {
-  await page.route("http://localhost/**", async (route) => {
-    const pathname = decodeURIComponent(
-      new URL(route.request().url()).pathname,
-    );
-    const file = pathname.startsWith("/assets/")
-      ? resolve(dist, pathname.slice(1))
-      : resolve(dist, "index.html");
-    if (!file.startsWith(dist + sep)) return route.abort();
-    const contentType =
-      {
-        ".html": "text/html",
-        ".js": "text/javascript",
-        ".css": "text/css",
-        ".png": "image/png",
-        ".svg": "image/svg+xml",
-      }[extname(file)] ?? "application/octet-stream";
-    await route.fulfill({ body: await readFile(file), contentType });
-  });
+  await serveBuiltApp(page);
   await page.addInitScript(
     ({ catalog }) => {
       const callbacks = new Map();
