@@ -3,6 +3,13 @@ const endpoint = "https://swetrix.pureportal.io/backend/v1/log";
 
 type Metadata = Record<string, string>;
 
+const screenshotNames: Record<string, string> = {
+  scan: "disk-usage",
+  treemap: "treemap",
+  rename: "batch-rename",
+  cleanup: "empty-folders",
+};
+
 function campaignTags(): Metadata {
   const query = new URLSearchParams(location.search);
   const tags: Metadata = {};
@@ -94,9 +101,8 @@ export function startAnalytics(hasConsent: () => boolean) {
         });
       }
     } else if (link.hasAttribute("data-screenshot")) {
-      track("screenshot_view", {
-        image: url.pathname.includes("rename") ? "batch-rename" : "disk-usage",
-      });
+      const scene = /\/(scan|treemap|rename|cleanup)-/.exec(url.pathname)?.[1];
+      if (scene) track("screenshot_view", { image: screenshotNames[scene] });
     } else if (["mailto:", "tel:"].includes(url.protocol)) {
       track("contact_click", { method: url.protocol === "mailto:" ? "email" : "phone" });
     } else if (url.protocol === "https:" && url.origin !== location.origin) {

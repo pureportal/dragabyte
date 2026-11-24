@@ -3,10 +3,10 @@ import { test, expect, site } from "./fixtures.mjs";
 for (const width of [320, 390, 768, 1024, 1440, 1920]) {
   test(`pages, images and touch targets fit at ${width}px`, async ({ page, events }) => {
     await page.setViewportSize({ width, height: 900 });
-    for (const route of ["/", "/imprint/", "/privacy/"]) {
+    for (const route of ["/", "/imprint/", "/privacy/", "/de/", "/de/imprint/", "/de/privacy/"]) {
       await page.goto(`${site}${route}`);
       if (await page.getByRole("dialog").isVisible()) {
-        await page.getByRole("button", { name: "Reject", exact: true }).click();
+        await page.locator('[data-choice="rejected"]').click();
       }
       await page.locator("img").evaluateAll((images) => {
         images.forEach((image) => { image.loading = "eager"; });
@@ -16,7 +16,7 @@ for (const width of [320, 390, 768, 1024, 1440, 1920]) {
       )).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       const controls = await page.locator("nav a, .brand, .studio-link, .button, .text-link, .download-link, address a, button:visible")
-        .evaluateAll((elements) => elements.map((element) => {
+        .evaluateAll((elements) => elements.filter((element) => element.getClientRects().length > 0).map((element) => {
           const bounds = element.getBoundingClientRect();
           return { text: element.textContent.trim(), x: bounds.x, right: bounds.right, height: bounds.height };
         }));

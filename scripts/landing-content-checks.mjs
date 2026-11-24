@@ -7,6 +7,13 @@ export async function verifyLandingContent(base) {
     ["", /<title>Dragabyte\b/],
     ["imprint/", /<title>Imprint — Dragabyte<\/title>/],
     ["privacy/", /<title>Privacy policy — Dragabyte<\/title>/],
+    ["de/", /<title>Dragabyte\b/],
+    ["de/imprint/", /<title>Impressum — Dragabyte<\/title>/],
+    ["de/privacy/", /<title>Datenschutzerklärung — Dragabyte<\/title>/],
+  ];
+  const homes = [
+    ["", "https://pureportal.io/terms"],
+    ["de/", "https://pureportal.io/de/terms"],
   ];
 
   for (const [route, title] of routes) {
@@ -18,39 +25,53 @@ export async function verifyLandingContent(base) {
     assert.match(html, title);
     assert.doesNotMatch(html, /__DRAGABYTE_VERSION__/);
     assert.match(html, /<script\b[^>]*type="module"[^>]*src="[^"]+"/);
+    assert.ok(
+      html.includes(`<html lang="${route.startsWith("de/") ? "de" : "en"}">`),
+      `Wrong language: ${url.pathname}`,
+    );
+    for (const language of ["en", "de", "x-default"]) {
+      assert.ok(
+        html.includes(`hreflang="${language}" href="https://dragabyte.app/`),
+        `Missing ${language} alternate: ${url.pathname}`,
+      );
+    }
     pages.set(url.href, html);
 
-    for (const [tag] of html.matchAll(/<(?:img|link|script)\b[^>]*>/g)) {
+    for (const [tag] of html.matchAll(/<(?:img|link|script)\b[^>]*>|<a\b[^>]*data-screenshot[^>]*>/g)) {
+      if (/rel="(?:alternate|canonical)"/.test(tag)) continue;
       const reference = /(?:src|href)="([^"]+)"/.exec(tag)?.[1];
       if (reference) assets.add(new URL(reference, url).href);
     }
   }
 
-  const home = pages.get(base.href);
-  const downloads = [
-    ...home.matchAll(
-      /href="(https:\/\/github\.com\/pureportal\/dragabyte\/releases\/download\/v([^/]+)\/([^"]+))"/g,
-    ),
-  ];
-  assert.equal(downloads.length, 5, "Expected five direct desktop downloads");
-  assert.equal(new Set(downloads.map(([, url]) => url)).size, 5);
-  assert.equal(new Set(downloads.map(([, , version]) => version)).size, 1);
-  for (const [, , version, name] of downloads) {
-    assert.match(version, /^\d+\.\d+\.\d+$/);
-    assert.ok(name.includes(version), `Download version mismatch: ${name}`);
-  }
-  for (const extension of [".exe", ".msi", ".deb", ".rpm", ".AppImage"]) {
-    assert.ok(
-      downloads.some(([, url]) => url.endsWith(extension)),
-      `Missing ${extension} download`,
-    );
-  }
-  for (const route of ["imprint/", "privacy/"]) {
-    assert.ok(home.includes(`href="./${route}"`), `Missing ${route} link`);
-    assert.match(
-      pages.get(new URL(route, base).href),
-      /mailto:support@pureportal\.io/,
-    );
+  for (const [route, terms] of homes) {
+    const home = pages.get(new URL(route, base).href);
+    const downloads = [
+      ...home.matchAll(
+        /href="(https:\/\/github\.com\/pureportal\/dragabyte\/releases\/download\/v([^/]+)\/([^"]+))"/g,
+      ),
+    ];
+    assert.equal(downloads.length, 5, `Expected five direct desktop downloads on /${route}`);
+    assert.equal(new Set(downloads.map(([, url]) => url)).size, 5);
+    assert.equal(new Set(downloads.map(([, , version]) => version)).size, 1);
+    for (const [, , version, name] of downloads) {
+      assert.match(version, /^\d+\.\d+\.\d+$/);
+      assert.ok(name.includes(version), `Download version mismatch: ${name}`);
+    }
+    for (const extension of [".exe", ".msi", ".deb", ".rpm", ".AppImage"]) {
+      assert.ok(
+        downloads.some(([, url]) => url.endsWith(extension)),
+        `Missing ${extension} download on /${route}`,
+      );
+    }
+    assert.ok(home.includes(`href="${terms}"`), `Missing terms link on /${route}`);
+    for (const page of ["imprint/", "privacy/"]) {
+      assert.ok(home.includes(`href="./${page}"`), `Missing /${route}${page} link`);
+      assert.match(
+        pages.get(new URL(`${route}${page}`, base).href),
+        /mailto:support@pureportal\.io/,
+      );
+    }
   }
 
   assert.ok(assets.size >= 5, "Expected local stylesheets and product images");
@@ -109,6 +130,6 @@ export async function verifyLandingContent(base) {
   });
   assert.equal(missing.status, 404, "Missing pages must return 404");
   console.log(
-    `Landing content passed: ${pages.size} pages, ${assets.size} local assets, five downloads, navigation, and 404 response.`,
+    `Landing content passed: ${pages.size} pages, ${assets.size} local assets, five downloads per language, navigation, and 404 response.`,
   );
 }

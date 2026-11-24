@@ -10,9 +10,14 @@
       name="description"
       content="How the Dragabyte website, downloads, desktop app, CLI, and support handle your data, and how to exercise your privacy rights."
     />
+    <link rel="canonical" href="https://dragabyte.app/privacy/" />
+    <link rel="alternate" hreflang="en" href="https://dragabyte.app/privacy/" />
+    <link rel="alternate" hreflang="de" href="https://dragabyte.app/de/privacy/" />
+    <link rel="alternate" hreflang="x-default" href="https://dragabyte.app/privacy/" />
     <link rel="icon" type="image/png" href="/icon.png" />
     <link rel="stylesheet" href="../src/styles.css" />
     <link rel="stylesheet" href="../src/legal.css" />
+    <script type="module" src="../src/language.ts"></script>
     <script type="module" src="../src/consent.ts"></script>
   </head>
   <body>
@@ -27,16 +32,23 @@
         /><span>Dragabyte</span></a
       >
       <nav aria-label="Main navigation">
-        <a href="../#features">Features</a><a href="../#terminal">Terminal</a
-        ><a class="nav-download" href="../#download"
-          >Download <span aria-hidden="true">↘</span></a
-        >
+        <a class="nav-section" href="../#features">Features</a
+        ><a class="nav-section" href="../#terminal">Terminal</a
+        ><a
+          class="language-switch"
+          href="../de/privacy/"
+          hreflang="de"
+          lang="de"
+          data-language="de"
+          aria-label="Deutsch"
+          >DE</a
+        ><a class="nav-download" href="../#download">Download</a>
       </nav>
     </header>
     <main id="main" class="legal-page page-width" tabindex="-1">
       <div class="legal-heading">
         <h1>Privacy policy</h1>
-        <p>Updated <time datetime="2026-09-13">13 September 2026</time></p>
+        <p>Updated <time datetime="2026-11-25">25 November 2026</time></p>
       </div>
       <div class="legal-layout">
         <nav class="legal-navigation" aria-label="Privacy policy sections">
@@ -115,6 +127,13 @@
               the site’s browser storage. This preference is used only to remember
               your decision and is not sent to Swetrix.
             </p>
+            <p>
+              When you switch between English and German, the site stores your
+              language in this browser so later visits open in that language.
+              It stays on your device and is not sent to us or to Swetrix.
+              Without a stored choice, the site uses your browser’s language
+              setting to pick English or German.
+            </p>
             <button class="consent-settings" type="button" data-consent-settings hidden>
               Privacy settings
             </button>
@@ -155,8 +174,8 @@
             <p>
               If you email us, we process your address, message, attachments,
               and communication details to answer your request. Email is handled
-              through Zoho Mail, provided by Zoho Corporation B.V. in the
-              Netherlands. See
+              through Zoho Mail, provided by Zoho Corporation B.V., Beneluxlaan
+              4B, 3527 HT Utrecht, Netherlands. See
               <a href="https://www.zoho.com/privacy.html"
                 >Zoho’s privacy policy</a
               >.
@@ -228,7 +247,8 @@
       <nav aria-label="Footer navigation">
         <a href="https://github.com/pureportal/dragabyte">GitHub</a
         ><a href="../imprint/">Imprint</a
-        ><a href="./" aria-current="page">Privacy</a>
+        ><a href="./" aria-current="page">Privacy</a
+        ><a href="https://pureportal.io/terms">Terms</a>
       </nav>
     </footer>
   </body>

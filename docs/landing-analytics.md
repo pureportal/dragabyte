@@ -48,7 +48,7 @@ download requests finish with `keepalive`.
 | Downloads | `download_click`, with `platform`, `format`, and release `version`. All five original direct links are preserved. |
 | Download section | `download_section`, once when the section becomes visible. |
 | Other home sections | `section_view`, with the section ID, once per section. |
-| Screenshots | `screenshot_view`, with `disk-usage` or `batch-rename`. |
+| Screenshots | `screenshot_view`, with `disk-usage`, `treemap`, `batch-rename`, or `empty-folders`. |
 | External links | `outbound_click`, with the destination hostname. |
 | Contact links | `contact_click`, with `email` or `phone`; no address or number is sent. |
 | Errors | JavaScript errors and unhandled promise rejections. Standard error type and, when available, same-origin filename, line and column; maximum ten per activation. Messages and stack traces are omitted. |
@@ -62,7 +62,7 @@ queued for later acceptance. Analytics failures do not interrupt navigation.
 
 - **Downloads** traffic view: `download_click` displayed as the Downloads metric.
 - **Download conversion** funnel: `/` → `download_click`.
-- **Download journey** funnel: `/` → `download_section` → `download_click`.
+- **Download journey** funnel: `/` or `/de/` → `download_section` → `download_click`.
 
 These were created and read back through the instance’s administration API.
 

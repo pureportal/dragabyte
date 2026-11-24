@@ -36,6 +36,13 @@ export default defineConfig({
         privacy: fileURLToPath(
           new URL("./privacy/index.html", import.meta.url),
         ),
+        "de-home": fileURLToPath(new URL("./de/index.html", import.meta.url)),
+        "de-imprint": fileURLToPath(
+          new URL("./de/imprint/index.html", import.meta.url),
+        ),
+        "de-privacy": fileURLToPath(
+          new URL("./de/privacy/index.html", import.meta.url),
+        ),
       },
     },
   },

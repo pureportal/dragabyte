@@ -7,6 +7,30 @@ let choice: Choice | null = readChoice();
 let generation = 0;
 let stopAnalytics: ((discardPending?: boolean) => void) | undefined;
 let returnFocus: HTMLElement | null = null;
+const text = {
+  en: {
+    settings: "Privacy settings",
+    title: "Analytics",
+    close: "Close privacy settings",
+    description: "Allow Swetrix to measure visits, downloads, performance and errors?",
+    policy: "Privacy policy",
+    reject: "Reject",
+    withdraw: "Withdraw consent",
+    accept: "Accept",
+    storageError: "Your choice could not be saved. Allow browser storage and try again.",
+  },
+  de: {
+    settings: "Datenschutzeinstellungen",
+    title: "Analyse",
+    close: "Datenschutzeinstellungen schließen",
+    description: "Dürfen wir mit Swetrix Besuche, Downloads, Ladezeiten und Fehler messen?",
+    policy: "Datenschutzerklärung",
+    reject: "Ablehnen",
+    withdraw: "Einwilligung widerrufen",
+    accept: "Akzeptieren",
+    storageError: "Ihre Auswahl konnte nicht gespeichert werden. Erlauben Sie den Browserspeicher und versuchen Sie es erneut.",
+  },
+}[document.documentElement.lang === "de" ? "de" : "en"];
 
 function readChoice(): Choice | null {
   try {
@@ -20,7 +44,7 @@ function readChoice(): Choice | null {
 const settings = document.createElement("button");
 settings.type = "button";
 settings.className = "consent-settings";
-settings.textContent = "Privacy settings";
+settings.textContent = text.settings;
 document.querySelector(".site-footer nav")?.append(settings);
 
 const dialog = document.createElement("dialog");
@@ -28,16 +52,16 @@ dialog.className = "consent-dialog";
 dialog.setAttribute("aria-labelledby", "consent-title");
 dialog.setAttribute("aria-describedby", "consent-description");
 dialog.innerHTML = `
-  <h2 id="consent-title">Analytics</h2>
-  <button class="consent-close" type="button" aria-label="Close privacy settings" hidden>
+  <h2 id="consent-title">${text.title}</h2>
+  <button class="consent-close" type="button" aria-label="${text.close}" hidden>
     <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
   </button>
-  <p id="consent-description">Allow Swetrix to measure visits, downloads, performance and errors?</p>
-  <a class="consent-policy" href="${privacyUrl}">Privacy policy</a>
+  <p id="consent-description">${text.description}</p>
+  <a class="consent-policy" href="${privacyUrl}">${text.policy}</a>
   <p class="consent-error" role="alert" hidden></p>
   <div class="consent-actions">
-    <button type="button" data-choice="rejected">Reject</button>
-    <button type="button" data-choice="accepted">Accept</button>
+    <button type="button" data-choice="rejected">${text.reject}</button>
+    <button type="button" data-choice="accepted">${text.accept}</button>
   </div>
 `;
 document.body.append(dialog);
@@ -46,7 +70,7 @@ const close = dialog.querySelector<HTMLButtonElement>(".consent-close")!;
 const error = dialog.querySelector<HTMLParagraphElement>(".consent-error")!;
 
 function openSettings(trigger: Element | null = document.activeElement) {
-  reject.textContent = choice === "accepted" ? "Withdraw consent" : "Reject";
+  reject.textContent = choice === "accepted" ? text.withdraw : text.reject;
   close.hidden = choice === null;
   if (trigger instanceof HTMLElement && !dialog.contains(trigger)) {
     returnFocus = trigger;
@@ -88,7 +112,7 @@ function saveChoice(next: Choice) {
   } catch {
     choice = null;
     close.hidden = true;
-    error.textContent = "Your choice could not be saved. Allow browser storage and try again.";
+    error.textContent = text.storageError;
     error.hidden = false;
     return;
   }

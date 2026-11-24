@@ -7,8 +7,10 @@
   border-bottom: 1px solid var(--line);
 }
 .legal-heading h1 {
-  font-size: clamp(44px, 5vw, 68px);
-  letter-spacing: -0.055em;
+  font-size: clamp(36px, 5vw, 68px);
+  letter-spacing: -0.045em;
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 .legal-heading > p {
   margin-top: 20px;
@@ -42,7 +44,7 @@
 }
 .legal-content h2 {
   margin-bottom: 18px;
-  color: #172d2c;
+  color: var(--ink);
   font-size: 26px;
   letter-spacing: -0.025em;
 }

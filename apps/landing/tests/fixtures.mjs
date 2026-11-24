@@ -12,6 +12,8 @@ const contentTypes = {
   ".css": "text/css",
   ".js": "text/javascript",
   ".png": "image/png",
+  ".webp": "image/webp",
+  ".jpg": "image/jpeg",
 };
 
 export async function assetResponse(url) {
